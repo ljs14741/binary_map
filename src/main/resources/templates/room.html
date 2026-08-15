@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title th:text="|${mapView.hostName()}님의 짝꿍지도|">짝꿍지도</title>
+  <meta name="description" th:content="|${mapView.hostName()}님의 짝꿍지도. 이름만 적으면 궁합이 나오고, 사는 곳에 핀이 찍혀요.|">
+  <meta name="robots" content="noindex, follow">
+  <meta name="google-adsense-account" content="ca-pub-6890085609044109">
+  <link rel="canonical" th:href="${mapView.shareUrl()}">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="짝꿍지도">
+  <meta property="og:locale" content="ko_KR">
+  <meta property="og:title" th:content="|${mapView.hostName()}님의 짝꿍지도|">
+  <meta property="og:description" content="이름만 적으면 궁합이 나오고, 친구가 사는 곳에 핀이 찍혀요.">
+  <meta property="og:image" content="https://binaryworld.kr/img/radish.png">
+  <meta property="og:url" th:content="${mapView.shareUrl()}">
+
+  <link rel="icon" href="https://binaryworld.kr/img/favicon/favicon.ico" type="image/x-icon">
+  <meta name="theme-color" content="#fff4ea">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <link rel="stylesheet" href="https://binaryworld.kr/common/header.css">
+  <link rel="stylesheet" href="https://binaryworld.kr/common/footer.css">
+  <link rel="stylesheet" th:href="@{/css/main.css}">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6890085609044109"
+          crossorigin="anonymous"></script>
+</head>
+<body data-theme="light">
+<header id="global-header" aria-label="Binary World 공통 메뉴"></header>
+
+<main class="map-page">
+  <section class="map-hero">
+    <p class="map-kicker">짝꿍지도</p>
+    <h1 class="map-room-title">
+      <span th:text="${mapView.hostName()}">수현</span>님의<br>짝꿍지도
+    </h1>
+    <p class="map-lead" id="room-lead" th:text="|${mapView.hostSido()} · ${mapView.total()}명|">서울 · 0명</p>
+  </section>
+
+  <section class="map-card" id="host-tools" th:hidden="${!mapView.host()}">
+    <p class="map-card-kicker">방장</p>
+    <h2>친구 초대 링크</h2>
+    <p class="map-sample-lead">이 지도를 관리할 수 있는 건 지금 이 폰이에요. 링크는 복사해서 카톡에 보내 주세요.</p>
+    <button type="button" class="map-cta" id="copy-link">초대 링크 복사</button>
+    <button type="button" class="map-share" id="room-share">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2C6.7 3.2 2.4 6.6 2.4 10.8c0 2.7 1.8 5.1 4.5 6.5l-.9 3.4c-.1.3.3.6.5.4l3.8-2.5c.6.1 1.1.1 1.7.1 5.3 0 9.6-3.4 9.6-7.6S17.3 3.2 12 3.2z"/></svg>
+      카톡으로 초대하기
+    </button>
+    <form id="host-edit" class="map-form map-form-tight">
+      <label>
+        내 이름
+        <input id="edit-name" type="text" maxlength="20" required>
+      </label>
+      <label>
+        사는 곳
+        <select id="edit-sido" required>
+          <option th:each="sido : ${sidos}" th:value="${sido.code()}" th:text="${sido.label()}">서울</option>
+        </select>
+      </label>
+      <p id="edit-error" class="map-error" hidden></p>
+      <button type="submit" class="map-cta-secondary" id="edit-submit">내 정보 수정</button>
+    </form>
+    <button type="button" class="map-danger" id="delete-map">이 지도 삭제</button>
+  </section>
+
+  <section class="map-card" id="join-card" th:hidden="${mapView.host()}">
+    <p class="map-card-kicker">3초 참여</p>
+    <h2>이름만 적으면 핀이 찍혀요</h2>
+    <form id="join-form" class="map-form">
+      <label>
+        내 이름
+        <input id="join-name" type="text" maxlength="20" placeholder="민지" autocomplete="name" required>
+      </label>
+      <label>
+        사는 곳
+        <select id="join-sido" required>
+          <option value="" disabled selected>도를 골라 주세요</option>
+          <option th:each="sido : ${sidos}" th:value="${sido.code()}" th:text="${sido.label()}">서울</option>
+        </select>
+      </label>
+      <p id="join-error" class="map-error" hidden></p>
+      <button type="submit" id="join-submit">궁합 확인하고 들어가기</button>
+    </form>
+  </section>
+
+  <section id="join-result" class="map-result" hidden></section>
+
+  <section class="map-sample">
+    <div class="map-stage">
+      <div class="map-stage-head">
+        <strong id="stage-title" th:text="|${mapView.hostName()}님의 짝꿍지도|">수현님의 짝꿍지도</strong>
+        <span id="stage-count" th:text="|${mapView.total()}명|">0명</span>
+      </div>
+      <div class="korea-wrap" id="korea-wrap" aria-label="대한민국 시도 지도"></div>
+      <p class="map-stage-caption" id="stage-caption">링크를 보내면 친구가 사는 도에 핀이 찍혀요</p>
+      <div class="map-stats" id="map-stats">
+        <button type="button" class="map-stat" th:each="count : ${mapView.counts()}"
+                th:style="|--stat:${count.color()}|"
+                th:attr="data-filter=${count.filterKey()}">
+          <b th:text="${count.count()}">0</b>
+          <span th:text="${count.label()}">부랄짝꿍</span>
+        </button>
+      </div>
+    </div>
+    <ol class="map-rank" id="map-rank"></ol>
+    <a class="map-cta" id="guest-create" href="/#create-map" th:hidden="${mapView.host()}">나도 내 지도 만들기</a>
+  </section>
+</main>
+
+<div id="map-sheet" class="map-sheet" hidden>
+  <button type="button" class="map-sheet-backdrop" id="map-sheet-backdrop" aria-label="닫기"></button>
+  <div class="map-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="map-sheet-title">
+    <div class="map-sheet-handle"></div>
+    <div class="map-sheet-head">
+      <div>
+        <strong id="map-sheet-title">서울/경기</strong>
+        <span id="map-sheet-count">0명</span>
+      </div>
+      <button type="button" class="map-sheet-close" id="map-sheet-close">닫기</button>
+    </div>
+    <ul id="map-sheet-list" class="map-sheet-list"></ul>
+  </div>
+</div>
+
+<footer id="global-footer" aria-label="Binary World 푸터"></footer>
+<script id="map-json" type="application/json" th:utext="${mapJson}">{}</script>
+<script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
+<script src="https://binaryworld.kr/common/header.js" defer></script>
+<script src="https://binaryworld.kr/common/footer.js" defer></script>
+<script th:src="@{/js/map-app.js}" defer></script>
+<script th:src="@{/js/map-board.js}" defer></script>
+<script th:src="@{/js/room.js}" defer></script>
+</body>
+</html>
