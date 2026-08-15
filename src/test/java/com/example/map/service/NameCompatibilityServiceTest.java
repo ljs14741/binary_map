@@ -35,7 +35,10 @@ class NameCompatibilityServiceTest {
 
     @Test
     void mapsScoreToEverydayLabel() {
-        assertThat(RelationLabel.fromScore(82)).isEqualTo(RelationLabel.BEST_FRIEND);
-        assertThat(RelationLabel.fromScore(12)).isEqualTo(RelationLabel.NOT_A_MATCH);
+        assertThat(RelationLabel.fromScore(96)).isEqualTo(RelationLabel.BURAL_MATE);
+        assertThat(RelationLabel.fromScore(82)).isEqualTo(RelationLabel.TRUE_MATE);
+        assertThat(RelationLabel.fromScore(61)).isEqualTo(RelationLabel.BIZ_MATE);
+        assertThat(RelationLabel.fromScore(41)).isEqualTo(RelationLabel.AWKWARD_MATE);
+        assertThat(RelationLabel.fromScore(12)).isEqualTo(RelationLabel.DANGER_MATE);
     }
 }

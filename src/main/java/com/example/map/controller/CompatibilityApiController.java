@@ -33,7 +33,7 @@ public class CompatibilityApiController {
                 result.letters(),
                 result.stages(),
                 result.score(),
-                label.displayName(),
+                label.titledName(),
                 label.mapColor(),
                 commentOf(label)
         );
@@ -46,10 +46,11 @@ public class CompatibilityApiController {
 
     private String commentOf(RelationLabel label) {
         return switch (label) {
-            case BEST_FRIEND -> "공책에 나란히 적어도 어색하지 않은 사이";
-            case COMFORTABLE -> "오래 안 봐도 다시 만나면 바로 그 말투";
-            case ACQUAINTANCE -> "이름만 접었을 뿐, 사이는 앞으로 만들면 됨";
-            case NOT_A_MATCH -> "점수는 구라고, 그래서 더 웃김";
+            case BURAL_MATE -> "이름만 접었는데 이미 같은 반임";
+            case TRUE_MATE -> "오래 안 봐도 다시 만나면 바로 그 말투";
+            case BIZ_MATE -> "필요할 때 연락하면 되는 사이";
+            case AWKWARD_MATE -> "인사하고 어색한 침묵이 남음";
+            case DANGER_MATE -> "점수는 구라고, 그래서 더 웃김";
         };
     }
 }

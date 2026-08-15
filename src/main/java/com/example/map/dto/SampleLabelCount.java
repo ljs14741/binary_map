@@ -1,4 +1,4 @@
 package com.example.map.dto;
 
-public record SampleLabelCount(String label, String color, int count) {
+public record SampleLabelCount(String label, String color, int count, String filterKey) {
 }

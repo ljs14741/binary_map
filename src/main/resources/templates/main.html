@@ -2,33 +2,80 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>이름궁합 테스트 - 친구 동네가 칠해지는 단짝지도</title>
-  <meta name="description" content="두 이름만 접어보는 이름궁합. 링크를 보내면 친구가 사는 도가 내 한국 지도에 칠해져요.">
-  <meta name="keywords" content="이름궁합, 이름 궁합 테스트, 단짝지도, 획수 궁합, 친구 궁합">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>짝꿍지도 - 이름궁합 테스트 | Binary World</title>
+  <meta name="description" content="두 이름만 접어보는 이름궁합. 친구가 사는 지역에 핀이 찍히는 짝꿍지도. 획수 궁합으로 부랄짝꿍부터 위험 짝꿍까지 바로 확인하세요.">
+  <meta name="keywords" content="짝꿍지도, 이름궁합, 이름 궁합 테스트, 획수 궁합, 친구 궁합, 이름 접기, 궁합 테스트, Binary World">
   <meta name="robots" content="index, follow">
   <meta name="author" content="Binary World">
+  <meta name="google-adsense-account" content="ca-pub-6890085609044109">
+  <link rel="canonical" href="https://map.binaryworld.kr/">
 
   <meta property="og:type" content="website">
-  <meta property="og:title" content="이름궁합 테스트 - 단짝지도">
-  <meta property="og:description" content="두 이름만 접어보는 이름궁합. 링크를 보내면 친구가 사는 도가 지도에 칠해져요.">
-  <meta property="og:url" content="https://map.binaryworld.kr">
+  <meta property="og:site_name" content="짝꿍지도">
+  <meta property="og:locale" content="ko_KR">
+  <meta property="og:title" content="짝꿍지도 - 이름궁합 테스트">
+  <meta property="og:description" content="두 이름만 접어보는 이름궁합. 친구가 사는 지역에 핀이 찍히고, 누르면 친구 목록이 나와요.">
+  <meta property="og:image" content="https://binaryworld.kr/img/radish.png">
+  <meta property="og:url" content="https://map.binaryworld.kr/">
 
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="짝꿍지도 - 이름궁합 테스트">
+  <meta name="twitter:description" content="두 이름만 접어보는 이름궁합. 친구가 사는 지역에 핀이 찍히고, 누르면 친구 목록이 나와요.">
+  <meta name="twitter:image" content="https://binaryworld.kr/img/radish.png">
+
+  <link rel="icon" href="https://binaryworld.kr/img/favicon/favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://binaryworld.kr/img/favicon/apple-icon-180x180.png">
   <meta name="theme-color" content="#fff4ea">
+
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
   <link rel="stylesheet" href="https://binaryworld.kr/common/header.css">
   <link rel="stylesheet" href="https://binaryworld.kr/common/footer.css">
   <link rel="stylesheet" th:href="@{/css/main.css}">
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6890085609044109"
+          crossorigin="anonymous"></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "짝꿍지도",
+    "alternateName": "이름궁합 테스트",
+    "url": "https://map.binaryworld.kr/",
+    "description": "두 이름만 접어보는 이름궁합. 친구가 사는 지역에 핀이 찍히는 짝꿍지도.",
+    "applicationCategory": "EntertainmentApplication",
+    "operatingSystem": "Web",
+    "inLanguage": "ko",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "KRW"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Binary World",
+      "url": "https://binaryworld.kr"
+    }
+  }
+  </script>
 </head>
 <body data-theme="light">
 <header id="global-header" aria-label="Binary World 공통 메뉴"></header>
 
 <main class="map-page">
   <section class="map-hero">
-    <p class="map-brand">단짝지도</p>
-    <h1>내 주변에 단짝이<br>몇 명일까?</h1>
-    <p class="map-lead">두 이름만 접어보는 이름궁합.<br>링크를 보내면 친구가 사는 도가 지도에 칠해져요.</p>
+    <p class="map-kicker">이름궁합</p>
+    <h1 class="map-title">
+      <span class="map-title-pin" aria-hidden="true"></span>
+      <span class="map-title-text">짝꿍지도</span>
+    </h1>
+    <p class="map-tagline">내 주변에 짝꿍이<br>몇 명일까?</p>
+    <p class="map-lead">두 이름만 접어보는 이름궁합.<br>링크를 보내면 친구가 사는 지역에 핀이 찍히고, 누르면 친구 목록이 나와요.</p>
+    <button type="button" class="map-share" id="kakao-share" data-share="home">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2C6.7 3.2 2.4 6.6 2.4 10.8c0 2.7 1.8 5.1 4.5 6.5l-.9 3.4c-.1.3.3.6.5.4l3.8-2.5c.6.1 1.1.1 1.7.1 5.3 0 9.6-3.4 9.6-7.6S17.3 3.2 12 3.2z"/></svg>
+      카톡으로 공유
+    </button>
   </section>
 
   <section class="map-card" aria-label="이름궁합">
@@ -53,43 +100,62 @@
 
   <section id="sample-map" class="map-sample">
     <p class="map-card-kicker">미리보기 · 50명</p>
-    <h2>친구가 들어오면<br>지도가 이렇게 칠해져요</h2>
-    <p class="map-sample-lead">전국에 아는 사람이 많을수록 알록달록해져요. 아래는 50명이 모인 예시예요.</p>
+    <h2>친구가 들어오면<br>지역 핀이 이렇게 찍혀요</h2>
+    <p class="map-sample-lead">같은 지역은 하나로 묶여요. 핀을 누르면 그 동네 친구 목록이 올라와요.</p>
 
     <div class="map-stage">
       <div class="map-stage-head">
-        <strong>수현님의 단짝지도</strong>
+        <strong>수현님의 짝꿍지도</strong>
         <span th:text="|${sampleTotal}명|">50명</span>
       </div>
       <div class="korea-wrap" id="korea-wrap" aria-label="대한민국 시도 예시 지도"></div>
-      <p class="map-stage-caption">색이 칠해진 도는 친구가 있는 곳이에요 · 실제 대한민국 시도 경계</p>
-      <div class="map-stats">
-        <div class="map-stat" th:each="count : ${sampleCounts}" th:style="|--stat:${count.color()}|">
+      <p class="map-stage-caption">빛나는 금색이 방장 · 핀을 누르면 그 동네 친구가 나와요</p>
+      <div class="map-stats" id="map-stats">
+        <button type="button" class="map-stat" th:each="count : ${sampleCounts}"
+                th:style="|--stat:${count.color()}|"
+                th:attr="data-filter=${count.filterKey()}">
           <b th:text="${count.count()}">24</b>
-          <span th:text="${count.label()}">단짝</span>
-        </div>
+          <span th:text="${count.label()}">부랄짝꿍</span>
+        </button>
       </div>
     </div>
 
-    <ol class="map-rank">
-      <li th:each="friend, iter : ${sampleFriends}">
+    <ol class="map-rank" id="map-rank">
+      <li th:each="friend, iter : ${sampleFriends}" th:attr="data-label=${friend.label()}">
         <em th:text="${iter.count}">1</em>
         <div>
           <strong th:text="${friend.name()}">민지</strong>
-          <small th:text="|${friend.sido()} · ${friend.label()}|">서울 · 단짝</small>
+          <small th:text="|${friend.sido()} · ${friend.label()}|">서울 · 부랄짝꿍</small>
         </div>
         <b th:style="|color:${friend.color()}|" th:text="${friend.score()}">88</b>
       </li>
     </ol>
 
-    <button type="button" class="map-cta" id="sample-create-btn">내 단짝지도 만들기</button>
+    <button type="button" class="map-cta" id="sample-create-btn">내 짝꿍지도 만들기</button>
     <a class="map-cta-secondary" href="#compat-form">나도 이름 접어보기</a>
   </section>
 </main>
 
+<div id="map-sheet" class="map-sheet" hidden>
+  <button type="button" class="map-sheet-backdrop" id="map-sheet-backdrop" aria-label="닫기"></button>
+  <div class="map-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="map-sheet-title">
+    <div class="map-sheet-handle"></div>
+    <div class="map-sheet-head">
+      <div>
+        <strong id="map-sheet-title">서울/경기</strong>
+        <span id="map-sheet-count">21명</span>
+      </div>
+      <button type="button" class="map-sheet-close" id="map-sheet-close">닫기</button>
+    </div>
+    <ul id="map-sheet-list" class="map-sheet-list"></ul>
+  </div>
+</div>
+
 <footer id="global-footer" aria-label="Binary World 푸터"></footer>
 
 <script id="sample-json" type="application/json" th:utext="${sampleJson}">[]</script>
+<script id="sample-friends-json" type="application/json" th:utext="${sampleFriendsJson}">[]</script>
+<script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
 <script src="https://binaryworld.kr/common/header.js" defer></script>
 <script src="https://binaryworld.kr/common/footer.js" defer></script>
 <script th:src="@{/js/main.js}" defer></script>

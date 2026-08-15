@@ -24,7 +24,9 @@ public class MapController {
         List<SampleRegion> regions = sampleRegions();
         model.addAttribute("sampleRegions", regions);
         model.addAttribute("sampleJson", objectMapper.writeValueAsString(regions));
-        model.addAttribute("sampleFriends", sampleFriends());
+        List<SampleFriend> friends = sampleFriends();
+        model.addAttribute("sampleFriends", friends);
+        model.addAttribute("sampleFriendsJson", objectMapper.writeValueAsString(friends));
         model.addAttribute("sampleCounts", sampleCounts());
         model.addAttribute("sampleTotal", 50);
         return "main";
@@ -32,46 +34,58 @@ public class MapController {
 
     private List<SampleRegion> sampleRegions() {
         return List.of(
-                region("11", "서울", 11, RelationLabel.BEST_FRIEND),
-                region("41", "경기", 9, RelationLabel.COMFORTABLE),
-                region("26", "부산", 4, RelationLabel.BEST_FRIEND),
-                region("28", "인천", 3, RelationLabel.COMFORTABLE),
-                region("27", "대구", 2, RelationLabel.ACQUAINTANCE),
-                region("29", "광주", 2, RelationLabel.BEST_FRIEND),
-                region("30", "대전", 2, RelationLabel.COMFORTABLE),
-                region("31", "울산", 1, RelationLabel.NOT_A_MATCH),
-                region("36", "세종", 1, RelationLabel.COMFORTABLE),
-                region("42", "강원", 2, RelationLabel.ACQUAINTANCE),
-                region("43", "충북", 2, RelationLabel.BEST_FRIEND),
-                region("44", "충남", 2, RelationLabel.COMFORTABLE),
-                region("45", "전북", 2, RelationLabel.ACQUAINTANCE),
-                region("46", "전남", 1, RelationLabel.BEST_FRIEND),
-                region("47", "경북", 2, RelationLabel.COMFORTABLE),
-                region("48", "경남", 3, RelationLabel.BEST_FRIEND),
-                region("50", "제주", 1, RelationLabel.BEST_FRIEND)
+                region("11", "서울", 8, RelationLabel.BURAL_MATE),
+                region("41", "경기", 10, RelationLabel.TRUE_MATE),
+                region("26", "부산", 4, RelationLabel.TRUE_MATE),
+                region("28", "인천", 3, RelationLabel.BIZ_MATE),
+                region("27", "대구", 3, RelationLabel.AWKWARD_MATE),
+                region("29", "광주", 2, RelationLabel.BURAL_MATE),
+                region("30", "대전", 2, RelationLabel.BIZ_MATE),
+                region("31", "울산", 2, RelationLabel.DANGER_MATE),
+                region("36", "세종", 1, RelationLabel.BIZ_MATE),
+                region("42", "강원", 2, RelationLabel.AWKWARD_MATE),
+                region("43", "충북", 2, RelationLabel.TRUE_MATE),
+                region("44", "충남", 3, RelationLabel.BIZ_MATE),
+                region("45", "전북", 2, RelationLabel.AWKWARD_MATE),
+                region("46", "전남", 1, RelationLabel.TRUE_MATE),
+                region("47", "경북", 2, RelationLabel.BIZ_MATE),
+                region("48", "경남", 2, RelationLabel.BURAL_MATE),
+                region("50", "제주", 1, RelationLabel.BURAL_MATE)
         );
     }
 
     private List<SampleFriend> sampleFriends() {
         return List.of(
-                new SampleFriend("민지", "서울", 88, RelationLabel.BEST_FRIEND.displayName(), RelationLabel.BEST_FRIEND.mapColor()),
-                new SampleFriend("서준", "부산", 84, RelationLabel.BEST_FRIEND.displayName(), RelationLabel.BEST_FRIEND.mapColor()),
-                new SampleFriend("하은", "제주", 79, RelationLabel.BEST_FRIEND.displayName(), RelationLabel.BEST_FRIEND.mapColor()),
-                new SampleFriend("도윤", "경기", 71, RelationLabel.COMFORTABLE.displayName(), RelationLabel.COMFORTABLE.mapColor()),
-                new SampleFriend("지아", "인천", 66, RelationLabel.COMFORTABLE.displayName(), RelationLabel.COMFORTABLE.mapColor()),
-                new SampleFriend("현우", "대구", 47, RelationLabel.ACQUAINTANCE.displayName(), RelationLabel.ACQUAINTANCE.mapColor()),
-                new SampleFriend("수아", "강원", 38, RelationLabel.ACQUAINTANCE.displayName(), RelationLabel.ACQUAINTANCE.mapColor()),
-                new SampleFriend("태민", "울산", 19, RelationLabel.NOT_A_MATCH.displayName(), RelationLabel.NOT_A_MATCH.mapColor())
+                friend("민지", "서울", "11", 96, RelationLabel.BURAL_MATE),
+                friend("하은", "제주", "50", 88, RelationLabel.BURAL_MATE),
+                friend("예린", "광주", "29", 91, RelationLabel.BURAL_MATE),
+                friend("서준", "부산", "26", 82, RelationLabel.TRUE_MATE),
+                friend("도윤", "경기", "41", 74, RelationLabel.TRUE_MATE),
+                friend("나연", "충북", "43", 78, RelationLabel.TRUE_MATE),
+                friend("지아", "인천", "28", 61, RelationLabel.BIZ_MATE),
+                friend("시우", "대전", "30", 58, RelationLabel.BIZ_MATE),
+                friend("현우", "대구", "27", 41, RelationLabel.AWKWARD_MATE),
+                friend("수아", "강원", "42", 35, RelationLabel.AWKWARD_MATE),
+                friend("태민", "울산", "31", 18, RelationLabel.DANGER_MATE)
         );
+    }
+
+    private SampleFriend friend(String name, String sido, String sidoCode, int score, RelationLabel label) {
+        return new SampleFriend(name, sido, sidoCode, score, label.displayName(), label.mapColor());
     }
 
     private List<SampleLabelCount> sampleCounts() {
         return List.of(
-                new SampleLabelCount(RelationLabel.BEST_FRIEND.displayName(), RelationLabel.BEST_FRIEND.mapColor(), 24),
-                new SampleLabelCount(RelationLabel.COMFORTABLE.displayName(), RelationLabel.COMFORTABLE.mapColor(), 19),
-                new SampleLabelCount(RelationLabel.ACQUAINTANCE.displayName(), RelationLabel.ACQUAINTANCE.mapColor(), 6),
-                new SampleLabelCount(RelationLabel.NOT_A_MATCH.displayName(), RelationLabel.NOT_A_MATCH.mapColor(), 1)
+                countOf(RelationLabel.BURAL_MATE, 13),
+                countOf(RelationLabel.TRUE_MATE, 17),
+                countOf(RelationLabel.BIZ_MATE, 11),
+                countOf(RelationLabel.AWKWARD_MATE, 7),
+                countOf(RelationLabel.DANGER_MATE, 2)
         );
+    }
+
+    private SampleLabelCount countOf(RelationLabel label, int count) {
+        return new SampleLabelCount(label.titledName(), label.mapColor(), count, label.displayName());
     }
 
     private SampleRegion region(String code, String name, int count, RelationLabel label) {
