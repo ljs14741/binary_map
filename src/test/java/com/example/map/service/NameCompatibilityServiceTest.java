@@ -22,6 +22,14 @@ class NameCompatibilityServiceTest {
     }
 
     @Test
+    void reverseOrderCanProduceDifferentScore() {
+        int forward = service.calculate("이진수", "홍길동").score();
+        int reverse = service.calculate("홍길동", "이진수").score();
+        assertThat(forward).isBetween(0, 100);
+        assertThat(reverse).isBetween(0, 100);
+    }
+
+    @Test
     void sameNamesAlwaysProduceSameScore() {
         int first = service.calculate("김민수", "박서연").score();
         int second = service.calculate("김민수", "박서연").score();

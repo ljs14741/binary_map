@@ -6,7 +6,12 @@
   boot();
 
   async function boot() {
-    if (token && !view.host) {
+    try {
+      await MapApp.syncAccount();
+    } catch (error) {
+      // keep going
+    }
+    if (token || !view.host) {
       try {
         view = await MapApp.api(`/api/maps/${view.id}`, { token });
       } catch (error) {
@@ -35,7 +40,21 @@
     document.getElementById("join-card").hidden = !!(view.host || joined);
     if (view.host) {
       document.getElementById("edit-name").value = view.hostName;
-      document.getElementById("edit-sido").value = view.hostSidoCode;
+      MapApp.bindRegionSelects(
+        document.getElementById("edit-sido"),
+        document.getElementById("edit-sigungu"),
+        view.hostSigunguCode
+      );
+      const login = document.getElementById("host-login");
+      const keep = document.getElementById("host-keep-lead");
+      if (view.claimed) {
+        login.hidden = true;
+        keep.textContent = "카카오 계정에 연결된 지도예요. 다른 폰에서도 이 계정으로 관리할 수 있어요.";
+      } else {
+        login.hidden = false;
+        login.href = MapApp.loginUrl(`/m/${view.id}`);
+        keep.textContent = "이 지도를 관리할 수 있는 건 지금 이 폰이에요. 로그인하면 다른 폰에서도 관리할 수 있어요.";
+      }
     }
     await MapBoard.paint({
       wrapId: "korea-wrap",
@@ -64,17 +83,24 @@
           <strong>${MapBoard.escapeHtml(person.name)}</strong>
           <small>${MapBoard.escapeHtml(person.sido)} · ${MapBoard.escapeHtml(person.label)}</small>
         </div>
-        <b style="color:${person.color}">${person.score}</b>
+        <div class="map-rank-scores">
+          <b style="color:${person.color}">${person.score}</b>
+          <em style="color:${person.reverseColor}">← ${person.reverseScore}</em>
+        </div>
       </li>
     `).join("");
   }
 
   function bind() {
+    MapApp.bindRegionSelects(
+      document.getElementById("join-sido"),
+      document.getElementById("join-sigungu")
+    );
     document.getElementById("copy-link").addEventListener("click", () => MapApp.copyLink(view.shareUrl));
     document.getElementById("room-share").addEventListener("click", () => {
       MapApp.shareKakao({
         title: `${view.hostName}님의 짝꿍지도`,
-        description: "이름만 적으면 궁합이 나오고, 사는 곳에 핀이 찍혀요.",
+        description: "이름만 적으면 이름궁합이 나오고, 사는 곳에 핀이 찍혀요.",
         button: "나도 들어가기",
         url: view.shareUrl
       });
@@ -90,13 +116,13 @@
     const button = document.getElementById("join-submit");
     error.hidden = true;
     button.disabled = true;
-    button.textContent = "접는 중...";
+    button.textContent = "이름궁합 보는 중...";
     try {
       const data = await MapApp.api(`/api/maps/${view.id}/join`, {
         method: "POST",
         body: {
           guestName: document.getElementById("join-name").value,
-          sidoCode: document.getElementById("join-sido").value
+          sigunguCode: document.getElementById("join-sigungu").value
         }
       });
       MapApp.setJoined(view.id, data.guestName);
@@ -118,7 +144,7 @@
     box.classList.remove("is-done");
     box.style.setProperty("--score-color", data.color);
     box.innerHTML = `
-      <p class="map-result-status" id="reveal-status">이름을 한 글자씩 접는 중</p>
+      <p class="map-result-status" id="reveal-status">이름궁합 계산 중</p>
       <div class="map-result-top">
         <div class="map-score is-wait" id="reveal-score">?</div>
         <div class="map-result-copy">
@@ -127,7 +153,7 @@
           <span id="reveal-chip">계산 중</span>
         </div>
       </div>
-      <p class="map-comment" id="reveal-comment"></p>
+      <div id="reveal-dual"></div>
       <div class="map-fold">
         <div class="map-fold-letters">${data.letters.map((letter) => `<span>${MapBoard.escapeHtml(letter || "·")}</span>`).join("")}</div>
         ${data.stages.map((stage) => `<div class="map-fold-row">${stage.map((num) => `<span>${num}</span>`).join("")}</div>`).join("")}
@@ -141,7 +167,7 @@
     const rows = [...box.querySelectorAll(".map-fold-row")];
     for (let i = 0; i < rows.length; i += 1) {
       document.getElementById("reveal-status").textContent =
-        i === rows.length - 1 ? "마지막 숫자를 남기는 중" : "옆 숫자를 접는 중";
+        i === rows.length - 1 ? "점수를 내는 중" : "궁합 숫자를 맞추는 중";
       for (const cell of rows[i].querySelectorAll("span")) {
         cell.classList.add("is-on");
         await MapApp.wait(55);
@@ -155,7 +181,7 @@
     scoreEl.textContent = data.score;
     document.getElementById("reveal-label").textContent = data.label;
     document.getElementById("reveal-chip").textContent = `${data.score}점`;
-    document.getElementById("reveal-comment").textContent = data.comment;
+    document.getElementById("reveal-dual").innerHTML = MapApp.dualScores(data);
     document.getElementById("reveal-status").textContent = `${data.hostName}랑 ${data.guestName}`;
     box.classList.add("is-done");
   }
@@ -172,7 +198,7 @@
         token,
         body: {
           hostName: document.getElementById("edit-name").value,
-          hostSidoCode: document.getElementById("edit-sido").value
+          hostSigunguCode: document.getElementById("edit-sigungu").value
         }
       });
       if (token) {

@@ -22,4 +22,11 @@
 
 http://localhost:8080
 
+카카오 로그인 Redirect URI:
+
+- `http://localhost:8080/login/oauth2/code/kakao`
+- `https://map.binaryworld.kr/login/oauth2/code/kakao`
+
+시군구를 반영하려면 [SCHEMA.md](SCHEMA.md)의 `DROP` 후 `CREATE`를 다시 실행한다.
+
 상세 설계는 [DESIGN.md](DESIGN.md)를 본다.

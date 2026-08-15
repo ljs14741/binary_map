@@ -18,7 +18,7 @@
   document.getElementById("kakao-share")?.addEventListener("click", () => {
     MapApp.shareKakao({
       title: "짝꿍지도",
-      description: "내 주변에 짝꿍이 몇 명일까? 이름만 접어보는 이름궁합.",
+      description: "내 주변에 짝꿍이 몇 명일까? 두 이름으로 보는 이름궁합.",
       button: "나도 해보기"
     });
   });
@@ -30,7 +30,7 @@
     event.preventDefault();
     hideError();
     submit.disabled = true;
-    submit.textContent = "접는 중...";
+    submit.textContent = "이름궁합 보는 중...";
     try {
       const data = await MapApp.api("/api/compatibility", {
         method: "POST",
@@ -53,7 +53,7 @@
     resultBox.classList.remove("is-done");
     resultBox.style.setProperty("--score-color", data.color);
     resultBox.innerHTML = `
-      <p class="map-result-status" id="reveal-status">이름을 한 글자씩 접는 중</p>
+      <p class="map-result-status" id="reveal-status">이름궁합 계산 중</p>
       <div class="map-result-top">
         <div class="map-score is-wait" id="reveal-score">?</div>
         <div class="map-result-copy">
@@ -62,7 +62,7 @@
           <span id="reveal-chip">계산 중</span>
         </div>
       </div>
-      <p class="map-comment" id="reveal-comment"></p>
+      <div id="reveal-dual"></div>
       <div class="map-fold">
         <div class="map-fold-letters">${data.letters.map((letter) => `<span>${MapBoard.escapeHtml(letter || "·")}</span>`).join("")}</div>
         ${data.stages.map((stage) => `<div class="map-fold-row">${stage.map((num) => `<span>${num}</span>`).join("")}</div>`).join("")}
@@ -78,7 +78,7 @@
       MapApp.shareKakao({
         title: `${data.hostName} × ${data.guestName} · ${data.label}`,
         description: `${data.score}점. ${data.comment}`,
-        button: "나도 이름 접어보기"
+        button: "나도 이름궁합 해보기"
       });
     });
     resultBox.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -91,7 +91,7 @@
     const rows = [...resultBox.querySelectorAll(".map-fold-row")];
     for (let i = 0; i < rows.length; i += 1) {
       document.getElementById("reveal-status").textContent =
-        i === rows.length - 1 ? "마지막 숫자를 남기는 중" : "옆 숫자를 접는 중";
+        i === rows.length - 1 ? "점수를 내는 중" : "궁합 숫자를 맞추는 중";
       for (const cell of rows[i].querySelectorAll("span")) {
         cell.classList.add("is-on");
         await MapApp.wait(55);
@@ -105,8 +105,8 @@
     scoreEl.textContent = data.score;
     document.getElementById("reveal-label").textContent = data.label;
     document.getElementById("reveal-chip").textContent = `${data.score}점`;
-    document.getElementById("reveal-comment").textContent = data.comment;
-    document.getElementById("reveal-status").textContent = "두 사람의 이름 궁합";
+    document.getElementById("reveal-dual").innerHTML = MapApp.dualScores(data);
+    document.getElementById("reveal-status").textContent = "두 사람의 이름궁합";
     resultBox.classList.add("is-done");
   }
 
@@ -153,6 +153,10 @@
   }
 
   function bindCreate() {
+    MapApp.bindRegionSelects(
+      document.getElementById("create-sido"),
+      document.getElementById("create-sigungu")
+    );
     const createForm = document.getElementById("create-form");
     if (!createForm) {
       return;
@@ -169,7 +173,7 @@
           method: "POST",
           body: {
             hostName: document.getElementById("create-name").value,
-            hostSidoCode: document.getElementById("create-sido").value
+            hostSigunguCode: document.getElementById("create-sigungu").value
           }
         });
         MapApp.saveMap({
@@ -187,26 +191,62 @@
     });
   }
 
-  function renderMyMaps() {
+  async function renderMyMaps() {
     const box = document.getElementById("my-maps");
     const list = document.getElementById("my-maps-list");
+    const login = document.getElementById("kakao-login");
+    const logout = document.getElementById("kakao-logout");
+    const lead = document.getElementById("my-maps-lead");
+    const title = document.getElementById("my-maps-title");
     if (!box || !list) {
       return;
     }
-    const maps = MapApp.listMaps();
-    if (!maps.length) {
+    let me = { loggedIn: false, maps: [] };
+    try {
+      me = await MapApp.syncAccount();
+    } catch (error) {
+      me = { loggedIn: false, maps: [] };
+    }
+    const local = MapApp.listMaps();
+    const byId = new Map();
+    (me.maps || []).forEach((item) => {
+      byId.set(item.id, {
+        id: item.id,
+        name: item.hostName,
+        note: item.place ? `${item.place} · ${item.total}명` : "카카오 계정 지도"
+      });
+    });
+    local.forEach((item) => {
+      if (!byId.has(item.id)) {
+        byId.set(item.id, { id: item.id, name: item.name, note: "이 폰에서 만든 지도" });
+      }
+    });
+    const maps = [...byId.values()];
+    login.href = MapApp.loginUrl("/");
+    login.hidden = me.loggedIn;
+    logout.hidden = !me.loggedIn;
+    const heroLogin = document.getElementById("hero-login");
+    if (heroLogin) {
+      heroLogin.href = MapApp.loginUrl("/");
+      heroLogin.hidden = me.loggedIn;
+    }
+    if (!maps.length && !me.loggedIn) {
       box.hidden = true;
       return;
     }
     box.hidden = false;
-    list.innerHTML = maps.map((item) => `
+    title.textContent = me.loggedIn ? `${me.nickname}님의 짝꿍지도` : "내가 만든 짝꿍지도";
+    lead.textContent = me.loggedIn
+      ? "이 계정에 연결된 지도예요. 다른 폰에서도 볼 수 있어요."
+      : "지금은 이 폰에만 저장돼 있어요. 로그인하면 다른 폰에서도 관리할 수 있어요.";
+    list.innerHTML = maps.length ? maps.map((item) => `
       <li>
         <a href="/m/${item.id}">
           <strong>${MapBoard.escapeHtml(item.name)}님의 짝꿍지도</strong>
-          <small>이 폰에서 만든 지도</small>
+          <small>${MapBoard.escapeHtml(item.note)}</small>
         </a>
       </li>
-    `).join("");
+    `).join("") : "<li><small>아직 연결된 지도가 없어요.</small></li>";
   }
 
   function showError(message) {

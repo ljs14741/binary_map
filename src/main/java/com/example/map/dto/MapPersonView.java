@@ -1,14 +1,16 @@
 package com.example.map.dto;
 
-import java.util.List;
-
 public record MapPersonView(
         Long id,
         String name,
         String sido,
         String sidoCode,
+        String sigunguCode,
         int score,
         String label,
-        String color
+        String color,
+        int reverseScore,
+        String reverseLabel,
+        String reverseColor
 ) {
 }

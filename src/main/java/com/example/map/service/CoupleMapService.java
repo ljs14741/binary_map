@@ -1,14 +1,16 @@
 package com.example.map.service;
 
+import com.example.map.dto.ClaimMapItem;
 import com.example.map.dto.CreatedMapResponse;
 import com.example.map.dto.JoinMapResponse;
 import com.example.map.dto.MapPersonView;
+import com.example.map.dto.MapSummary;
 import com.example.map.dto.MapView;
 import com.example.map.dto.SampleLabelCount;
 import com.example.map.entity.CoupleMap;
 import com.example.map.entity.CoupleMapPerson;
 import com.example.map.entity.RelationLabel;
-import com.example.map.entity.Sido;
+import com.example.map.entity.Sigungu;
 import com.example.map.repository.CoupleMapPersonRepository;
 import com.example.map.repository.CoupleMapRepository;
 import lombok.RequiredArgsConstructor;
@@ -34,18 +36,20 @@ public class CoupleMapService {
     private final CoupleMapRepository coupleMapRepository;
     private final CoupleMapPersonRepository coupleMapPersonRepository;
     private final NameCompatibilityService nameCompatibilityService;
+    private final RegionCatalog regionCatalog;
 
     @Transactional
-    public CreatedMapResponse create(String hostName, String hostSidoCode) {
+    public CreatedMapResponse create(String hostName, String hostSigunguCode, String userId) {
         String name = requireName(hostName);
-        Sido sido = Sido.fromCode(hostSidoCode);
+        Sigungu sigungu = regionCatalog.fromCode(hostSigunguCode);
         LocalDateTime now = LocalDateTime.now();
 
         CoupleMap map = new CoupleMap();
         map.setId(UUID.randomUUID().toString());
         map.setHostName(name);
-        map.setHostSidoCode(sido.code());
+        map.setHostSigunguCode(sigungu.code());
         map.setHostToken(UUID.randomUUID().toString());
+        map.setUserId(blankToNull(userId));
         map.setCreatedAt(now);
         map.setUpdatedAt(now);
         coupleMapRepository.save(map);
@@ -53,29 +57,40 @@ public class CoupleMapService {
         return new CreatedMapResponse(
                 map.getId(),
                 map.getHostName(),
-                map.getHostSidoCode(),
+                map.getHostSigunguCode(),
                 map.getHostToken(),
                 shareUrl(map.getId())
         );
     }
 
     @Transactional(readOnly = true)
-    public MapView view(String mapId, String hostToken) {
+    public MapView view(String mapId, String hostToken, String userId) {
         CoupleMap map = getMap(mapId);
-        return toView(map, isHost(map, hostToken));
+        return toView(map, isHost(map, hostToken, userId));
+    }
+
+    @Transactional(readOnly = true)
+    public List<MapSummary> listByUser(String userId) {
+        if (userId == null || userId.isBlank()) {
+            return List.of();
+        }
+        return coupleMapRepository.findByUserIdOrderByUpdatedAtDesc(userId).stream()
+                .map(this::toSummary)
+                .toList();
     }
 
     @Transactional
-    public JoinMapResponse join(String mapId, String guestName, String sidoCode) {
+    public JoinMapResponse join(String mapId, String guestName, String sigunguCode) {
         CoupleMap map = getMap(mapId);
         String name = requireName(guestName);
-        Sido sido = Sido.fromCode(sidoCode);
+        Sigungu sigungu = regionCatalog.fromCode(sigunguCode);
         if (name.equals(map.getHostName())) {
             throw new IllegalArgumentException("방장과 같은 이름은 쓸 수 없어요. 별명을 적어 주세요.");
         }
 
-        var result = nameCompatibilityService.calculate(map.getHostName(), name);
-        RelationLabel label = result.label();
+        var forward = nameCompatibilityService.calculate(map.getHostName(), name);
+        var reverse = nameCompatibilityService.calculate(name, map.getHostName());
+        RelationLabel label = forward.label();
         LocalDateTime now = LocalDateTime.now();
 
         CoupleMapPerson person = coupleMapPersonRepository
@@ -88,8 +103,9 @@ public class CoupleMapService {
 
         person.setMap(map);
         person.setPersonName(name);
-        person.setSidoCode(sido.code());
-        person.setScore(result.score());
+        person.setSigunguCode(sigungu.code());
+        person.setScore(forward.score());
+        person.setReverseScore(reverse.score());
         person.setLabel(label.displayName());
         if (person.getCreatedAt() == null) {
             person.setCreatedAt(now);
@@ -100,27 +116,31 @@ public class CoupleMapService {
         return new JoinMapResponse(
                 map.getHostName(),
                 name,
-                result.letters(),
-                result.stages(),
-                result.score(),
+                forward.letters(),
+                forward.stages(),
+                forward.score(),
                 label.titledName(),
                 label.mapColor(),
                 label.comment(),
+                reverse.score(),
+                reverse.label().titledName(),
+                reverse.label().mapColor(),
+                reverse.label().comment(),
                 toView(map, false)
         );
     }
 
     @Transactional
-    public MapView updateHost(String mapId, String hostToken, String hostName, String hostSidoCode) {
-        CoupleMap map = requireHost(mapId, hostToken);
+    public MapView updateHost(String mapId, String hostToken, String userId, String hostName, String hostSigunguCode) {
+        CoupleMap map = requireHost(mapId, hostToken, userId);
         String name = requireName(hostName);
-        Sido sido = Sido.fromCode(hostSidoCode);
+        Sigungu sigungu = regionCatalog.fromCode(hostSigunguCode);
         boolean nameChanged = !name.equals(map.getHostName());
         if (nameChanged && coupleMapPersonRepository.findByMap_IdAndPersonName(mapId, name).isPresent()) {
             throw new IllegalArgumentException("이미 그 이름으로 들어온 친구가 있어요. 다른 이름을 써 주세요.");
         }
         map.setHostName(name);
-        map.setHostSidoCode(sido.code());
+        map.setHostSigunguCode(sigungu.code());
         map.setUpdatedAt(LocalDateTime.now());
         if (nameChanged) {
             recalculate(map);
@@ -129,16 +149,48 @@ public class CoupleMapService {
     }
 
     @Transactional
-    public void deleteMap(String mapId, String hostToken) {
-        CoupleMap map = requireHost(mapId, hostToken);
+    public int claim(String userId, List<ClaimMapItem> items) {
+        if (userId == null || userId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "카카오 로그인이 필요해요.");
+        }
+        if (items == null || items.isEmpty()) {
+            return 0;
+        }
+        int claimed = 0;
+        LocalDateTime now = LocalDateTime.now();
+        for (ClaimMapItem item : items) {
+            if (item == null || item.id() == null || item.token() == null) {
+                continue;
+            }
+            var map = coupleMapRepository.findByIdAndHostToken(item.id(), item.token());
+            if (map.isEmpty()) {
+                continue;
+            }
+            CoupleMap found = map.get();
+            if (found.getUserId() != null && !found.getUserId().equals(userId)) {
+                continue;
+            }
+            if (userId.equals(found.getUserId())) {
+                continue;
+            }
+            found.setUserId(userId);
+            found.setUpdatedAt(now);
+            claimed += 1;
+        }
+        return claimed;
+    }
+
+    @Transactional
+    public void deleteMap(String mapId, String hostToken, String userId) {
+        CoupleMap map = requireHost(mapId, hostToken, userId);
         List<CoupleMapPerson> people = coupleMapPersonRepository.findByMap_IdOrderByScoreDescCreatedAtAsc(mapId);
         coupleMapPersonRepository.deleteAll(people);
         coupleMapRepository.delete(map);
     }
 
     @Transactional
-    public MapView deletePerson(String mapId, String hostToken, Long personId) {
-        CoupleMap map = requireHost(mapId, hostToken);
+    public MapView deletePerson(String mapId, String hostToken, String userId, Long personId) {
+        CoupleMap map = requireHost(mapId, hostToken, userId);
         CoupleMapPerson person = coupleMapPersonRepository.findByIdAndMap_Id(personId, mapId)
                 .orElseThrow(() -> new IllegalArgumentException("친구를 찾을 수 없어요."));
         coupleMapPersonRepository.delete(person);
@@ -149,16 +201,18 @@ public class CoupleMapService {
         List<CoupleMapPerson> people = coupleMapPersonRepository.findByMap_IdOrderByScoreDescCreatedAtAsc(map.getId());
         LocalDateTime now = LocalDateTime.now();
         for (CoupleMapPerson person : people) {
-            var result = nameCompatibilityService.calculate(map.getHostName(), person.getPersonName());
-            person.setScore(result.score());
-            person.setLabel(result.label().displayName());
+            var forward = nameCompatibilityService.calculate(map.getHostName(), person.getPersonName());
+            var reverse = nameCompatibilityService.calculate(person.getPersonName(), map.getHostName());
+            person.setScore(forward.score());
+            person.setReverseScore(reverse.score());
+            person.setLabel(forward.label().displayName());
             person.setUpdatedAt(now);
         }
     }
 
-    private CoupleMap requireHost(String mapId, String hostToken) {
+    private CoupleMap requireHost(String mapId, String hostToken, String userId) {
         CoupleMap map = getMap(mapId);
-        if (!isHost(map, hostToken)) {
+        if (!isHost(map, hostToken, userId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "이 지도를 관리할 수 없어요.");
         }
         return map;
@@ -169,36 +223,58 @@ public class CoupleMapService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "지도를 찾을 수 없어요."));
     }
 
-    private boolean isHost(CoupleMap map, String hostToken) {
-        return hostToken != null && !hostToken.isBlank() && hostToken.equals(map.getHostToken());
+    private boolean isHost(CoupleMap map, String hostToken, String userId) {
+        if (hostToken != null && !hostToken.isBlank() && hostToken.equals(map.getHostToken())) {
+            return true;
+        }
+        return userId != null && !userId.isBlank() && userId.equals(map.getUserId());
     }
 
     private MapView toView(CoupleMap map, boolean host) {
         List<CoupleMapPerson> rows = coupleMapPersonRepository.findByMap_IdOrderByScoreDescCreatedAtAsc(map.getId());
         List<MapPersonView> people = rows.stream().map(this::toPerson).toList();
+        Sigungu sigungu = regionCatalog.fromCode(map.getHostSigunguCode());
         return new MapView(
                 map.getId(),
                 map.getHostName(),
-                Sido.fromCode(map.getHostSidoCode()).label(),
-                map.getHostSidoCode(),
+                regionCatalog.displayName(sigungu),
+                sigungu.sidoCode(),
+                sigungu.code(),
                 shareUrl(map.getId()),
                 host,
+                map.getUserId() != null && !map.getUserId().isBlank(),
                 people.size(),
                 countsOf(people),
                 people
         );
     }
 
+    private MapSummary toSummary(CoupleMap map) {
+        return new MapSummary(
+                map.getId(),
+                map.getHostName(),
+                regionCatalog.displayName(map.getHostSigunguCode()),
+                (int) coupleMapPersonRepository.countByMap_Id(map.getId()),
+                shareUrl(map.getId())
+        );
+    }
+
     private MapPersonView toPerson(CoupleMapPerson person) {
         RelationLabel label = RelationLabel.fromScore(person.getScore());
+        RelationLabel reverse = RelationLabel.fromScore(person.getReverseScore());
+        Sigungu sigungu = regionCatalog.fromCode(person.getSigunguCode());
         return new MapPersonView(
                 person.getId(),
                 person.getPersonName(),
-                Sido.fromCode(person.getSidoCode()).label(),
-                person.getSidoCode(),
+                regionCatalog.displayName(sigungu),
+                sigungu.sidoCode(),
+                sigungu.code(),
                 person.getScore(),
                 label.displayName(),
-                label.mapColor()
+                label.mapColor(),
+                person.getReverseScore(),
+                reverse.displayName(),
+                reverse.mapColor()
         );
     }
 
@@ -230,5 +306,9 @@ public class CoupleMapService {
 
     private String shareUrl(String mapId) {
         return SHARE_BASE + mapId;
+    }
+
+    private String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value;
     }
 }

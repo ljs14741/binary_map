@@ -2,7 +2,6 @@ package com.example.map.controller;
 
 import com.example.map.dto.CompatibilityRequest;
 import com.example.map.dto.CompatibilityResponse;
-import com.example.map.entity.RelationLabel;
 import com.example.map.service.NameCompatibilityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,17 +24,21 @@ public class CompatibilityApiController {
     public CompatibilityResponse calculate(@RequestBody CompatibilityRequest request) {
         String host = nameCompatibilityService.normalize(request.hostName());
         String guest = nameCompatibilityService.normalize(request.guestName());
-        var result = nameCompatibilityService.calculate(host, guest);
-        RelationLabel label = result.label();
+        var forward = nameCompatibilityService.calculate(host, guest);
+        var reverse = nameCompatibilityService.calculate(guest, host);
         return new CompatibilityResponse(
                 host,
                 guest,
-                result.letters(),
-                result.stages(),
-                result.score(),
-                label.titledName(),
-                label.mapColor(),
-                label.comment()
+                forward.letters(),
+                forward.stages(),
+                forward.score(),
+                forward.label().titledName(),
+                forward.label().mapColor(),
+                forward.label().comment(),
+                reverse.score(),
+                reverse.label().titledName(),
+                reverse.label().mapColor(),
+                reverse.label().comment()
         );
     }
 

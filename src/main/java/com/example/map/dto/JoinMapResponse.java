@@ -11,6 +11,10 @@ public record JoinMapResponse(
         String label,
         String color,
         String comment,
+        int reverseScore,
+        String reverseLabel,
+        String reverseColor,
+        String reverseComment,
         MapView map
 ) {
 }

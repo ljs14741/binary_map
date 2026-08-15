@@ -1,5 +1,6 @@
 package com.example.map.controller;
 
+import com.example.map.dto.ClaimMapsRequest;
 import com.example.map.dto.CreateMapRequest;
 import com.example.map.dto.CreatedMapResponse;
 import com.example.map.dto.JoinMapRequest;
@@ -12,6 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,34 +38,47 @@ public class CoupleMapApiController {
     public CreatedMapResponse create(
             @RequestBody CreateMapRequest body,
             HttpServletRequest request,
-            HttpServletResponse response
+            HttpServletResponse response,
+            Authentication authentication
     ) {
-        CreatedMapResponse created = coupleMapService.create(body.hostName(), body.hostSidoCode());
+        CreatedMapResponse created = coupleMapService.create(
+                body.hostName(),
+                body.hostSigunguCode(),
+                KakaoAuth.userId(authentication)
+        );
         HostTokenSupport.write(request, response, created.id(), created.hostToken());
         return created;
     }
 
+    @PostMapping("/claim")
+    public Map<String, Integer> claim(@RequestBody ClaimMapsRequest body, Authentication authentication) {
+        int claimed = coupleMapService.claim(KakaoAuth.userId(authentication), body.maps());
+        return Map.of("claimed", claimed);
+    }
+
     @GetMapping("/{id}")
-    public MapView view(@PathVariable String id, HttpServletRequest request) {
-        return coupleMapService.view(id, HostTokenSupport.read(request, id));
+    public MapView view(@PathVariable String id, HttpServletRequest request, Authentication authentication) {
+        return coupleMapService.view(id, HostTokenSupport.read(request, id), KakaoAuth.userId(authentication));
     }
 
     @PostMapping("/{id}/join")
     public JoinMapResponse join(@PathVariable String id, @RequestBody JoinMapRequest body) {
-        return coupleMapService.join(id, body.guestName(), body.sidoCode());
+        return coupleMapService.join(id, body.guestName(), body.sigunguCode());
     }
 
     @PatchMapping("/{id}")
     public MapView update(
             @PathVariable String id,
             @RequestBody UpdateMapRequest body,
-            HttpServletRequest request
+            HttpServletRequest request,
+            Authentication authentication
     ) {
         return coupleMapService.updateHost(
                 id,
                 HostTokenSupport.read(request, id),
+                KakaoAuth.userId(authentication),
                 body.hostName(),
-                body.hostSidoCode()
+                body.hostSigunguCode()
         );
     }
 
@@ -71,9 +86,10 @@ public class CoupleMapApiController {
     public ResponseEntity<Void> delete(
             @PathVariable String id,
             HttpServletRequest request,
-            HttpServletResponse response
+            HttpServletResponse response,
+            Authentication authentication
     ) {
-        coupleMapService.deleteMap(id, HostTokenSupport.read(request, id));
+        coupleMapService.deleteMap(id, HostTokenSupport.read(request, id), KakaoAuth.userId(authentication));
         HostTokenSupport.clear(request, response, id);
         return ResponseEntity.noContent().build();
     }
@@ -82,9 +98,15 @@ public class CoupleMapApiController {
     public MapView deletePerson(
             @PathVariable String id,
             @PathVariable Long personId,
-            HttpServletRequest request
+            HttpServletRequest request,
+            Authentication authentication
     ) {
-        return coupleMapService.deletePerson(id, HostTokenSupport.read(request, id), personId);
+        return coupleMapService.deletePerson(
+                id,
+                HostTokenSupport.read(request, id),
+                KakaoAuth.userId(authentication),
+                personId
+        );
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

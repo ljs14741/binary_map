@@ -37,4 +37,4 @@ out/
 .vscode/
 
 ### Local docs ###
-DESIGN.md
+*.md

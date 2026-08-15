@@ -52,9 +52,80 @@
     localStorage.setItem("coupleJoin_" + id, name);
   }
 
+  function loginUrl(next) {
+    return "/login/kakao?next=" + encodeURIComponent(next || window.location.pathname + window.location.hash);
+  }
+
+  function loadSigungus() {
+    const node = document.getElementById("sigungus-json");
+    try {
+      return node ? JSON.parse(node.textContent || "[]") : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  const sigungus = loadSigungus();
+
+  function escapeHtml(value) {
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;");
+  }
+
+  function bindRegionSelects(sidoEl, gunguEl, selectedCode) {
+    if (!sidoEl || !gunguEl) {
+      return;
+    }
+    if (selectedCode) {
+      sidoEl.value = selectedCode.slice(0, 2);
+      gunguEl.dataset.selected = selectedCode;
+    }
+    const fill = () => {
+      const sido = sidoEl.value;
+      const list = sigungus.filter((item) => item.sidoCode === sido);
+      const current = gunguEl.dataset.selected || gunguEl.value || "";
+      gunguEl.innerHTML = `<option value="">시군구를 골라 주세요</option>`
+        + list.map((item) => `<option value="${item.code}">${escapeHtml(item.label)}</option>`).join("");
+      if (current && list.some((item) => item.code === current)) {
+        gunguEl.value = current;
+      } else {
+        gunguEl.value = "";
+      }
+    };
+    if (!sidoEl.dataset.bound) {
+      sidoEl.dataset.bound = "true";
+      sidoEl.addEventListener("change", () => {
+        gunguEl.dataset.selected = "";
+        fill();
+      });
+    }
+    fill();
+  }
+
+  function dualScores(data) {
+    return `
+      <div class="map-dual">
+        <div class="map-dual-card" style="--score-color:${data.color}">
+          <small>${escapeHtml(data.hostName)} → ${escapeHtml(data.guestName)}</small>
+          <b>${data.score}</b>
+          <span>${escapeHtml(data.label)}</span>
+          <p>${escapeHtml(data.comment || "")}</p>
+        </div>
+        <div class="map-dual-card" style="--score-color:${data.reverseColor}">
+          <small>${escapeHtml(data.guestName)} → ${escapeHtml(data.hostName)}</small>
+          <b>${data.reverseScore}</b>
+          <span>${escapeHtml(data.reverseLabel)}</span>
+          <p>${escapeHtml(data.reverseComment || "")}</p>
+        </div>
+      </div>`;
+  }
+
   async function shareKakao(payload) {
     const title = payload.title || "짝꿍지도";
-    const description = payload.description || "이름만 접어보는 이름궁합";
+    const description = payload.description || "두 이름으로 보는 이름궁합";
     const button = payload.button || "나도 해보기";
     const url = payload.url || "https://map.binaryworld.kr/";
     try {
@@ -89,7 +160,7 @@
     }
   }
 
-    async function api(url, options) {
+  async function api(url, options = {}) {
     const headers = Object.assign({}, options.headers || {});
     if (options.body) {
       headers["Content-Type"] = "application/json";
@@ -113,6 +184,16 @@
     return data;
   }
 
+  async function syncAccount() {
+    const me = await api("/api/me");
+    const local = listMaps().filter((item) => item.id && item.token);
+    if (me.loggedIn && local.length) {
+      await api("/api/maps/claim", { method: "POST", body: { maps: local } });
+      return api("/api/me");
+    }
+    return me;
+  }
+
   window.MapApp = {
     showToast,
     wait,
@@ -122,8 +203,12 @@
     tokenOf,
     joinedName,
     setJoined,
+    loginUrl,
+    bindRegionSelects,
+    dualScores,
     shareKakao,
     copyLink,
-    api
+    api,
+    syncAccount
   };
 })();

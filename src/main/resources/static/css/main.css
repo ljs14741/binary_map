@@ -920,6 +920,66 @@ body.is-sheet-open {
   margin-top: 16px;
 }
 
+.map-region-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.map-dual {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 14px 0 4px;
+}
+
+.map-dual-card {
+  padding: 12px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--score-color);
+}
+
+.map-dual-card small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.map-dual-card b {
+  display: block;
+  margin: 4px 0 2px;
+  color: var(--score-color);
+  font-size: 28px;
+  letter-spacing: -0.04em;
+}
+
+.map-dual-card span {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.map-dual-card p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.map-rank-scores {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+}
+
+.map-rank-scores em {
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .map-mine {
   list-style: none;
   margin: 0;

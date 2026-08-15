@@ -1,10 +1,10 @@
 package com.example.map.dto;
 
-public record CreatedMapResponse(
+public record MapSummary(
         String id,
         String hostName,
-        String hostSigunguCode,
-        String hostToken,
+        String place,
+        int total,
         String shareUrl
 ) {
 }

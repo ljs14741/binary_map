@@ -34,11 +34,14 @@ public class CoupleMapPerson {
     @Column(name = "person_name", nullable = false, length = 50)
     private String personName;
 
-    @Column(name = "sido_code", nullable = false, length = 2)
-    private String sidoCode;
+    @Column(name = "sigungu_code", nullable = false, length = 5)
+    private String sigunguCode;
 
     @Column(name = "score", nullable = false)
     private Integer score;
+
+    @Column(name = "reverse_score", nullable = false)
+    private Integer reverseScore;
 
     @Column(name = "label", nullable = false, length = 32)
     private String label;

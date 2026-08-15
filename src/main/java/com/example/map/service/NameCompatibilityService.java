@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  * 초등 이름 획수 궁합.
- * 두 이름을 한 글자씩 교차 배치한 뒤 이웃 합의 일의 자리만 남기며 두 자리가 남을 때까지 접는다.
+ * 두 이름을 한 글자씩 교차 배치한 뒤 이웃 합의 일의 자리만 남기며 두 자리가 남을 때까지 줄인다.
  */
 @Service
 public class NameCompatibilityService {

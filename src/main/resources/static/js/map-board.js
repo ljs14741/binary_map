@@ -195,6 +195,7 @@
           <small>${escapeHtml(person.sido)} · ${escapeHtml(person.label)}</small>
         </div>
         <b style="color:${person.color}">${person.score}</b>
+        ${person.reverseScore != null ? `<small style="color:${person.reverseColor}">← ${person.reverseScore}</small>` : ""}
         ${onDeletePerson && person.id ? `<button type="button" class="map-sheet-remove" data-id="${person.id}">지우기</button>` : ""}
       </li>
     `).join("") + (extra > 0 ? `<li class="is-extra"><span>그 외 ${extra}명</span></li>` : "");

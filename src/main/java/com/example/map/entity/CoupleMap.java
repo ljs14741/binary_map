@@ -24,8 +24,8 @@ public class CoupleMap {
     @Column(name = "host_name", nullable = false, length = 50)
     private String hostName;
 
-    @Column(name = "host_sido_code", nullable = false, length = 2)
-    private String hostSidoCode;
+    @Column(name = "host_sigungu_code", nullable = false, length = 5)
+    private String hostSigunguCode;
 
     @Column(name = "host_token", nullable = false, length = 36)
     private String hostToken;

@@ -39,7 +39,7 @@ public enum RelationLabel {
 
     public String comment() {
         return switch (this) {
-            case BURAL_MATE -> "이름만 접었는데 이미 같은 반임";
+            case BURAL_MATE -> "이름만 봤는데 이미 같은 반임";
             case TRUE_MATE -> "오래 안 봐도 다시 만나면 바로 그 말투";
             case BIZ_MATE -> "필요할 때 연락하면 되는 사이";
             case AWKWARD_MATE -> "인사하고 어색한 침묵이 남음";

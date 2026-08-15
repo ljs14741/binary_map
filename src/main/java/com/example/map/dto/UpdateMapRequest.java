@@ -1,4 +1,4 @@
 package com.example.map.dto;
 
-public record UpdateMapRequest(String hostName, String hostSidoCode) {
+public record UpdateMapRequest(String hostName, String hostSigunguCode) {
 }
