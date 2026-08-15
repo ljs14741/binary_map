@@ -36,7 +36,7 @@ public class NameCompatibilityService {
         return new CompatibilityResult(letters, stages, score, RelationLabel.fromScore(score));
     }
 
-    String normalize(String name) {
+    public String normalize(String name) {
         if (name == null) {
             return "";
         }

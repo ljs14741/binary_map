@@ -14,41 +14,84 @@
   <meta property="og:description" content="두 이름만 접어보는 이름궁합. 링크를 보내면 친구가 사는 도가 지도에 칠해져요.">
   <meta property="og:url" content="https://map.binaryworld.kr">
 
-  <meta name="theme-color" content="#f6f1e8">
+  <meta name="theme-color" content="#fff4ea">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
   <link rel="stylesheet" href="https://binaryworld.kr/common/header.css">
   <link rel="stylesheet" href="https://binaryworld.kr/common/footer.css">
   <link rel="stylesheet" th:href="@{/css/main.css}">
 </head>
-<body>
+<body data-theme="light">
 <header id="global-header" aria-label="Binary World 공통 메뉴"></header>
 
-<main class="map-home">
-  <p class="map-brand">단짝지도</p>
-  <h1>내 주변에 단짝이 몇 명일까?</h1>
-  <p class="map-lead">
-    두 이름만 접어보는 이름궁합.<br>
-    링크를 보내면 친구가 사는 도가 내 한국 지도에 칠해져요.
-  </p>
+<main class="map-page">
+  <section class="map-hero">
+    <p class="map-brand">단짝지도</p>
+    <h1>내 주변에 단짝이<br>몇 명일까?</h1>
+    <p class="map-lead">두 이름만 접어보는 이름궁합.<br>링크를 보내면 친구가 사는 도가 지도에 칠해져요.</p>
+  </section>
 
   <section class="map-card" aria-label="이름궁합">
-    <h2>이름 접어보기</h2>
-    <form class="map-form" onsubmit="return false;">
+    <p class="map-card-kicker">이름 접어보기</p>
+    <h2>궁합 확인하기</h2>
+    <form id="compat-form" class="map-form">
       <label>
         내 이름
-        <input type="text" name="hostName" maxlength="20" placeholder="이진수" autocomplete="name">
+        <input id="host-name" type="text" name="hostName" maxlength="20" placeholder="이진수" autocomplete="name" required>
       </label>
       <label>
         상대 이름
-        <input type="text" name="guestName" maxlength="20" placeholder="홍길동" autocomplete="off">
+        <input id="guest-name" type="text" name="guestName" maxlength="20" placeholder="홍길동" autocomplete="off" required>
       </label>
-      <button type="submit" disabled>곧 열어요</button>
+      <p id="compat-error" class="map-error" hidden></p>
+      <button type="submit" id="compat-submit">궁합 확인하기</button>
+      <a class="map-cta-secondary" href="#sample-map">알록달록 예시 지도 보기</a>
     </form>
-    <p class="map-note">이름 궁합과 인맥지도는 지금부터 만듭니다. 설계는 DESIGN.md를 보세요.</p>
+  </section>
+
+  <section id="compat-result" class="map-result" hidden></section>
+
+  <section id="sample-map" class="map-sample">
+    <p class="map-card-kicker">미리보기 · 50명</p>
+    <h2>친구가 들어오면<br>지도가 이렇게 칠해져요</h2>
+    <p class="map-sample-lead">전국에 아는 사람이 많을수록 알록달록해져요. 아래는 50명이 모인 예시예요.</p>
+
+    <div class="map-stage">
+      <div class="map-stage-head">
+        <strong>수현님의 단짝지도</strong>
+        <span th:text="|${sampleTotal}명|">50명</span>
+      </div>
+      <div class="korea-wrap" id="korea-wrap" aria-label="대한민국 시도 예시 지도"></div>
+      <p class="map-stage-caption">색이 칠해진 도는 친구가 있는 곳이에요 · 실제 대한민국 시도 경계</p>
+      <div class="map-stats">
+        <div class="map-stat" th:each="count : ${sampleCounts}" th:style="|--stat:${count.color()}|">
+          <b th:text="${count.count()}">24</b>
+          <span th:text="${count.label()}">단짝</span>
+        </div>
+      </div>
+    </div>
+
+    <ol class="map-rank">
+      <li th:each="friend, iter : ${sampleFriends}">
+        <em th:text="${iter.count}">1</em>
+        <div>
+          <strong th:text="${friend.name()}">민지</strong>
+          <small th:text="|${friend.sido()} · ${friend.label()}|">서울 · 단짝</small>
+        </div>
+        <b th:style="|color:${friend.color()}|" th:text="${friend.score()}">88</b>
+      </li>
+    </ol>
+
+    <button type="button" class="map-cta" id="sample-create-btn">내 단짝지도 만들기</button>
+    <a class="map-cta-secondary" href="#compat-form">나도 이름 접어보기</a>
   </section>
 </main>
 
 <footer id="global-footer" aria-label="Binary World 푸터"></footer>
+
+<script id="sample-json" type="application/json" th:utext="${sampleJson}">[]</script>
 <script src="https://binaryworld.kr/common/header.js" defer></script>
 <script src="https://binaryworld.kr/common/footer.js" defer></script>
+<script th:src="@{/js/main.js}" defer></script>
 </body>
 </html>

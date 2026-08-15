@@ -1,10 +1,10 @@
 package com.example.map.domain;
 
 public enum RelationLabel {
-    BEST_FRIEND(75, 100, "단짝", "#2f9e44"),
-    COMFORTABLE(50, 74, "편한 사이", "#1971c2"),
-    ACQUAINTANCE(25, 49, "그냥 아는 사이", "#f59f00"),
-    NOT_A_MATCH(0, 24, "안 맞음", "#868e96");
+    BEST_FRIEND(75, 100, "단짝", "#34d399"),
+    COMFORTABLE(50, 74, "편한 사이", "#7dd3fc"),
+    ACQUAINTANCE(25, 49, "그냥 아는 사이", "#fcd34d"),
+    NOT_A_MATCH(0, 24, "안 맞음", "#fda4af");
 
     private final int min;
     private final int max;
