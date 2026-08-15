@@ -1,6 +1,6 @@
 package com.example.map.service;
 
-import com.example.map.domain.RelationLabel;
+import com.example.map.entity.RelationLabel;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

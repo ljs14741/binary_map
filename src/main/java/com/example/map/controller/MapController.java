@@ -1,15 +1,19 @@
 package com.example.map.controller;
 
-import com.example.map.domain.RelationLabel;
+import com.example.map.entity.RelationLabel;
+import com.example.map.entity.Sido;
 import com.example.map.dto.SampleFriend;
 import com.example.map.dto.SampleLabelCount;
 import com.example.map.dto.SampleRegion;
+import com.example.map.service.CoupleMapService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
@@ -18,6 +22,7 @@ import java.util.List;
 public class MapController {
 
     private final ObjectMapper objectMapper;
+    private final CoupleMapService coupleMapService;
 
     @GetMapping("/")
     public String home(Model model) throws JsonProcessingException {
@@ -29,7 +34,17 @@ public class MapController {
         model.addAttribute("sampleFriendsJson", objectMapper.writeValueAsString(friends));
         model.addAttribute("sampleCounts", sampleCounts());
         model.addAttribute("sampleTotal", 50);
+        model.addAttribute("sidos", Sido.all());
         return "main";
+    }
+
+    @GetMapping("/m/{id}")
+    public String room(@PathVariable String id, HttpServletRequest request, Model model) throws JsonProcessingException {
+        var view = coupleMapService.view(id, HostTokenSupport.read(request, id));
+        model.addAttribute("mapView", view);
+        model.addAttribute("mapJson", objectMapper.writeValueAsString(view));
+        model.addAttribute("sidos", Sido.all());
+        return "room";
     }
 
     private List<SampleRegion> sampleRegions() {

@@ -1,5 +1,6 @@
 server:
   port: 8080
+  forward-headers-strategy: framework
   servlet:
     session:
       timeout: 120m
@@ -7,6 +8,21 @@ server:
 spring:
   thymeleaf:
     cache: false
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://bitcoin.ctcwc6so032k.ap-northeast-2.rds.amazonaws.com:3306/map?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: admin
+    password: 87654321
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: false
+    properties:
+      hibernate.format_sql: true
+      hibernate.dialect: org.hibernate.dialect.MySQLDialect
 
 logging:
   level:

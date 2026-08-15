@@ -131,8 +131,35 @@
       </li>
     </ol>
 
-    <button type="button" class="map-cta" id="sample-create-btn">내 짝꿍지도 만들기</button>
+    <button type="button" class="map-cta" id="sample-create-btn" data-open-create>내 짝꿍지도 만들기</button>
     <a class="map-cta-secondary" href="#compat-form">나도 이름 접어보기</a>
+  </section>
+
+  <section id="my-maps" class="map-card" hidden>
+    <p class="map-card-kicker">이 폰</p>
+    <h2>내가 만든 짝꿍지도</h2>
+    <ul class="map-mine" id="my-maps-list"></ul>
+  </section>
+
+  <section id="create-map" class="map-card" hidden>
+    <p class="map-card-kicker">내 공간</p>
+    <h2>내 짝꿍지도 만들기</h2>
+    <p class="map-sample-lead">이름과 사는 곳만 있으면 링크가 생겨요. 로그인 없이 이 폰에서 관리해요.</p>
+    <form id="create-form" class="map-form">
+      <label>
+        내 이름
+        <input id="create-name" type="text" maxlength="20" placeholder="이진수" autocomplete="name" required>
+      </label>
+      <label>
+        사는 곳
+        <select id="create-sido" required>
+          <option value="" disabled selected>도를 골라 주세요</option>
+          <option th:each="sido : ${sidos}" th:value="${sido.code()}" th:text="${sido.label()}">서울</option>
+        </select>
+      </label>
+      <p id="create-error" class="map-error" hidden></p>
+      <button type="submit" id="create-submit">내 짝꿍지도 만들기</button>
+    </form>
   </section>
 </main>
 
@@ -158,6 +185,8 @@
 <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
 <script src="https://binaryworld.kr/common/header.js" defer></script>
 <script src="https://binaryworld.kr/common/footer.js" defer></script>
+<script th:src="@{/js/map-app.js}" defer></script>
+<script th:src="@{/js/map-board.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>
 </body>
 </html>

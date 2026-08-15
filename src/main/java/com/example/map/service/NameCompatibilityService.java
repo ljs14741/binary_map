@@ -1,6 +1,6 @@
 package com.example.map.service;
 
-import com.example.map.domain.RelationLabel;
+import com.example.map.entity.RelationLabel;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;

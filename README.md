@@ -9,7 +9,7 @@
 | 주소 | https://map.binaryworld.kr |
 | 모듈 | binary_map |
 | 스택 | Spring Boot 3.2.5, Java 17, Thymeleaf |
-| 1차 DB | 아직 없음. 방/참여 기능 붙일 때 MySQL + JPA |
+| 1차 DB | 같은 RDS의 `map` 데이터베이스. 테이블은 [SCHEMA.md](SCHEMA.md) |
 
 탭 제목 예: `이름궁합 테스트 - 친구 동네가 칠해지는 짝꿍지도`  
 카톡 공유 제목 예: `이진수님의 짝꿍지도`
