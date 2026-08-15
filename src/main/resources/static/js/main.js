@@ -44,7 +44,7 @@
       showError(error.message);
     } finally {
       submit.disabled = false;
-      submit.textContent = "궁합 확인하기";
+      submit.textContent = "궁합 보기";
     }
   });
 
@@ -142,7 +142,6 @@
 
   function openCreate() {
     const card = document.getElementById("create-map");
-    card.hidden = false;
     const hostName = document.getElementById("host-name");
     const createName = document.getElementById("create-name");
     if (hostName.value && !createName.value) {
@@ -203,50 +202,45 @@
     }
     let me = { loggedIn: false, maps: [] };
     try {
+      await MapApp.pruneMaps();
       me = await MapApp.syncAccount();
     } catch (error) {
       me = { loggedIn: false, maps: [] };
     }
-    const local = MapApp.listMaps();
     const byId = new Map();
     (me.maps || []).forEach((item) => {
       byId.set(item.id, {
         id: item.id,
         name: item.hostName,
-        note: item.place ? `${item.place} · ${item.total}명` : "카카오 계정 지도"
+        note: item.place ? `${item.place} · ${item.total}명` : ""
       });
     });
-    local.forEach((item) => {
+    MapApp.listMaps().forEach((item) => {
       if (!byId.has(item.id)) {
-        byId.set(item.id, { id: item.id, name: item.name, note: "이 폰에서 만든 지도" });
+        byId.set(item.id, { id: item.id, name: item.name, note: "" });
       }
     });
     const maps = [...byId.values()];
-    login.href = MapApp.loginUrl("/");
-    login.hidden = me.loggedIn;
-    logout.hidden = !me.loggedIn;
-    const heroLogin = document.getElementById("hero-login");
-    if (heroLogin) {
-      heroLogin.href = MapApp.loginUrl("/");
-      heroLogin.hidden = me.loggedIn;
-    }
     if (!maps.length && !me.loggedIn) {
       box.hidden = true;
       return;
     }
     box.hidden = false;
-    title.textContent = me.loggedIn ? `${me.nickname}님의 짝꿍지도` : "내가 만든 짝꿍지도";
+    title.textContent = me.loggedIn && me.nickname ? `${me.nickname}님의 지도` : "내 짝꿍지도";
     lead.textContent = me.loggedIn
-      ? "이 계정에 연결된 지도예요. 다른 폰에서도 볼 수 있어요."
-      : "지금은 이 폰에만 저장돼 있어요. 로그인하면 다른 폰에서도 관리할 수 있어요.";
+      ? "카카오 계정으로 연결된 지도예요."
+      : "이 휴대폰에서 만든 지도예요.";
+    login.href = MapApp.loginUrl("/");
+    login.hidden = me.loggedIn || !maps.length;
+    logout.hidden = !me.loggedIn;
     list.innerHTML = maps.length ? maps.map((item) => `
       <li>
         <a href="/m/${item.id}">
           <strong>${MapBoard.escapeHtml(item.name)}님의 짝꿍지도</strong>
-          <small>${MapBoard.escapeHtml(item.note)}</small>
+          ${item.note ? `<small>${MapBoard.escapeHtml(item.note)}</small>` : ""}
         </a>
       </li>
-    `).join("") : "<li><small>아직 연결된 지도가 없어요.</small></li>";
+    `).join("") : "<li><small>아직 만든 지도가 없어요.</small></li>";
   }
 
   function showError(message) {

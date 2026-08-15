@@ -49,11 +49,11 @@
       const keep = document.getElementById("host-keep-lead");
       if (view.claimed) {
         login.hidden = true;
-        keep.textContent = "카카오 계정에 연결된 지도예요. 다른 폰에서도 이 계정으로 관리할 수 있어요.";
+        keep.textContent = "카카오 계정으로 연결된 지도예요. 다른 휴대폰에서도 볼 수 있어요.";
       } else {
         login.hidden = false;
         login.href = MapApp.loginUrl(`/m/${view.id}`);
-        keep.textContent = "이 지도를 관리할 수 있는 건 지금 이 폰이에요. 로그인하면 다른 폰에서도 관리할 수 있어요.";
+        keep.textContent = "친구에게 이 링크를 보내 주세요. 다른 휴대폰에서도 보려면 아래 카카오 로그인을 하면 됩니다.";
       }
     }
     await MapBoard.paint({

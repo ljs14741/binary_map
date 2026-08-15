@@ -1,7 +1,7 @@
 (() => {
   const SHARE_IMAGE = "https://binaryworld.kr/img/radish.png";
   const KAKAO_KEY = "8b68c737be6b8e9a8007c61ee6f9b8da";
-  const MAPS_KEY = "coupleMaps";
+  const MAPS_KEY = "coupleMaps.v2";
 
   function showToast(message) {
     let toast = document.querySelector(".map-toast");
@@ -37,6 +37,21 @@
   function removeMap(id) {
     localStorage.setItem(MAPS_KEY, JSON.stringify(listMaps().filter((item) => item.id !== id)));
     localStorage.removeItem("coupleJoin_" + id);
+  }
+
+  async function pruneMaps() {
+    const maps = listMaps();
+    const alive = [];
+    await Promise.all(maps.map(async (item) => {
+      try {
+        await api("/api/maps/" + item.id, { token: item.token });
+        alive.push(item);
+      } catch (error) {
+        localStorage.removeItem("coupleJoin_" + item.id);
+      }
+    }));
+    localStorage.setItem(MAPS_KEY, JSON.stringify(alive));
+    return alive;
   }
 
   function tokenOf(id) {
@@ -200,6 +215,7 @@
     listMaps,
     saveMap,
     removeMap,
+    pruneMaps,
     tokenOf,
     joinedName,
     setJoined,
