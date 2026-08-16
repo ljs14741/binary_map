@@ -10,5 +10,7 @@ public interface CoupleMapRepository extends JpaRepository<CoupleMap, String> {
 
     List<CoupleMap> findByUserIdOrderByUpdatedAtDesc(String userId);
 
+    Optional<CoupleMap> findFirstByUserIdOrderByCreatedAtAsc(String userId);
+
     Optional<CoupleMap> findByIdAndHostToken(String id, String hostToken);
 }

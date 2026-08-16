@@ -44,6 +44,10 @@ public class CoupleMapService {
         if (userId == null || userId.isBlank()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "카카오 로그인 후 지도를 만들 수 있어요.");
         }
+        var existing = coupleMapRepository.findFirstByUserIdOrderByCreatedAtAsc(userId);
+        if (existing.isPresent()) {
+            return toCreated(existing.get());
+        }
         String name = requireName(hostName);
         Sigungu sigungu = regionCatalog.fromCode(hostSigunguCode);
         LocalDateTime now = LocalDateTime.now();
@@ -58,13 +62,7 @@ public class CoupleMapService {
         map.setUpdatedAt(now);
         coupleMapRepository.save(map);
 
-        return new CreatedMapResponse(
-                map.getId(),
-                map.getHostName(),
-                map.getHostSigunguCode(),
-                map.getHostToken(),
-                shareUrl(map.getId())
-        );
+        return toCreated(map);
     }
 
     @Transactional(readOnly = true)
@@ -177,6 +175,9 @@ public class CoupleMapService {
             if (userId.equals(found.getUserId())) {
                 continue;
             }
+            if (!coupleMapRepository.findByUserIdOrderByUpdatedAtDesc(userId).isEmpty()) {
+                continue;
+            }
             found.setUserId(userId);
             found.setUpdatedAt(now);
             claimed += 1;
@@ -265,6 +266,16 @@ public class CoupleMapService {
                 map.getHostName(),
                 regionCatalog.displayName(map.getHostSigunguCode()),
                 (int) coupleMapPersonRepository.countByMap_Id(map.getId()),
+                shareUrl(map.getId())
+        );
+    }
+
+    private CreatedMapResponse toCreated(CoupleMap map) {
+        return new CreatedMapResponse(
+                map.getId(),
+                map.getHostName(),
+                map.getHostSigunguCode(),
+                map.getHostToken(),
                 shareUrl(map.getId())
         );
     }

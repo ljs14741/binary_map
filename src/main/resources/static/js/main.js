@@ -195,20 +195,35 @@
     const gate = document.getElementById("create-gate");
     const bar = document.getElementById("account-bar");
     const login = document.getElementById("create-login");
+    const open = document.getElementById("create-open");
+    const lead = document.getElementById("create-lead");
+    const title = document.querySelector("#create-map h2");
     if (login) {
       login.href = MapApp.loginUrl("/#create-map");
     }
-    if (me.loggedIn) {
-      if (form) form.hidden = false;
-      if (gate) gate.hidden = true;
-      if (bar) {
-        bar.hidden = false;
+    const maps = me.maps || [];
+    const hasMap = me.loggedIn && maps.length > 0;
+    if (form) form.hidden = !(me.loggedIn && !hasMap);
+    if (gate) gate.hidden = me.loggedIn;
+    if (open) {
+      open.hidden = !hasMap;
+      if (hasMap) {
+        open.href = `/m/${maps[0].id}`;
+      }
+    }
+    if (bar) {
+      bar.hidden = !me.loggedIn;
+      if (me.loggedIn) {
         bar.innerHTML = `<b>카카오 로그인됨</b> · ${MapBoard.escapeHtml(me.nickname || "계정")} · <a href="/logout">로그아웃</a>`;
       }
-    } else {
-      if (form) form.hidden = true;
-      if (gate) gate.hidden = false;
-      if (bar) bar.hidden = true;
+    }
+    if (title) {
+      title.textContent = hasMap ? "내 짝꿍지도" : "내 짝꿍지도 만들기";
+    }
+    if (lead) {
+      lead.textContent = hasMap
+        ? "카카오 계정에는 지도가 하나예요. 이미 있는 지도를 열면 됩니다."
+        : "지도를 만들려면 카카오 로그인이 필요해요. 계정에 저장돼서 휴대폰을 바꿔도 다시 볼 수 있어요. 친구가 들어오는 건 로그인 없이 됩니다.";
     }
   }
 
