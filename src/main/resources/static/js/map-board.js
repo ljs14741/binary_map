@@ -173,8 +173,7 @@
       byKey.get(key).push(person);
     });
     return [...byKey.entries()].map(([key, grouped]) => {
-      grouped.sort((a, b) => rankScore(b) - rankScore(a)
-        || Math.min(b.score || 0, b.reverseScore || 0) - Math.min(a.score || 0, a.reverseScore || 0));
+      grouped = MapApp.sortPeople(grouped);
       const best = grouped[0];
       const point = pinPoint(svg, best.sidoCode, best.sigunguCode);
       return {
@@ -218,7 +217,7 @@
       <span class="host-ring"></span>
       <span class="host-ring is-late"></span>
       <span class="host-dot"></span>
-      <span class="host-badge">${escapeHtml(name)}의 고향</span>
+      <span class="host-badge">${escapeHtml(name)}의 거주지역</span>
     `;
     return host;
   }

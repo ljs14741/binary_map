@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -91,10 +90,7 @@ public class MapController {
                 friend("태민", "울산 남구", "31", "31140", 18, 7, RelationLabel.DANGER_MATE, RelationLabel.DANGER_MATE)
         );
         return friends.stream()
-                .sorted(Comparator
-                        .comparingInt((SampleFriend person) -> Math.max(person.score(), person.reverseScore())).reversed()
-                        .thenComparingInt((SampleFriend person) -> Math.min(person.score(), person.reverseScore())).reversed()
-                        .thenComparing(SampleFriend::name))
+                .sorted(this::compareRank)
                 .toList();
     }
 
@@ -139,5 +135,21 @@ public class MapController {
 
     private String rankLabel(SampleFriend friend) {
         return friend.reverseScore() > friend.score() ? friend.reverseLabel() : friend.label();
+    }
+
+    private int compareRank(SampleFriend a, SampleFriend b) {
+        int high = Integer.compare(
+                Math.max(b.score(), b.reverseScore()),
+                Math.max(a.score(), a.reverseScore()));
+        if (high != 0) {
+            return high;
+        }
+        int low = Integer.compare(
+                Math.min(b.score(), b.reverseScore()),
+                Math.min(a.score(), a.reverseScore()));
+        if (low != 0) {
+            return low;
+        }
+        return a.name().compareTo(b.name());
     }
 }

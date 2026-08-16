@@ -21,7 +21,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -236,10 +235,7 @@ public class CoupleMapService {
         List<CoupleMapPerson> rows = coupleMapPersonRepository.findByMap_IdOrderByScoreDescCreatedAtAsc(map.getId());
         List<MapPersonView> people = rows.stream()
                 .map(this::toPerson)
-                .sorted(Comparator
-                        .comparingInt((MapPersonView person) -> Math.max(person.score(), person.reverseScore())).reversed()
-                        .thenComparingInt((MapPersonView person) -> Math.min(person.score(), person.reverseScore())).reversed()
-                        .thenComparing(MapPersonView::name))
+                .sorted(this::compareRank)
                 .toList();
         Sigungu sigungu = regionCatalog.fromCode(map.getHostSigunguCode());
         return new MapView(
@@ -292,8 +288,25 @@ public class CoupleMapService {
                 label.mapColor(),
                 person.getReverseScore(),
                 reverse.displayName(),
-                reverse.mapColor()
+                reverse.mapColor(),
+                person.getCreatedAt()
         );
+    }
+
+    private int compareRank(MapPersonView a, MapPersonView b) {
+        int high = Integer.compare(
+                Math.max(b.score(), b.reverseScore()),
+                Math.max(a.score(), a.reverseScore()));
+        if (high != 0) {
+            return high;
+        }
+        int low = Integer.compare(
+                Math.min(b.score(), b.reverseScore()),
+                Math.min(a.score(), a.reverseScore()));
+        if (low != 0) {
+            return low;
+        }
+        return a.createdAt().compareTo(b.createdAt());
     }
 
     private List<SampleLabelCount> countsOf(List<MapPersonView> people) {

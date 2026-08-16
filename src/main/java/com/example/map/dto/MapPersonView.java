@@ -1,5 +1,7 @@
 package com.example.map.dto;
 
+import java.time.LocalDateTime;
+
 public record MapPersonView(
         Long id,
         String name,
@@ -11,6 +13,7 @@ public record MapPersonView(
         String color,
         int reverseScore,
         String reverseLabel,
-        String reverseColor
+        String reverseColor,
+        LocalDateTime createdAt
 ) {
 }

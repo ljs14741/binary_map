@@ -677,6 +677,22 @@
     return { label: person.label, color: person.color };
   }
 
+  function createdAtMs(person) {
+    const value = person && person.createdAt;
+    if (value == null || value === "") {
+      return Number.POSITIVE_INFINITY;
+    }
+    if (typeof value === "number") {
+      return value;
+    }
+    if (Array.isArray(value)) {
+      const [year, month, day, hour = 0, minute = 0, second = 0] = value;
+      return Date.UTC(year, (month || 1) - 1, day || 1, hour, minute, Math.floor(second));
+    }
+    const ms = Date.parse(value);
+    return Number.isNaN(ms) ? Number.POSITIVE_INFINITY : ms;
+  }
+
   function sortPeople(people) {
     return [...(people || [])].sort((a, b) => {
       const ah = Math.max(a.score || 0, a.reverseScore || 0);
@@ -688,6 +704,11 @@
       const bl = Math.min(b.score || 0, b.reverseScore || 0);
       if (bl !== al) {
         return bl - al;
+      }
+      const at = createdAtMs(a);
+      const bt = createdAtMs(b);
+      if (at !== bt) {
+        return at - bt;
       }
       return String(a.name || "").localeCompare(String(b.name || ""), "ko");
     });

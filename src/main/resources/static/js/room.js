@@ -35,10 +35,11 @@
     document.getElementById("stage-title").textContent = `${view.hostName}님의 짝꿍지도`;
     document.getElementById("stage-count").textContent = `${view.total}명 참여`;
     document.getElementById("stage-caption").textContent = view.total
-      ? "금색이 고향 · 같은 시라도 구가 다르면 핀이 갈라져요"
+      ? "금색이 거주지역 · 같은 시라도 구가 다르면 핀이 갈라져요"
       : "카톡으로 보내면 친구가 사는 곳에 핀이 찍혀요";
+    const people = MapApp.sortPeople(view.people);
     renderStats(view.counts);
-    renderRank(view.people);
+    renderRank(people);
     document.getElementById("host-tools").hidden = !view.host;
     document.getElementById("guest-create").hidden = !!view.host;
     const joined = MapApp.joinedName(view.id);
@@ -70,7 +71,7 @@
     await MapBoard.paint({
       wrapId: "korea-wrap",
       host: { name: view.hostName, sidoCode: view.hostSidoCode, sigunguCode: view.hostSigunguCode },
-      people: view.people,
+      people,
       onDeletePerson: view.host ? deletePerson : null
     });
   }
