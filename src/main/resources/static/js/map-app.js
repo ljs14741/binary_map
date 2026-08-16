@@ -586,7 +586,6 @@
       return;
     }
     const filename = options.filename || "짝꿍지도.png";
-    const text = options.text || "짝꿍지도";
     showToast("이미지 만드는 중...");
     try {
       const blob = element.id === "map-stage" || element.classList.contains("map-stage")
@@ -598,7 +597,7 @@
       const file = new File([blob], filename, { type: "image/png" });
       try {
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: "짝꿍지도", text });
+          await navigator.share({ files: [file] });
           showToast("공유 창에서 인스타·스토리를 고르면 돼요.");
           return;
         }
