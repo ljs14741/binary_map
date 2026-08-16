@@ -40,6 +40,9 @@ public class CoupleMapService {
 
     @Transactional
     public CreatedMapResponse create(String hostName, String hostSigunguCode, String userId) {
+        if (userId == null || userId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "카카오 로그인 후 지도를 만들 수 있어요.");
+        }
         String name = requireName(hostName);
         Sigungu sigungu = regionCatalog.fromCode(hostSigunguCode);
         LocalDateTime now = LocalDateTime.now();
@@ -49,7 +52,7 @@ public class CoupleMapService {
         map.setHostName(name);
         map.setHostSigunguCode(sigungu.code());
         map.setHostToken(UUID.randomUUID().toString());
-        map.setUserId(blankToNull(userId));
+        map.setUserId(userId);
         map.setCreatedAt(now);
         map.setUpdatedAt(now);
         coupleMapRepository.save(map);
@@ -85,7 +88,7 @@ public class CoupleMapService {
         String name = requireName(guestName);
         Sigungu sigungu = regionCatalog.fromCode(sigunguCode);
         if (name.equals(map.getHostName())) {
-            throw new IllegalArgumentException("방장과 같은 이름은 쓸 수 없어요. 별명을 적어 주세요.");
+            throw new IllegalArgumentException("지도 이름과 같은 이름은 쓸 수 없어요. 별명을 적어 주세요.");
         }
 
         var forward = nameCompatibilityService.calculate(map.getHostName(), name);
@@ -121,11 +124,11 @@ public class CoupleMapService {
                 forward.score(),
                 label.titledName(),
                 label.mapColor(),
-                label.comment(),
+                reverse.letters(),
+                reverse.stages(),
                 reverse.score(),
                 reverse.label().titledName(),
                 reverse.label().mapColor(),
-                reverse.label().comment(),
                 toView(map, false)
         );
     }
@@ -306,9 +309,5 @@ public class CoupleMapService {
 
     private String shareUrl(String mapId) {
         return SHARE_BASE + mapId;
-    }
-
-    private String blankToNull(String value) {
-        return value == null || value.isBlank() ? null : value;
     }
 }

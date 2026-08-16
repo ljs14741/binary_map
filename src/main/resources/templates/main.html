@@ -100,8 +100,15 @@
   <section id="create-map" class="map-card">
     <p class="map-card-kicker">2. 내 지도</p>
     <h2>내 짝꿍지도 만들기</h2>
-    <p class="map-sample-lead">이름과 사는 곳만 적으면 내 지도 링크가 생겨요. 그 링크를 친구에게 보내면 됩니다.</p>
-    <form id="create-form" class="map-form">
+    <p class="map-sample-lead">지도를 만들려면 카카오 로그인이 필요해요. 계정에 저장돼서 휴대폰을 바꿔도 다시 볼 수 있어요. 친구가 들어오는 건 로그인 없이 됩니다.</p>
+    <p id="account-bar" class="map-account" hidden></p>
+    <div id="create-gate">
+      <a class="map-kakao" id="create-login" href="/login/kakao?next=%2F%23create-map">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2C6.7 3.2 2.4 6.6 2.4 10.8c0 2.7 1.8 5.1 4.5 6.5l-.9 3.4c-.1.3.3.6.5.4l3.8-2.5c.6.1 1.1.1 1.7.1 5.3 0 9.6-3.4 9.6-7.6S17.3 3.2 12 3.2z"/></svg>
+        카카오로 로그인하고 만들기
+      </a>
+    </div>
+    <form id="create-form" class="map-form" hidden>
       <label>
         내 이름
         <input id="create-name" type="text" maxlength="20" placeholder="이진수" autocomplete="name" required>
@@ -131,8 +138,6 @@
     <h2 id="my-maps-title">내 짝꿍지도</h2>
     <p class="map-sample-lead" id="my-maps-lead"></p>
     <ul class="map-mine" id="my-maps-list"></ul>
-    <a class="map-cta-secondary" id="kakao-login" hidden>다른 휴대폰에서도 보려면 카카오 로그인</a>
-    <a class="map-cta-secondary" id="kakao-logout" href="/logout" hidden>로그아웃</a>
   </section>
 
   <section id="sample-map" class="map-sample">
@@ -146,7 +151,7 @@
         <span th:text="|${sampleTotal}명|">50명</span>
       </div>
       <div class="korea-wrap" id="korea-wrap" aria-label="대한민국 시도 예시 지도"></div>
-      <p class="map-stage-caption">빛나는 금색이 방장 · 핀을 누르면 그 동네 친구가 나와요</p>
+      <p class="map-stage-caption">빛나는 금색이 고향 · 핀을 누르면 그 동네 친구가 나와요</p>
       <div class="map-stats" id="map-stats">
         <button type="button" class="map-stat" th:each="count : ${sampleCounts}"
                 th:style="|--stat:${count.color()}|"
@@ -167,8 +172,6 @@
         <b th:style="|color:${friend.color()}|" th:text="${friend.score()}">88</b>
       </li>
     </ol>
-
-    <button type="button" class="map-cta" id="sample-create-btn" data-open-create>내 짝꿍지도 만들기</button>
   </section>
 </main>
 

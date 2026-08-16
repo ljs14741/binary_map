@@ -33,7 +33,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font-family: inherit;
 }
 
@@ -194,21 +195,115 @@ input {
 }
 
 .map-form input,
-.map-form select {
+.map-form select,
+.map-select-btn {
   width: 100%;
   padding: 13px 14px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: #fff;
+  border: 1.5px solid #f0ddd0;
+  border-radius: 16px;
+  background-color: #fff;
   color: var(--ink);
   font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
   outline: none;
 }
 
 .map-form input:focus,
-.map-form select:focus {
+.map-select.is-open .map-select-btn,
+.map-select-btn:focus-visible {
   border-color: #ffb39d;
   box-shadow: 0 0 0 4px rgba(255, 122, 89, 0.12);
+}
+
+.map-select {
+  position: relative;
+}
+
+.map-select select {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+  pointer-events: none;
+}
+
+.map-select-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0;
+  min-height: 50px;
+  padding-right: 44px;
+  text-align: left;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'><path fill='%23ff7a59' d='M5.2 7.4L10 12.2l4.8-4.8 1.4 1.4L10 15 3.8 8.8z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+}
+
+.map-select-btn.is-placeholder {
+  color: #b08978;
+  font-weight: 600;
+}
+
+.map-select.is-open .map-select-btn {
+  border-color: #ff7a59;
+}
+
+.map-select.is-invalid .map-select-btn {
+  border-color: #e11d48;
+}
+
+.map-select-menu {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  display: none;
+  max-height: 240px;
+  margin: 0;
+  padding: 6px;
+  overflow: auto;
+  list-style: none;
+  border: 1px solid #ffd4c6;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 16px 32px rgba(80, 40, 20, 0.14);
+}
+
+.map-select.is-open .map-select-menu {
+  display: block;
+}
+
+.map-select-menu li {
+  padding: 11px 12px;
+  border-radius: 12px;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.map-select-menu li:hover {
+  background: #fff4ea;
+}
+
+.map-select-menu li.is-on {
+  background: #fff0ea;
+  color: var(--coral-deep);
+}
+
+.map-select-menu li.is-disabled {
+  display: none;
 }
 
 .map-error {
@@ -217,7 +312,7 @@ input {
   font-size: 13px;
 }
 
-.map-form button,
+.map-form button:not(.map-select-btn),
 .map-cta,
 .map-cta-secondary {
   display: block;
@@ -232,14 +327,14 @@ input {
   cursor: pointer;
 }
 
-.map-form button,
+.map-form button:not(.map-select-btn),
 .map-cta {
   background: linear-gradient(180deg, var(--coral) 0%, var(--coral-deep) 100%);
   color: #fff;
   box-shadow: 0 10px 20px rgba(240, 90, 58, 0.22);
 }
 
-.map-form button:disabled {
+.map-form button:not(.map-select-btn):disabled {
   opacity: 0.6;
   cursor: wait;
 }
@@ -959,6 +1054,80 @@ body.is-sheet-open {
   display: block;
   font-size: 13px;
   font-weight: 700;
+}
+
+.map-folds {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.map-fold-cap {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.map-account {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.map-account b {
+  font-weight: 800;
+}
+
+.map-account a {
+  color: #047857;
+  font-weight: 800;
+}
+
+.map-kakao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 4px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #fee500;
+  color: #191919;
+  font-size: 16px;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 10px 22px rgba(254, 229, 0, 0.38);
+}
+
+.map-kakao svg {
+  width: 18px;
+  height: 18px;
+  fill: #191919;
+}
+
+.map-warn {
+  margin: 0 0 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #fff4ea;
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .map-folds,
+  .map-dual,
+  .map-region-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .map-dual-card p {

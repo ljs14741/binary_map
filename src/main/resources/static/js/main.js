@@ -18,12 +18,9 @@
   document.getElementById("kakao-share")?.addEventListener("click", () => {
     MapApp.shareKakao({
       title: "짝꿍지도",
-      description: "내 주변에 짝꿍이 몇 명일까? 두 이름으로 보는 이름궁합.",
+      description: "이름 두 개로 궁합 보고, 내 지도에 친구를 모아보세요.",
       button: "나도 해보기"
     });
-  });
-  document.querySelectorAll("[data-open-create]").forEach((button) => {
-    button.addEventListener("click", openCreate);
   });
 
   form.addEventListener("submit", async (event) => {
@@ -54,57 +51,11 @@
     resultBox.style.setProperty("--score-color", data.color);
     resultBox.innerHTML = `
       <p class="map-result-status" id="reveal-status">이름궁합 계산 중</p>
-      <div class="map-result-top">
-        <div class="map-score is-wait" id="reveal-score">?</div>
-        <div class="map-result-copy">
-          <p>${MapBoard.escapeHtml(data.hostName)} × ${MapBoard.escapeHtml(data.guestName)}</p>
-          <h3 id="reveal-label">...</h3>
-          <span id="reveal-chip">계산 중</span>
-        </div>
-      </div>
       <div id="reveal-dual"></div>
-      <div class="map-fold">
-        <div class="map-fold-letters">${data.letters.map((letter) => `<span>${MapBoard.escapeHtml(letter || "·")}</span>`).join("")}</div>
-        ${data.stages.map((stage) => `<div class="map-fold-row">${stage.map((num) => `<span>${num}</span>`).join("")}</div>`).join("")}
-      </div>
-      <button type="button" class="map-cta" data-open-create>내 짝꿍지도 만들기</button>
-      <button type="button" class="map-share" id="result-share">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2C6.7 3.2 2.4 6.6 2.4 10.8c0 2.7 1.8 5.1 4.5 6.5l-.9 3.4c-.1.3.3.6.5.4l3.8-2.5c.6.1 1.1.1 1.7.1 5.3 0 9.6-3.4 9.6-7.6S17.3 3.2 12 3.2z"/></svg>
-        이 궁합 카톡으로 보내기
-      </button>
+      ${MapApp.dualFolds(data)}
     `;
-    resultBox.querySelector("[data-open-create]").addEventListener("click", openCreate);
-    document.getElementById("result-share").addEventListener("click", () => {
-      MapApp.shareKakao({
-        title: `${data.hostName} × ${data.guestName} · ${data.label}`,
-        description: `${data.score}점. ${data.comment}`,
-        button: "나도 이름궁합 해보기"
-      });
-    });
     resultBox.scrollIntoView({ behavior: "smooth", block: "center" });
-
-    const letters = [...resultBox.querySelectorAll(".map-fold-letters span")];
-    for (const letter of letters) {
-      letter.classList.add("is-on");
-      await MapApp.wait(90);
-    }
-    const rows = [...resultBox.querySelectorAll(".map-fold-row")];
-    for (let i = 0; i < rows.length; i += 1) {
-      document.getElementById("reveal-status").textContent =
-        i === rows.length - 1 ? "점수를 내는 중" : "궁합 숫자를 맞추는 중";
-      for (const cell of rows[i].querySelectorAll("span")) {
-        cell.classList.add("is-on");
-        await MapApp.wait(55);
-      }
-      await MapApp.wait(160);
-    }
-    await MapApp.wait(280);
-    const scoreEl = document.getElementById("reveal-score");
-    scoreEl.classList.remove("is-wait");
-    scoreEl.classList.add("is-in");
-    scoreEl.textContent = data.score;
-    document.getElementById("reveal-label").textContent = data.label;
-    document.getElementById("reveal-chip").textContent = `${data.score}점`;
+    await MapApp.animateFolds(resultBox);
     document.getElementById("reveal-dual").innerHTML = MapApp.dualScores(data);
     document.getElementById("reveal-status").textContent = "두 사람의 이름궁합";
     resultBox.classList.add("is-done");
@@ -144,11 +95,13 @@
     const card = document.getElementById("create-map");
     const hostName = document.getElementById("host-name");
     const createName = document.getElementById("create-name");
-    if (hostName.value && !createName.value) {
+    if (hostName.value && createName && !createName.value) {
       createName.value = hostName.value;
     }
     card.scrollIntoView({ behavior: "smooth", block: "center" });
-    createName.focus();
+    if (createName && !document.getElementById("create-form").hidden) {
+      createName.focus();
+    }
   }
 
   function bindCreate() {
@@ -193,8 +146,6 @@
   async function renderMyMaps() {
     const box = document.getElementById("my-maps");
     const list = document.getElementById("my-maps-list");
-    const login = document.getElementById("kakao-login");
-    const logout = document.getElementById("kakao-logout");
     const lead = document.getElementById("my-maps-lead");
     const title = document.getElementById("my-maps-title");
     if (!box || !list) {
@@ -221,26 +172,44 @@
       }
     });
     const maps = [...byId.values()];
-    if (!maps.length && !me.loggedIn) {
+    applyCreateGate(me);
+    if (!maps.length) {
       box.hidden = true;
       return;
     }
     box.hidden = false;
     title.textContent = me.loggedIn && me.nickname ? `${me.nickname}님의 지도` : "내 짝꿍지도";
-    lead.textContent = me.loggedIn
-      ? "카카오 계정으로 연결된 지도예요."
-      : "이 휴대폰에서 만든 지도예요.";
-    login.href = MapApp.loginUrl("/");
-    login.hidden = me.loggedIn || !maps.length;
-    logout.hidden = !me.loggedIn;
-    list.innerHTML = maps.length ? maps.map((item) => `
+    lead.textContent = "카카오 계정에 저장된 내 지도예요.";
+    list.innerHTML = maps.map((item) => `
       <li>
         <a href="/m/${item.id}">
           <strong>${MapBoard.escapeHtml(item.name)}님의 짝꿍지도</strong>
           ${item.note ? `<small>${MapBoard.escapeHtml(item.note)}</small>` : ""}
         </a>
       </li>
-    `).join("") : "<li><small>아직 만든 지도가 없어요.</small></li>";
+    `).join("");
+  }
+
+  function applyCreateGate(me) {
+    const form = document.getElementById("create-form");
+    const gate = document.getElementById("create-gate");
+    const bar = document.getElementById("account-bar");
+    const login = document.getElementById("create-login");
+    if (login) {
+      login.href = MapApp.loginUrl("/#create-map");
+    }
+    if (me.loggedIn) {
+      if (form) form.hidden = false;
+      if (gate) gate.hidden = true;
+      if (bar) {
+        bar.hidden = false;
+        bar.innerHTML = `<b>카카오 로그인됨</b> · ${MapBoard.escapeHtml(me.nickname || "계정")} · <a href="/logout">로그아웃</a>`;
+      }
+    } else {
+      if (form) form.hidden = true;
+      if (gate) gate.hidden = false;
+      if (bar) bar.hidden = true;
+    }
   }
 
   function showError(message) {

@@ -10,10 +10,10 @@ public record CompatibilityResponse(
         int score,
         String label,
         String color,
-        String comment,
+        List<String> reverseLetters,
+        List<List<Integer>> reverseStages,
         int reverseScore,
         String reverseLabel,
-        String reverseColor,
-        String reverseComment
+        String reverseColor
 ) {
 }

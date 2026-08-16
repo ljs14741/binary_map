@@ -114,7 +114,7 @@
       <span class="host-ring"></span>
       <span class="host-ring is-late"></span>
       <span class="host-dot"></span>
-      <span class="host-badge">${escapeHtml(name)} · 방장</span>
+      <span class="host-badge">${escapeHtml(name)} · 고향</span>
     `;
     return host;
   }

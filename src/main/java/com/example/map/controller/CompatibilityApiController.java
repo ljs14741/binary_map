@@ -34,11 +34,11 @@ public class CompatibilityApiController {
                 forward.score(),
                 forward.label().titledName(),
                 forward.label().mapColor(),
-                forward.label().comment(),
+                reverse.letters(),
+                reverse.stages(),
                 reverse.score(),
                 reverse.label().titledName(),
-                reverse.label().mapColor(),
-                reverse.label().comment()
+                reverse.label().mapColor()
         );
     }
 

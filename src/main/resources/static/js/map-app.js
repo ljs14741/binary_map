@@ -90,10 +90,102 @@
       .replaceAll('"', "&quot;");
   }
 
+  function closeCustomSelects(except) {
+    document.querySelectorAll(".map-select.is-open").forEach((wrap) => {
+      if (wrap !== except) {
+        wrap.classList.remove("is-open");
+      }
+    });
+  }
+
+  function refreshCustomSelect(select) {
+    const wrap = select.closest(".map-select");
+    if (!wrap) {
+      return;
+    }
+    const btn = wrap.querySelector(".map-select-btn");
+    const menu = wrap.querySelector(".map-select-menu");
+    if (!btn || !menu) {
+      return;
+    }
+    menu.innerHTML = [...select.options].map((opt) => {
+      const on = opt.value === select.value ? " is-on" : "";
+      const disabled = opt.disabled || opt.value === "" ? " is-disabled" : "";
+      return `<li class="${on}${disabled}" data-value="${escapeHtml(opt.value)}" role="option">${escapeHtml(opt.textContent)}</li>`;
+    }).join("");
+    const picked = select.selectedOptions[0];
+    btn.textContent = picked ? picked.textContent : "골라 주세요";
+    btn.classList.toggle("is-placeholder", !select.value);
+  }
+
+  function enhanceSelect(select) {
+    if (!select || select.closest(".map-select")) {
+      return;
+    }
+    const wrap = document.createElement("div");
+    wrap.className = "map-select";
+    select.parentNode.insertBefore(wrap, select);
+    wrap.appendChild(select);
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "map-select-btn";
+    btn.setAttribute("aria-haspopup", "listbox");
+
+    const menu = document.createElement("ul");
+    menu.className = "map-select-menu";
+    menu.setAttribute("role", "listbox");
+
+    wrap.appendChild(btn);
+    wrap.appendChild(menu);
+
+    select.addEventListener("invalid", () => {
+      wrap.classList.add("is-invalid");
+    });
+    select.addEventListener("change", () => {
+      wrap.classList.remove("is-invalid");
+    });
+
+    btn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const open = !wrap.classList.contains("is-open");
+      closeCustomSelects();
+      wrap.classList.toggle("is-open", open);
+    });
+    menu.addEventListener("click", (event) => {
+      const item = event.target.closest("li");
+      if (!item || item.classList.contains("is-disabled")) {
+        return;
+      }
+      select.value = item.dataset.value || "";
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+      refreshCustomSelect(select);
+      wrap.classList.remove("is-open");
+    });
+    refreshCustomSelect(select);
+  }
+
+  if (!window.__mapSelectBound) {
+    window.__mapSelectBound = true;
+    document.addEventListener("click", (event) => {
+      if (!event.target.closest(".map-select")) {
+        closeCustomSelects();
+      }
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeCustomSelects();
+      }
+    });
+  }
+
   function bindRegionSelects(sidoEl, gunguEl, selectedCode) {
     if (!sidoEl || !gunguEl) {
       return;
     }
+    enhanceSelect(sidoEl);
+    enhanceSelect(gunguEl);
     if (selectedCode) {
       sidoEl.value = selectedCode.slice(0, 2);
       gunguEl.dataset.selected = selectedCode;
@@ -109,6 +201,8 @@
       } else {
         gunguEl.value = "";
       }
+      refreshCustomSelect(sidoEl);
+      refreshCustomSelect(gunguEl);
     };
     if (!sidoEl.dataset.bound) {
       sidoEl.dataset.bound = "true";
@@ -127,15 +221,51 @@
           <small>${escapeHtml(data.hostName)} → ${escapeHtml(data.guestName)}</small>
           <b>${data.score}</b>
           <span>${escapeHtml(data.label)}</span>
-          <p>${escapeHtml(data.comment || "")}</p>
         </div>
         <div class="map-dual-card" style="--score-color:${data.reverseColor}">
           <small>${escapeHtml(data.guestName)} → ${escapeHtml(data.hostName)}</small>
           <b>${data.reverseScore}</b>
           <span>${escapeHtml(data.reverseLabel)}</span>
-          <p>${escapeHtml(data.reverseComment || "")}</p>
         </div>
       </div>`;
+  }
+
+  function foldPane(letters, stages, caption) {
+    const safeLetters = letters || [];
+    const safeStages = stages || [];
+    return `
+      <div class="map-fold-pane">
+        <p class="map-fold-cap">${escapeHtml(caption)}</p>
+        <div class="map-fold">
+          <div class="map-fold-letters">${safeLetters.map((letter) => `<span>${escapeHtml(letter || "·")}</span>`).join("")}</div>
+          ${safeStages.map((stage) => `<div class="map-fold-row">${stage.map((num) => `<span>${num}</span>`).join("")}</div>`).join("")}
+        </div>
+      </div>`;
+  }
+
+  function dualFolds(data) {
+    return `
+      <div class="map-folds">
+        ${foldPane(data.letters, data.stages, `${data.hostName} → ${data.guestName}`)}
+        ${foldPane(data.reverseLetters, data.reverseStages, `${data.guestName} → ${data.hostName}`)}
+      </div>`;
+  }
+
+  async function animateFolds(root) {
+    const panes = [...root.querySelectorAll(".map-fold-pane")];
+    for (const pane of panes) {
+      for (const letter of pane.querySelectorAll(".map-fold-letters span")) {
+        letter.classList.add("is-on");
+        await wait(45);
+      }
+      for (const row of pane.querySelectorAll(".map-fold-row")) {
+        for (const cell of row.querySelectorAll("span")) {
+          cell.classList.add("is-on");
+          await wait(30);
+        }
+        await wait(70);
+      }
+    }
   }
 
   async function shareKakao(payload) {
@@ -222,6 +352,8 @@
     loginUrl,
     bindRegionSelects,
     dualScores,
+    dualFolds,
+    animateFolds,
     shareKakao,
     copyLink,
     api,

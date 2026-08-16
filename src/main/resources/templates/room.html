@@ -39,15 +39,21 @@
   </section>
 
   <section class="map-card" id="host-tools" th:hidden="${!mapView.host()}">
-    <p class="map-card-kicker">방장</p>
-    <h2>친구 초대 링크</h2>
-    <p class="map-sample-lead" id="host-keep-lead">친구에게 이 링크를 보내 주세요.</p>
-    <button type="button" class="map-cta" id="copy-link">초대 링크 복사</button>
+    <p class="map-card-kicker">내 지도</p>
+    <h2>친구 초대</h2>
+    <p class="map-sample-lead" id="host-keep-lead">카톡으로 보내면 친구는 이름과 사는 곳만 적어요.</p>
+    <p id="account-status" class="map-account" hidden></p>
     <button type="button" class="map-share" id="room-share">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2C6.7 3.2 2.4 6.6 2.4 10.8c0 2.7 1.8 5.1 4.5 6.5l-.9 3.4c-.1.3.3.6.5.4l3.8-2.5c.6.1 1.1.1 1.7.1 5.3 0 9.6-3.4 9.6-7.6S17.3 3.2 12 3.2z"/></svg>
-      카톡으로 초대하기
+      카톡으로 친구 초대
     </button>
-    <a class="map-cta-secondary" id="host-login" th:href="|/login/kakao?next=/m/${mapView.id()}|">다른 휴대폰에서도 보려면 카카오 로그인</a>
+    <div id="host-login-box" hidden>
+      <p class="map-warn">이 지도는 아직 카카오 계정에 안 붙어 있어요. 휴대폰을 바꾸거나 기록을 지우면 관리 화면을 못 찾을 수 있어요. 지금 로그인해서 저장해 두세요.</p>
+      <a class="map-kakao" id="host-login" th:href="|/login/kakao?next=/m/${mapView.id()}|">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2C6.7 3.2 2.4 6.6 2.4 10.8c0 2.7 1.8 5.1 4.5 6.5l-.9 3.4c-.1.3.3.6.5.4l3.8-2.5c.6.1 1.1.1 1.7.1 5.3 0 9.6-3.4 9.6-7.6S17.3 3.2 12 3.2z"/></svg>
+        카카오로 로그인하고 저장
+      </a>
+    </div>
     <form id="host-edit" class="map-form map-form-tight">
       <label>
         내 이름

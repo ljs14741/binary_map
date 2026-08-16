@@ -2,12 +2,13 @@
   const node = document.getElementById("map-json");
   let view = node ? JSON.parse(node.textContent || "{}") : {};
   const token = MapApp.tokenOf(view.id);
+  let me = { loggedIn: false, nickname: "" };
 
   boot();
 
   async function boot() {
     try {
-      await MapApp.syncAccount();
+      me = await MapApp.syncAccount();
     } catch (error) {
       // keep going
     }
@@ -30,8 +31,8 @@
     document.getElementById("stage-title").textContent = `${view.hostName}님의 짝꿍지도`;
     document.getElementById("stage-count").textContent = `${view.total}명`;
     document.getElementById("stage-caption").textContent = view.total
-      ? "빛나는 금색이 방장 · 핀을 누르면 그 동네 친구가 나와요"
-      : "링크를 보내면 친구가 사는 도에 핀이 찍혀요";
+      ? "빛나는 금색이 고향 · 핀을 누르면 그 동네 친구가 나와요"
+      : "카톡으로 보내면 친구가 사는 곳에 핀이 찍혀요";
     renderStats(view.counts);
     renderRank(view.people);
     document.getElementById("host-tools").hidden = !view.host;
@@ -45,15 +46,21 @@
         document.getElementById("edit-sigungu"),
         view.hostSigunguCode
       );
-      const login = document.getElementById("host-login");
+      const loginBox = document.getElementById("host-login-box");
+      const status = document.getElementById("account-status");
       const keep = document.getElementById("host-keep-lead");
       if (view.claimed) {
-        login.hidden = true;
-        keep.textContent = "카카오 계정으로 연결된 지도예요. 다른 휴대폰에서도 볼 수 있어요.";
+        loginBox.hidden = true;
+        status.hidden = false;
+        status.textContent = me.nickname
+          ? `카카오 계정에 저장됨 · ${me.nickname}`
+          : "카카오 계정에 저장됨";
+        keep.textContent = "카톡으로 보내면 친구는 이름과 사는 곳만 적어요.";
       } else {
-        login.hidden = false;
-        login.href = MapApp.loginUrl(`/m/${view.id}`);
-        keep.textContent = "친구에게 이 링크를 보내 주세요. 다른 휴대폰에서도 보려면 아래 카카오 로그인을 하면 됩니다.";
+        loginBox.hidden = false;
+        status.hidden = true;
+        document.getElementById("host-login").href = MapApp.loginUrl(`/m/${view.id}`);
+        keep.textContent = "카톡으로 보내면 친구는 이름과 사는 곳만 적어요.";
       }
     }
     await MapBoard.paint({
@@ -96,11 +103,10 @@
       document.getElementById("join-sido"),
       document.getElementById("join-sigungu")
     );
-    document.getElementById("copy-link").addEventListener("click", () => MapApp.copyLink(view.shareUrl));
     document.getElementById("room-share").addEventListener("click", () => {
       MapApp.shareKakao({
         title: `${view.hostName}님의 짝꿍지도`,
-        description: "이름만 적으면 이름궁합이 나오고, 사는 곳에 핀이 찍혀요.",
+        description: "이름만 적으면 궁합이 나오고, 사는 곳에 핀이 찍혀요.",
         button: "나도 들어가기",
         url: view.shareUrl
       });
@@ -145,42 +151,11 @@
     box.style.setProperty("--score-color", data.color);
     box.innerHTML = `
       <p class="map-result-status" id="reveal-status">이름궁합 계산 중</p>
-      <div class="map-result-top">
-        <div class="map-score is-wait" id="reveal-score">?</div>
-        <div class="map-result-copy">
-          <p>${MapBoard.escapeHtml(data.hostName)} × ${MapBoard.escapeHtml(data.guestName)}</p>
-          <h3 id="reveal-label">...</h3>
-          <span id="reveal-chip">계산 중</span>
-        </div>
-      </div>
       <div id="reveal-dual"></div>
-      <div class="map-fold">
-        <div class="map-fold-letters">${data.letters.map((letter) => `<span>${MapBoard.escapeHtml(letter || "·")}</span>`).join("")}</div>
-        ${data.stages.map((stage) => `<div class="map-fold-row">${stage.map((num) => `<span>${num}</span>`).join("")}</div>`).join("")}
-      </div>
+      ${MapApp.dualFolds(data)}
     `;
     box.scrollIntoView({ behavior: "smooth", block: "center" });
-    for (const letter of box.querySelectorAll(".map-fold-letters span")) {
-      letter.classList.add("is-on");
-      await MapApp.wait(90);
-    }
-    const rows = [...box.querySelectorAll(".map-fold-row")];
-    for (let i = 0; i < rows.length; i += 1) {
-      document.getElementById("reveal-status").textContent =
-        i === rows.length - 1 ? "점수를 내는 중" : "궁합 숫자를 맞추는 중";
-      for (const cell of rows[i].querySelectorAll("span")) {
-        cell.classList.add("is-on");
-        await MapApp.wait(55);
-      }
-      await MapApp.wait(160);
-    }
-    await MapApp.wait(280);
-    const scoreEl = document.getElementById("reveal-score");
-    scoreEl.classList.remove("is-wait");
-    scoreEl.classList.add("is-in");
-    scoreEl.textContent = data.score;
-    document.getElementById("reveal-label").textContent = data.label;
-    document.getElementById("reveal-chip").textContent = `${data.score}점`;
+    await MapApp.animateFolds(box);
     document.getElementById("reveal-dual").innerHTML = MapApp.dualScores(data);
     document.getElementById("reveal-status").textContent = `${data.hostName}랑 ${data.guestName}`;
     box.classList.add("is-done");
@@ -205,7 +180,7 @@
         MapApp.saveMap({ id: next.id, token, name: next.hostName });
       }
       await render(next);
-      MapApp.showToast("방장 정보를 바꿨어요.");
+      MapApp.showToast("내 정보를 바꿨어요.");
     } catch (err) {
       error.hidden = false;
       error.textContent = err.message;
