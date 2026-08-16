@@ -49,15 +49,24 @@
     resultBox.classList.remove("is-done");
     resultBox.style.setProperty("--score-color", data.color);
     resultBox.innerHTML = `
-      <p class="map-result-status" id="reveal-status">이름궁합 계산 중</p>
-      <div id="reveal-dual"></div>
+      <div class="map-share-card" id="share-card">
+        <p class="map-result-status" id="reveal-status">이름궁합 계산 중</p>
+        <div id="reveal-dual"></div>
+      </div>
       ${MapApp.dualFolds(data)}
+      <button type="button" class="map-save" id="save-result">이미지 저장</button>
     `;
     resultBox.scrollIntoView({ behavior: "smooth", block: "center" });
     await MapApp.animateFolds(resultBox);
     document.getElementById("reveal-dual").innerHTML = MapApp.dualScores(data);
     document.getElementById("reveal-status").textContent = "두 사람의 이름궁합";
     resultBox.classList.add("is-done");
+    document.getElementById("save-result").addEventListener("click", () => {
+      MapApp.captureShare(document.getElementById("share-card"), {
+        filename: `${data.hostName}_${data.guestName}_이름궁합.png`,
+        text: `${data.hostName}랑 ${data.guestName} 이름궁합`
+      });
+    });
   }
 
   async function paintSample() {

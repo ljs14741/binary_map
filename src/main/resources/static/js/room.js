@@ -112,6 +112,12 @@
     document.getElementById("join-form").addEventListener("submit", join);
     document.getElementById("host-edit").addEventListener("submit", updateHost);
     document.getElementById("delete-map").addEventListener("click", removeMap);
+    document.getElementById("save-map").addEventListener("click", () => {
+      MapApp.captureShare(document.getElementById("map-stage"), {
+        filename: `${view.hostName}의_짝꿍지도.png`,
+        text: `${view.hostName}님의 짝꿍지도`
+      });
+    });
   }
 
   async function join(event) {
@@ -148,15 +154,24 @@
     box.classList.remove("is-done");
     box.style.setProperty("--score-color", data.color);
     box.innerHTML = `
-      <p class="map-result-status" id="reveal-status">이름궁합 계산 중</p>
-      <div id="reveal-dual"></div>
+      <div class="map-share-card" id="share-card">
+        <p class="map-result-status" id="reveal-status">이름궁합 계산 중</p>
+        <div id="reveal-dual"></div>
+      </div>
       ${MapApp.dualFolds(data)}
+      <button type="button" class="map-save" id="save-result">이미지 저장</button>
     `;
     box.scrollIntoView({ behavior: "smooth", block: "center" });
     await MapApp.animateFolds(box);
     document.getElementById("reveal-dual").innerHTML = MapApp.dualScores(data);
     document.getElementById("reveal-status").textContent = `${data.hostName}랑 ${data.guestName}`;
     box.classList.add("is-done");
+    document.getElementById("save-result").addEventListener("click", () => {
+      MapApp.captureShare(document.getElementById("share-card"), {
+        filename: `${data.hostName}_${data.guestName}_이름궁합.png`,
+        text: `${data.hostName}랑 ${data.guestName} 이름궁합`
+      });
+    });
   }
 
   async function updateHost(event) {

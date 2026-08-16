@@ -305,6 +305,70 @@
     }
   }
 
+  function blobFromCanvas(canvas) {
+    return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+  }
+
+  async function captureShare(element, options = {}) {
+    if (!element) {
+      showToast("저장할 화면이 없어요.");
+      return;
+    }
+    if (typeof html2canvas !== "function") {
+      showToast("이미지를 준비하지 못했어요.");
+      return;
+    }
+    const filename = options.filename || "짝꿍지도.png";
+    const text = options.text || "짝꿍지도";
+    showToast("이미지 만드는 중...");
+    try {
+      const canvas = await html2canvas(element, {
+        backgroundColor: "#fff4ea",
+        scale: Math.min(2, window.devicePixelRatio || 2),
+        useCORS: true,
+        logging: false,
+        ignoreElements: (node) => node.classList && (
+          node.classList.contains("map-spark")
+          || node.classList.contains("map-save")
+          || node.classList.contains("map-capture-row")
+        ),
+        onclone: (cloned) => {
+          const mark = cloned.createElement("p");
+          mark.textContent = "짝꿍지도 · map.binaryworld.kr";
+          mark.style.cssText = "margin:10px 0 0;text-align:center;color:#8a6d52;font-size:12px;font-weight:800;letter-spacing:-0.03em";
+          const root = cloned.getElementById(element.id) || cloned.querySelector(".map-stage, .map-share-card");
+          if (root) {
+            root.appendChild(mark);
+          }
+        }
+      });
+      const blob = await blobFromCanvas(canvas);
+      if (!blob) {
+        throw new Error("empty");
+      }
+      const file = new File([blob], filename, { type: "image/png" });
+      try {
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: "짝꿍지도", text });
+          return;
+        }
+      } catch (error) {
+        if (error && error.name === "AbortError") {
+          return;
+        }
+      }
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 2000);
+      showToast("이미지를 저장했어요. 인스타 스토리에 올리면 돼요.");
+    } catch (error) {
+      showToast("이미지 저장에 실패했어요. 화면을 캡처해 주세요.");
+    }
+  }
+
   async function api(url, options = {}) {
     const headers = Object.assign({}, options.headers || {});
     if (options.body) {
@@ -447,6 +511,7 @@
     animateFolds,
     shareKakao,
     copyLink,
+    captureShare,
     api,
     syncAccount,
     heartOf,

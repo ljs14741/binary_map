@@ -32,7 +32,8 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
   <link rel="stylesheet" href="https://binaryworld.kr/common/header.css">
   <link rel="stylesheet" href="https://binaryworld.kr/common/footer.css">
-  <link rel="stylesheet" th:href="@{/css/main.css}">
+  <link rel="stylesheet" th:href="@{/css/main.css}" id="theme-style">
+  <link rel="stylesheet" href="https://binaryworld.kr/common/guestbook.css">
 
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6890085609044109"
           crossorigin="anonymous"></script>
@@ -166,6 +167,8 @@
 
     <ol class="map-rank" id="map-rank"></ol>
   </section>
+
+  <div id="bw-guestbook" aria-label="방명록"></div>
 </main>
 
 <div id="map-sheet" class="map-sheet" hidden>
@@ -187,9 +190,11 @@
 
 <script id="sample-friends-json" type="application/json" th:utext="${sampleFriendsJson}">[]</script>
 <script id="sigungus-json" type="application/json" th:utext="${sigungusJson}">[]</script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
 <script src="https://binaryworld.kr/common/header.js" defer></script>
 <script src="https://binaryworld.kr/common/footer.js" defer></script>
+<script src="https://binaryworld.kr/common/guestbook.js" defer></script>
 <script th:src="@{/js/map-app.js}" defer></script>
 <script th:src="@{/js/map-board.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>
