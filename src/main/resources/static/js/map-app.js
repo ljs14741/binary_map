@@ -309,87 +309,21 @@
     return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
   }
 
-  const SHOT_STYLE_PROPS = [
-    "box-sizing", "background-color", "color", "border-top-width", "border-right-width",
-    "border-bottom-width", "border-left-width", "border-top-style", "border-right-style",
-    "border-bottom-style", "border-left-style", "border-top-color", "border-right-color",
-    "border-bottom-color", "border-left-color", "border-radius", "font-family", "font-size",
-    "font-weight", "font-style", "letter-spacing", "line-height", "text-align", "padding-top",
-    "padding-right", "padding-bottom", "padding-left", "margin-top", "margin-right",
-    "margin-bottom", "margin-left", "width", "height", "min-width", "min-height", "max-width",
-    "display", "flex-direction", "flex-wrap", "align-items", "justify-content", "gap",
-    "grid-template-columns", "grid-column", "position", "left", "top", "right", "bottom",
-    "transform", "opacity", "overflow", "z-index", "white-space", "fill", "stroke",
-    "stroke-width", "text-overflow"
-  ];
-
-  function applyComputed(from, to) {
-    const cs = getComputedStyle(from);
-    for (const prop of SHOT_STYLE_PROPS) {
-      try {
-        const value = cs.getPropertyValue(prop);
-        if (value) {
-          to.style.setProperty(prop, value);
-        }
-      } catch (error) {
-        // skip unsupported
-      }
+  function cssColorToRgb(value) {
+    if (!value || value === "none") {
+      return value;
     }
-    to.style.setProperty("animation", "none");
-    to.style.setProperty("transition", "none");
-    to.style.setProperty("box-shadow", "none");
-    if (from.classList.contains("cluster-pin") || from.classList.contains("host-pin")) {
-      to.style.setProperty("opacity", "1");
+    if (/^#|^rgba?\(/i.test(value) && !/color\(/i.test(value)) {
+      return value;
     }
-  }
-
-  function copyComputedTree(from, to) {
-    if (!from || !to || from.nodeType !== 1 || to.nodeType !== 1) {
-      return;
+    const ctx = cssColorToRgb.ctx || (cssColorToRgb.ctx = document.createElement("canvas").getContext("2d"));
+    try {
+      ctx.fillStyle = "#000000";
+      ctx.fillStyle = value;
+      return ctx.fillStyle || "#333333";
+    } catch (error) {
+      return "#333333";
     }
-    applyComputed(from, to);
-    const fromKids = from.children;
-    const toKids = to.children;
-    const count = Math.min(fromKids.length, toKids.length);
-    for (let i = 0; i < count; i += 1) {
-      copyComputedTree(fromKids[i], toKids[i]);
-    }
-  }
-
-  function stripShotNoise(root) {
-    root.querySelectorAll(".map-spark, .map-save, .map-capture-row").forEach((node) => node.remove());
-  }
-
-  function composeShareNode(element) {
-    const wrap = document.createElement("div");
-    wrap.style.cssText = "background:#fff4ea;padding:14px 12px 16px;border-radius:24px;font-family:Pretendard,Apple SD Gothic Neo,sans-serif;";
-    if (element.id === "map-stage" || element.classList.contains("map-stage")) {
-      const stageClone = element.cloneNode(true);
-      wrap.appendChild(stageClone);
-      copyComputedTree(element, stageClone);
-      const rank = document.getElementById("map-rank");
-      if (rank && rank.children.length) {
-        const top = document.createElement("ol");
-        top.style.cssText = "list-style:none;margin:10px 0 0;padding:6px;background:#fffdf9;border-radius:16px;";
-        const take = Math.min(3, rank.children.length);
-        for (let i = 0; i < take; i += 1) {
-          const li = rank.children[i].cloneNode(true);
-          top.appendChild(li);
-          copyComputedTree(rank.children[i], li);
-        }
-        wrap.appendChild(top);
-      }
-    } else {
-      const clone = element.cloneNode(true);
-      wrap.appendChild(clone);
-      copyComputedTree(element, clone);
-    }
-    stripShotNoise(wrap);
-    const mark = document.createElement("p");
-    mark.textContent = "짝꿍지도 · map.binaryworld.kr";
-    mark.style.cssText = "margin:12px 0 0;text-align:center;color:#8a6d52;font-size:12px;font-weight:800;letter-spacing:-0.03em";
-    wrap.appendChild(mark);
-    return wrap;
   }
 
   function loadImage(url) {
@@ -401,64 +335,249 @@
     });
   }
 
-  async function nodeToBlob(node) {
-    const width = Math.max(280, Math.ceil(node.scrollWidth || node.offsetWidth || 360));
-    const height = Math.max(120, Math.ceil(node.scrollHeight || node.offsetHeight || 240));
-    try {
-      return await svgForeignBlob(node, width, height);
-    } catch (error) {
-      return html2canvasBlob(node, width, height);
-    }
+  function roundRect(ctx, x, y, w, h, r) {
+    const radius = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.arcTo(x + w, y, x + w, y + h, radius);
+    ctx.arcTo(x + w, y + h, x, y + h, radius);
+    ctx.arcTo(x, y + h, x, y, radius);
+    ctx.arcTo(x, y, x + w, y, radius);
+    ctx.closePath();
   }
 
-  async function svgForeignBlob(node, width, height) {
-    const clone = node.cloneNode(true);
-    clone.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
-    const inner = new XMLSerializer().serializeToString(clone);
-    const svg =
-      `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
-      `<foreignObject width="100%" height="100%">${inner}</foreignObject></svg>`;
-    const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
+  function fitText(ctx, text, maxWidth) {
+    if (ctx.measureText(text).width <= maxWidth) {
+      return text;
+    }
+    let value = text;
+    while (value.length > 1 && ctx.measureText(value + "…").width > maxWidth) {
+      value = value.slice(0, -1);
+    }
+    return value + "…";
+  }
+
+  async function rasterizeSvg(svg, width, height) {
+    const copy = svg.cloneNode(true);
+    copy.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    const lives = svg.querySelectorAll("path, circle, rect, polygon, polyline, ellipse");
+    const clones = copy.querySelectorAll("path, circle, rect, polygon, polyline, ellipse");
+    clones.forEach((el, index) => {
+      const live = lives[index];
+      if (!live) {
+        return;
+      }
+      const cs = getComputedStyle(live);
+      const fill = cssColorToRgb(cs.fill);
+      if (fill && fill !== "none") {
+        el.setAttribute("fill", fill);
+      }
+      const stroke = cssColorToRgb(cs.stroke);
+      if (stroke && stroke !== "none") {
+        el.setAttribute("stroke", stroke);
+        el.setAttribute("stroke-width", cs.strokeWidth || "0.65");
+      }
+    });
+    const xml = new XMLSerializer().serializeToString(copy);
+    const url = URL.createObjectURL(new Blob([xml], { type: "image/svg+xml;charset=utf-8" }));
     try {
       const img = await loadImage(url);
-      const scale = Math.min(2, window.devicePixelRatio || 2);
       const canvas = document.createElement("canvas");
-      canvas.width = Math.ceil(width * scale);
-      canvas.height = Math.ceil(height * scale);
-      const ctx = canvas.getContext("2d");
-      ctx.fillStyle = "#fff4ea";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      return blobFromCanvas(canvas);
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+      return canvas;
     } finally {
       URL.revokeObjectURL(url);
     }
   }
 
-  async function html2canvasBlob(node, width, height) {
-    const sheets = [...document.querySelectorAll('link[rel="stylesheet"], style')];
-    const parked = sheets.map((el) => ({ el, parent: el.parentNode, next: el.nextSibling }));
-    parked.forEach((item) => item.el.remove());
-    try {
-      const canvas = await html2canvas(node, {
-        backgroundColor: "#fff4ea",
-        scale: Math.min(2, window.devicePixelRatio || 2),
-        width,
-        height,
-        windowWidth: width,
-        windowHeight: height,
-        logging: false
-      });
-      return blobFromCanvas(canvas);
-    } finally {
-      parked.forEach(({ el, parent, next }) => {
-        if (next) {
-          parent.insertBefore(el, next);
-        } else {
-          parent.appendChild(el);
+  async function drawMapShareCard(stage) {
+    const scale = 2;
+    const width = Math.ceil((stage.getBoundingClientRect().width || 360) * scale);
+    const pad = 24;
+    const title = (document.getElementById("stage-title") || stage.querySelector(".map-stage-head strong"))?.textContent || "짝꿍지도";
+    const count = (document.getElementById("stage-count") || stage.querySelector(".map-stage-head span"))?.textContent || "";
+    const caption = (document.getElementById("stage-caption") || stage.querySelector(".map-stage-caption"))?.textContent || "";
+    const wrap = stage.querySelector(".korea-wrap");
+    const svg = wrap ? wrap.querySelector("svg") : null;
+    const mapBox = wrap ? wrap.getBoundingClientRect() : { width: 320, height: 300 };
+    const mapW = Math.ceil(mapBox.width * scale);
+    const mapH = Math.ceil(Math.max(240, mapBox.height) * scale);
+    const stats = [...stage.querySelectorAll(".map-stat")];
+    const rankItems = [...document.querySelectorAll("#map-rank li")].slice(0, 3);
+    const statH = stats.length ? 78 * scale : 0;
+    const rankH = rankItems.length ? 20 * scale + rankItems.length * 58 * scale : 0;
+    const height = pad + 56 * scale + mapH + 36 * scale + statH + rankH + 48 * scale + pad;
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = Math.ceil(height);
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#fff4ea";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.textBaseline = "top";
+    ctx.fillStyle = "#2a1f1a";
+    ctx.font = `800 ${22 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+    ctx.fillText(fitText(ctx, title, width - pad * 2 - 120 * scale), pad, pad);
+    ctx.fillStyle = "#8a6d52";
+    ctx.font = `700 ${12 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+    ctx.textAlign = "right";
+    ctx.fillText(count, width - pad, pad + 6 * scale);
+    ctx.textAlign = "left";
+    let y = pad + 40 * scale;
+    roundRect(ctx, pad - 4, y, width - pad * 2 + 8, mapH + 16 * scale, 20 * scale);
+    ctx.fillStyle = "#9ecfde";
+    ctx.fill();
+    if (svg) {
+      const mapCanvas = await rasterizeSvg(svg, mapW, mapH);
+      ctx.drawImage(mapCanvas, pad, y + 8 * scale, mapW, mapH);
+      [...wrap.querySelectorAll(".cluster-pin, .host-pin")].forEach((pin) => {
+        const px = pad + (parseFloat(pin.style.left) / 100) * mapW;
+        const py = y + 8 * scale + (parseFloat(pin.style.top) / 100) * mapH;
+        const host = pin.classList.contains("host-pin");
+        const color = host ? "#f5c542" : cssColorToRgb(getComputedStyle(pin).getPropertyValue("--pin") || "#ff2d95");
+        ctx.beginPath();
+        ctx.fillStyle = color;
+        ctx.arc(px, py, (host ? 11 : 9) * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 3 * scale;
+        ctx.stroke();
+        const badge = pin.querySelector(".cluster-badge, .host-badge");
+        if (badge) {
+          ctx.font = `800 ${10 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+          const label = fitText(ctx, badge.textContent.trim(), 140 * scale);
+          const tw = ctx.measureText(label).width;
+          roundRect(ctx, px - tw / 2 - 8 * scale, py + 12 * scale, tw + 16 * scale, 18 * scale, 9 * scale);
+          ctx.fillStyle = host ? "#fff6cf" : "rgba(255,248,234,0.94)";
+          ctx.fill();
+          ctx.fillStyle = host ? "#9a7408" : "#4a3426";
+          ctx.textAlign = "center";
+          ctx.fillText(label, px, py + 15 * scale);
+          ctx.textAlign = "left";
         }
       });
     }
+    y += mapH + 28 * scale;
+    ctx.fillStyle = "#5c4a40";
+    ctx.font = `700 ${12 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.fillText(caption, width / 2, y);
+    ctx.textAlign = "left";
+    y += 28 * scale;
+    if (stats.length) {
+      const gap = 8 * scale;
+      const col = (width - pad * 2 - gap * 2) / 3;
+      stats.forEach((stat, index) => {
+        const sx = pad + (index % 3) * (col + gap);
+        const sy = y + Math.floor(index / 3) * (36 * scale + gap);
+        const color = cssColorToRgb(getComputedStyle(stat).getPropertyValue("--stat") || "#ff2d95");
+        roundRect(ctx, sx, sy, col, 34 * scale, 12 * scale);
+        ctx.fillStyle = "#fff";
+        ctx.fill();
+        ctx.strokeStyle = "#f0ddd0";
+        ctx.lineWidth = 1 * scale;
+        ctx.stroke();
+        const num = stat.querySelector("b")?.textContent || "0";
+        const label = stat.querySelector("span")?.textContent || "";
+        ctx.fillStyle = color;
+        ctx.font = `800 ${13 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+        ctx.fillText(num, sx + 10 * scale, sy + 6 * scale);
+        ctx.fillStyle = "#6b5344";
+        ctx.font = `700 ${9 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+        ctx.fillText(fitText(ctx, label, col - 20 * scale), sx + 10 * scale, sy + 20 * scale);
+      });
+      y += (stats.length > 3 ? 78 : 42) * scale;
+    }
+    rankItems.forEach((item, index) => {
+      const ry = y + index * 56 * scale;
+      roundRect(ctx, pad, ry, width - pad * 2, 50 * scale, 14 * scale);
+      ctx.fillStyle = index === 0 ? "#fff8d6" : "#fffdf9";
+      ctx.fill();
+      ctx.beginPath();
+      ctx.fillStyle = index === 0 ? "#f5c542" : index === 1 ? "#c5d0dc" : "#e0a070";
+      ctx.arc(pad + 22 * scale, ry + 25 * scale, 12 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#3a2a20";
+      ctx.font = `800 ${12 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.fillText(String(index + 1), pad + 22 * scale, ry + 18 * scale);
+      ctx.textAlign = "left";
+      const name = item.querySelector("strong")?.textContent || "";
+      const place = item.querySelector(".map-rank-place")?.textContent || "";
+      const tag = item.querySelector(".map-rank-tag")?.textContent || "";
+      ctx.fillStyle = "#2a1f1a";
+      ctx.font = `800 ${14 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+      ctx.fillText(fitText(ctx, name, 140 * scale), pad + 42 * scale, ry + 8 * scale);
+      ctx.fillStyle = "#5c4a40";
+      ctx.font = `700 ${10 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+      ctx.fillText(fitText(ctx, `${place} ${tag}`.trim(), 180 * scale), pad + 42 * scale, ry + 28 * scale);
+      const scores = [...item.querySelectorAll(".map-score-cell b")];
+      ctx.textAlign = "right";
+      ctx.fillStyle = scores[0] ? cssColorToRgb(scores[0].style.color || "#ff2d95") : "#2a1f1a";
+      ctx.font = `800 ${16 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+      if (scores[0]) {
+        ctx.fillText(scores[0].textContent, width - pad - 12 * scale, ry + 6 * scale);
+      }
+      if (scores[1]) {
+        ctx.fillStyle = cssColorToRgb(scores[1].style.color || "#8a7468");
+        ctx.font = `800 ${12 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+        ctx.fillText(scores[1].textContent, width - pad - 12 * scale, ry + 26 * scale);
+      }
+      ctx.textAlign = "left";
+    });
+    y += rankItems.length * 56 * scale + 12 * scale;
+    ctx.fillStyle = "#8a6d52";
+    ctx.font = `800 ${11 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.fillText("짝꿍지도 · map.binaryworld.kr", width / 2, canvas.height - 28 * scale);
+    ctx.textAlign = "left";
+    return blobFromCanvas(canvas);
+  }
+
+  async function drawScoreShareCard(card) {
+    const scale = 2;
+    const width = Math.ceil((card.getBoundingClientRect().width || 360) * scale);
+    const dual = [...card.querySelectorAll(".map-dual-card")];
+    const status = card.querySelector(".map-result-status")?.textContent || "이름궁합";
+    const height = (dual.length ? 220 : 140) * scale;
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#fff4ea";
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = "#2a1f1a";
+    ctx.font = `800 ${18 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillText(status, width / 2, 20 * scale);
+    const boxW = dual.length === 2 ? (width - 56 * scale) / 2 : width - 48 * scale;
+    dual.forEach((box, index) => {
+      const x = 24 * scale + index * (boxW + 8 * scale);
+      const y = 56 * scale;
+      roundRect(ctx, x, y, boxW, 120 * scale, 18 * scale);
+      ctx.fillStyle = "#fffdf9";
+      ctx.fill();
+      const color = cssColorToRgb(getComputedStyle(box).getPropertyValue("--score-color") || box.style.getPropertyValue("--score-color") || "#ff2d95");
+      const small = box.querySelector("small")?.textContent || "";
+      const score = box.querySelector("b")?.textContent || "";
+      const label = box.querySelector("span")?.textContent || "";
+      ctx.fillStyle = "#8a7468";
+      ctx.font = `700 ${11 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+      ctx.fillText(fitText(ctx, small, boxW - 16 * scale), x + boxW / 2, y + 14 * scale);
+      ctx.fillStyle = color;
+      ctx.font = `800 ${36 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+      ctx.fillText(score, x + boxW / 2, y + 36 * scale);
+      ctx.fillStyle = "#2a1f1a";
+      ctx.font = `800 ${12 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+      ctx.fillText(fitText(ctx, label, boxW - 16 * scale), x + boxW / 2, y + 88 * scale);
+    });
+    ctx.fillStyle = "#8a6d52";
+    ctx.font = `800 ${11 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+    ctx.fillText("짝꿍지도 · map.binaryworld.kr", width / 2, height - 28 * scale);
+    ctx.textAlign = "left";
+    return blobFromCanvas(canvas);
   }
 
   async function captureShare(element, options = {}) {
@@ -466,22 +585,13 @@
       showToast("저장할 화면이 없어요.");
       return;
     }
-    if (typeof html2canvas !== "function") {
-      showToast("이미지를 준비하지 못했어요.");
-      return;
-    }
     const filename = options.filename || "짝꿍지도.png";
     const text = options.text || "짝꿍지도";
     showToast("이미지 만드는 중...");
-    const shot = composeShareNode(element);
-    const holder = document.createElement("div");
-    const shotWidth = Math.ceil(element.getBoundingClientRect().width || 360);
-    holder.style.cssText = `position:fixed;left:-10000px;top:0;z-index:-1;width:${shotWidth}px`;
-    holder.appendChild(shot);
-    document.body.appendChild(holder);
     try {
-      await wait(40);
-      const blob = await nodeToBlob(shot);
+      const blob = element.id === "map-stage" || element.classList.contains("map-stage")
+        ? await drawMapShareCard(element)
+        : await drawScoreShareCard(element);
       if (!blob) {
         throw new Error("empty");
       }
@@ -509,8 +619,6 @@
     } catch (error) {
       console.error(error);
       showToast("이미지 저장에 실패했어요. 화면을 캡처해 주세요.");
-    } finally {
-      holder.remove();
     }
   }
 
