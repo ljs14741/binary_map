@@ -160,13 +160,16 @@
       return;
     }
     box.hidden = false;
-    title.textContent = me.nickname ? `${me.nickname}님의 지도` : "내 짝꿍지도";
-    lead.textContent = "이미 만든 지도예요. 눌러서 친구를 초대하면 됩니다.";
+    title.textContent = "내 짝꿍지도 열기";
+    lead.textContent = "아래 버튼을 누르면 내 지도로 들어가요. 친구 초대도 거기서 해요.";
     list.innerHTML = maps.map((item) => `
       <li>
-        <a href="/m/${item.id}">
-          <strong>${MapApp.escapeHtml(item.hostName)}님의 짝꿍지도</strong>
-          ${item.place ? `<small>${MapApp.escapeHtml(item.place)} · ${item.total}명</small>` : ""}
+        <a class="map-mine-link" href="/m/${item.id}">
+          <span>
+            <strong>${MapApp.escapeHtml(item.hostName)}님의 짝꿍지도</strong>
+            ${item.place ? `<small>${MapApp.escapeHtml(item.place)} · ${item.total}명</small>` : `<small>눌러서 지도 열기</small>`}
+          </span>
+          <em>열기</em>
         </a>
       </li>
     `).join("");

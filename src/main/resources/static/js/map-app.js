@@ -309,6 +309,158 @@
     return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
   }
 
+  const SHOT_STYLE_PROPS = [
+    "box-sizing", "background-color", "color", "border-top-width", "border-right-width",
+    "border-bottom-width", "border-left-width", "border-top-style", "border-right-style",
+    "border-bottom-style", "border-left-style", "border-top-color", "border-right-color",
+    "border-bottom-color", "border-left-color", "border-radius", "font-family", "font-size",
+    "font-weight", "font-style", "letter-spacing", "line-height", "text-align", "padding-top",
+    "padding-right", "padding-bottom", "padding-left", "margin-top", "margin-right",
+    "margin-bottom", "margin-left", "width", "height", "min-width", "min-height", "max-width",
+    "display", "flex-direction", "flex-wrap", "align-items", "justify-content", "gap",
+    "grid-template-columns", "grid-column", "position", "left", "top", "right", "bottom",
+    "transform", "opacity", "overflow", "z-index", "white-space", "fill", "stroke",
+    "stroke-width", "text-overflow"
+  ];
+
+  function applyComputed(from, to) {
+    const cs = getComputedStyle(from);
+    for (const prop of SHOT_STYLE_PROPS) {
+      try {
+        const value = cs.getPropertyValue(prop);
+        if (value) {
+          to.style.setProperty(prop, value);
+        }
+      } catch (error) {
+        // skip unsupported
+      }
+    }
+    to.style.setProperty("animation", "none");
+    to.style.setProperty("transition", "none");
+    to.style.setProperty("box-shadow", "none");
+    if (from.classList.contains("cluster-pin") || from.classList.contains("host-pin")) {
+      to.style.setProperty("opacity", "1");
+    }
+  }
+
+  function copyComputedTree(from, to) {
+    if (!from || !to || from.nodeType !== 1 || to.nodeType !== 1) {
+      return;
+    }
+    applyComputed(from, to);
+    const fromKids = from.children;
+    const toKids = to.children;
+    const count = Math.min(fromKids.length, toKids.length);
+    for (let i = 0; i < count; i += 1) {
+      copyComputedTree(fromKids[i], toKids[i]);
+    }
+  }
+
+  function stripShotNoise(root) {
+    root.querySelectorAll(".map-spark, .map-save, .map-capture-row").forEach((node) => node.remove());
+  }
+
+  function composeShareNode(element) {
+    const wrap = document.createElement("div");
+    wrap.style.cssText = "background:#fff4ea;padding:14px 12px 16px;border-radius:24px;font-family:Pretendard,Apple SD Gothic Neo,sans-serif;";
+    if (element.id === "map-stage" || element.classList.contains("map-stage")) {
+      const stageClone = element.cloneNode(true);
+      wrap.appendChild(stageClone);
+      copyComputedTree(element, stageClone);
+      const rank = document.getElementById("map-rank");
+      if (rank && rank.children.length) {
+        const top = document.createElement("ol");
+        top.style.cssText = "list-style:none;margin:10px 0 0;padding:6px;background:#fffdf9;border-radius:16px;";
+        const take = Math.min(3, rank.children.length);
+        for (let i = 0; i < take; i += 1) {
+          const li = rank.children[i].cloneNode(true);
+          top.appendChild(li);
+          copyComputedTree(rank.children[i], li);
+        }
+        wrap.appendChild(top);
+      }
+    } else {
+      const clone = element.cloneNode(true);
+      wrap.appendChild(clone);
+      copyComputedTree(element, clone);
+    }
+    stripShotNoise(wrap);
+    const mark = document.createElement("p");
+    mark.textContent = "짝꿍지도 · map.binaryworld.kr";
+    mark.style.cssText = "margin:12px 0 0;text-align:center;color:#8a6d52;font-size:12px;font-weight:800;letter-spacing:-0.03em";
+    wrap.appendChild(mark);
+    return wrap;
+  }
+
+  function loadImage(url) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("image"));
+      img.src = url;
+    });
+  }
+
+  async function nodeToBlob(node) {
+    const width = Math.max(280, Math.ceil(node.scrollWidth || node.offsetWidth || 360));
+    const height = Math.max(120, Math.ceil(node.scrollHeight || node.offsetHeight || 240));
+    try {
+      return await svgForeignBlob(node, width, height);
+    } catch (error) {
+      return html2canvasBlob(node, width, height);
+    }
+  }
+
+  async function svgForeignBlob(node, width, height) {
+    const clone = node.cloneNode(true);
+    clone.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+    const inner = new XMLSerializer().serializeToString(clone);
+    const svg =
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
+      `<foreignObject width="100%" height="100%">${inner}</foreignObject></svg>`;
+    const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
+    try {
+      const img = await loadImage(url);
+      const scale = Math.min(2, window.devicePixelRatio || 2);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.ceil(width * scale);
+      canvas.height = Math.ceil(height * scale);
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#fff4ea";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      return blobFromCanvas(canvas);
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  async function html2canvasBlob(node, width, height) {
+    const sheets = [...document.querySelectorAll('link[rel="stylesheet"], style')];
+    const parked = sheets.map((el) => ({ el, parent: el.parentNode, next: el.nextSibling }));
+    parked.forEach((item) => item.el.remove());
+    try {
+      const canvas = await html2canvas(node, {
+        backgroundColor: "#fff4ea",
+        scale: Math.min(2, window.devicePixelRatio || 2),
+        width,
+        height,
+        windowWidth: width,
+        windowHeight: height,
+        logging: false
+      });
+      return blobFromCanvas(canvas);
+    } finally {
+      parked.forEach(({ el, parent, next }) => {
+        if (next) {
+          parent.insertBefore(el, next);
+        } else {
+          parent.appendChild(el);
+        }
+      });
+    }
+  }
+
   async function captureShare(element, options = {}) {
     if (!element) {
       showToast("저장할 화면이 없어요.");
@@ -321,28 +473,15 @@
     const filename = options.filename || "짝꿍지도.png";
     const text = options.text || "짝꿍지도";
     showToast("이미지 만드는 중...");
+    const shot = composeShareNode(element);
+    const holder = document.createElement("div");
+    const shotWidth = Math.ceil(element.getBoundingClientRect().width || 360);
+    holder.style.cssText = `position:fixed;left:-10000px;top:0;z-index:-1;width:${shotWidth}px`;
+    holder.appendChild(shot);
+    document.body.appendChild(holder);
     try {
-      const canvas = await html2canvas(element, {
-        backgroundColor: "#fff4ea",
-        scale: Math.min(2, window.devicePixelRatio || 2),
-        useCORS: true,
-        logging: false,
-        ignoreElements: (node) => node.classList && (
-          node.classList.contains("map-spark")
-          || node.classList.contains("map-save")
-          || node.classList.contains("map-capture-row")
-        ),
-        onclone: (cloned) => {
-          const mark = cloned.createElement("p");
-          mark.textContent = "짝꿍지도 · map.binaryworld.kr";
-          mark.style.cssText = "margin:10px 0 0;text-align:center;color:#8a6d52;font-size:12px;font-weight:800;letter-spacing:-0.03em";
-          const root = cloned.getElementById(element.id) || cloned.querySelector(".map-stage, .map-share-card");
-          if (root) {
-            root.appendChild(mark);
-          }
-        }
-      });
-      const blob = await blobFromCanvas(canvas);
+      await wait(40);
+      const blob = await nodeToBlob(shot);
       if (!blob) {
         throw new Error("empty");
       }
@@ -350,6 +489,7 @@
       try {
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           await navigator.share({ files: [file], title: "짝꿍지도", text });
+          showToast("공유 창에서 인스타·스토리를 고르면 돼요.");
           return;
         }
       } catch (error) {
@@ -361,11 +501,16 @@
       const link = document.createElement("a");
       link.href = url;
       link.download = filename;
+      document.body.appendChild(link);
       link.click();
+      link.remove();
       window.setTimeout(() => URL.revokeObjectURL(url), 2000);
       showToast("이미지를 저장했어요. 인스타 스토리에 올리면 돼요.");
     } catch (error) {
+      console.error(error);
       showToast("이미지 저장에 실패했어요. 화면을 캡처해 주세요.");
+    } finally {
+      holder.remove();
     }
   }
 

@@ -1291,28 +1291,55 @@ body.is-sheet-open {
 
 .map-mine {
   list-style: none;
-  margin: 0;
+  margin: 8px 0 0;
   padding: 0;
 }
 
-.map-mine li + li {
-  border-top: 1px solid var(--line);
-}
-
-.map-mine a {
-  display: block;
-  padding: 12px 2px;
+.map-mine-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1.5px solid #f0ddd0;
+  border-radius: 18px;
+  background: #fff;
   color: inherit;
   text-decoration: none;
+  box-shadow: 0 8px 18px rgba(80, 40, 20, 0.06);
 }
 
-.map-mine strong {
+.map-mine-link span {
+  min-width: 0;
+  flex: 1;
+}
+
+.map-mine-link strong {
   display: block;
+  font-size: 16px;
+  letter-spacing: -0.03em;
 }
 
-.map-mine small {
+.map-mine-link small {
+  display: block;
+  margin-top: 4px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.map-mine-link em {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--coral);
+  color: #fff;
+  font-style: normal;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.map-mine-link:active {
+  transform: scale(0.98);
 }
 
 .map-danger {
