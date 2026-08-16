@@ -1,25 +1,14 @@
 (() => {
   const VIEW = { w: 800, h: 759 };
   const CENTER_FIX = { 28: [200, 152], 11: [251, 146] };
-  const CLUSTER_POS = {
-    sudo: [268, 188],
-    gangwon: [430, 168],
-    chungcheong: [292, 318],
-    honam: [236, 478],
-    daegu: [428, 388],
-    busan: [478, 508],
-    jeju: [228, 688]
+  const SIDO_NAME = {
+    "11": "서울", "26": "부산", "27": "대구", "28": "인천", "29": "광주",
+    "30": "대전", "31": "울산", "36": "세종", "41": "경기", "42": "강원",
+    "43": "충북", "44": "충남", "45": "전북", "46": "전남", "47": "경북",
+    "48": "경남", "50": "제주"
   };
-  const CLUSTERS = [
-    { id: "sudo", name: "서울/경기", codes: ["11", "41", "28"] },
-    { id: "gangwon", name: "강원", codes: ["42"] },
-    { id: "chungcheong", name: "대전/충청", codes: ["30", "36", "43", "44"] },
-    { id: "honam", name: "광주/전라", codes: ["29", "45", "46"] },
-    { id: "daegu", name: "대구/경북", codes: ["27", "47"] },
-    { id: "busan", name: "부산/경남", codes: ["26", "31", "48"] },
-    { id: "jeju", name: "제주", codes: ["50"] }
-  ];
 
+  let svgCache = "";
   let activeFilter = "";
   let clusterState = [];
   let onDeletePerson = null;
@@ -30,10 +19,12 @@
       return;
     }
     onDeletePerson = options.onDeletePerson || null;
-    const svgText = await fetch("/img/korea-sido.svg").then((res) => res.text());
+    if (!svgCache) {
+      svgCache = await fetch("/img/korea-sido.svg").then((res) => res.text());
+    }
     const canvas = document.createElement("div");
     canvas.className = "korea-canvas";
-    canvas.innerHTML = svgText;
+    canvas.innerHTML = svgCache;
     const svg = canvas.querySelector("svg");
     if (!svg) {
       return;
@@ -43,20 +34,16 @@
     svg.setAttribute("role", "img");
     svg.setAttribute("overflow", "visible");
     svg.classList.add("korea-map");
-    svg.querySelectorAll("path[data-code]").forEach((path) => path.classList.add("sido-land"));
+    svg.querySelectorAll("path[data-code]").forEach((path) => {
+      path.classList.add("sido-land");
+      if (path.getAttribute("data-code") === options.host.sidoCode) {
+        path.classList.add("is-home");
+      }
+    });
     wrap.replaceChildren(canvas);
 
-    const hostCode = options.host.sidoCode;
-    const hostPath = svg.querySelector(`path[data-code="${hostCode}"]`);
-    let hostPoint = CENTER_FIX[hostCode] || CLUSTER_POS.sudo;
-    if (hostPath && typeof hostPath.getBBox === "function") {
-      const box = hostPath.getBBox();
-      if (box.width || box.height) {
-        hostPoint = CENTER_FIX[hostCode] || [box.x + box.width / 2, box.y + box.height / 2];
-      }
-    }
-
-    clusterState = buildClusters(options.people || [], options.extras || []);
+    const hostPoint = pinPoint(svg, options.host.sidoCode, options.host.sigunguCode);
+    clusterState = buildClusters(svg, options.people || [], options.extras || []);
     const layer = document.createElement("div");
     layer.className = "cluster-layer";
     addSparkles(layer);
@@ -67,22 +54,96 @@
     applyFilter();
   }
 
-  function buildClusters(people, extras) {
+  function sidoBox(svg, code) {
+    const path = svg.querySelector(`path[data-code="${code}"]`);
+    if (!path || typeof path.getBBox !== "function") {
+      return null;
+    }
+    const box = path.getBBox();
+    return (box.width || box.height) ? box : null;
+  }
+
+  function sidoCenter(svg, code) {
+    if (CENTER_FIX[code]) {
+      return CENTER_FIX[code].slice();
+    }
+    const box = sidoBox(svg, code);
+    if (box) {
+      return [box.x + box.width / 2, box.y + box.height / 2];
+    }
+    return [400, 380];
+  }
+
+  function hashOffset(code, spreadX, spreadY) {
+    let hash = 2166136261;
+    const text = String(code || "");
+    for (let i = 0; i < text.length; i += 1) {
+      hash ^= text.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    const nx = ((hash >>> 0) % 1000) / 1000 - 0.5;
+    const ny = ((hash >>> 11) % 1000) / 1000 - 0.5;
+    return [nx * spreadX * 2, ny * spreadY * 2];
+  }
+
+  function pinPoint(svg, sidoCode, sigunguCode) {
+    const center = sidoCenter(svg, sidoCode);
+    const box = sidoBox(svg, sidoCode);
+    const spreadX = box ? Math.max(12, box.width * 0.28) : 16;
+    const spreadY = box ? Math.max(12, box.height * 0.28) : 16;
+    const offset = hashOffset(sigunguCode || sidoCode, spreadX, spreadY);
+    return [center[0] + offset[0], center[1] + offset[1]];
+  }
+
+  function rankScore(person) {
+    return Math.max(person.score || 0, person.reverseScore || 0);
+  }
+
+  function rankLabelOf(person) {
+    if ((person.reverseScore || 0) > (person.score || 0)) {
+      return person.reverseLabel || person.label;
+    }
+    return person.label;
+  }
+
+  function rankColorOf(person) {
+    if ((person.reverseScore || 0) > (person.score || 0)) {
+      return person.reverseColor || person.color;
+    }
+    return person.color;
+  }
+
+  function buildClusters(svg, people, extras) {
     const all = people.map((person) => ({ ...person, named: true })).concat(extras);
-    return CLUSTERS.map((cluster) => {
-      const grouped = all
-        .filter((person) => cluster.codes.includes(person.sidoCode))
-        .sort((a, b) => b.score - a.score);
-      const best = grouped[0] || { score: 0, color: "#94a3b8" };
+    const bySido = new Map();
+    all.forEach((person) => {
+      const code = person.sidoCode;
+      if (!code) {
+        return;
+      }
+      if (!bySido.has(code)) {
+        bySido.set(code, []);
+      }
+      bySido.get(code).push(person);
+    });
+    return [...bySido.entries()].map(([code, grouped]) => {
+      grouped.sort((a, b) => rankScore(b) - rankScore(a) || Math.min(b.score || 0, b.reverseScore || 0) - Math.min(a.score || 0, a.reverseScore || 0));
+      const best = grouped[0];
+      const point = sidoCenter(svg, code);
+      const places = [...new Set(grouped.map((person) => person.sigunguCode).filter(Boolean))];
+      const name = places.length === 1 && grouped[0].sido
+        ? grouped[0].sido
+        : (SIDO_NAME[code] || code);
       return {
-        ...cluster,
-        x: CLUSTER_POS[cluster.id][0],
-        y: CLUSTER_POS[cluster.id][1],
+        id: code,
+        name,
+        x: point[0],
+        y: point[1],
         count: grouped.length,
         people: grouped,
-        labels: [...new Set(grouped.map((person) => person.label))],
-        bestScore: best.score,
-        color: best.color
+        labels: [...new Set(grouped.map(rankLabelOf).filter(Boolean))],
+        bestScore: rankScore(best),
+        color: rankColorOf(best)
       };
     }).filter((cluster) => cluster.count > 0);
   }
@@ -182,23 +243,28 @@
     const sheet = document.getElementById("map-sheet");
     const list = document.getElementById("map-sheet-list");
     const visible = activeFilter
-      ? cluster.people.filter((person) => person.label === activeFilter)
+      ? cluster.people.filter((person) => rankLabelOf(person) === activeFilter)
       : cluster.people;
     const named = visible.filter((person) => person.named);
     const extra = visible.length - named.length;
     document.getElementById("map-sheet-title").textContent = cluster.name;
     document.getElementById("map-sheet-count").textContent = `${visible.length}명`;
-    list.innerHTML = named.map((person) => `
+    list.innerHTML = named.map((person) => {
+      const other = Math.min(person.score || 0, person.reverseScore || 0);
+      const otherColor = (person.reverseScore || 0) > (person.score || 0) ? person.color : person.reverseColor;
+      return `
       <li>
         <div>
           <strong>${escapeHtml(person.name)}</strong>
-          <small>${escapeHtml(person.sido)} · ${escapeHtml(person.label)}</small>
+          <small>${escapeHtml(person.sido)} · ${escapeHtml(rankLabelOf(person))}</small>
         </div>
-        <b style="color:${person.color}">${person.score}</b>
-        ${person.reverseScore != null ? `<small style="color:${person.reverseColor}">← ${person.reverseScore}</small>` : ""}
+        <div class="map-rank-scores">
+          <b style="color:${rankColorOf(person)}">${rankScore(person)}</b>
+          ${person.reverseScore != null ? `<em style="color:${otherColor || person.color}">${other}</em>` : ""}
+        </div>
         ${onDeletePerson && person.id ? `<button type="button" class="map-sheet-remove" data-id="${person.id}">지우기</button>` : ""}
-      </li>
-    `).join("") + (extra > 0 ? `<li class="is-extra"><span>그 외 ${extra}명</span></li>` : "");
+      </li>`;
+    }).join("") + (extra > 0 ? `<li class="is-extra"><span>그 외 ${extra}명</span></li>` : "");
     list.querySelectorAll(".map-sheet-remove").forEach((button) => {
       button.addEventListener("click", () => onDeletePerson(Number(button.dataset.id)));
     });

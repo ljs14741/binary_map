@@ -17,7 +17,13 @@ public class NameCompatibilityService {
         String host = normalize(hostName);
         String guest = normalize(guestName);
         if (host.isEmpty() || guest.isEmpty()) {
-            throw new IllegalArgumentException("이름을 입력해 주세요.");
+            throw new IllegalArgumentException("닉네임을 입력해 주세요.");
+        }
+        if (host.length() < 2 || guest.length() < 2) {
+            throw new IllegalArgumentException("한글 닉네임을 두 글자 이상 적어 주세요.");
+        }
+        if (host.length() > 8 || guest.length() > 8) {
+            throw new IllegalArgumentException("닉네임은 여덟 글자까지예요.");
         }
 
         List<String> letters = interleave(host, guest);

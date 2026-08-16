@@ -77,7 +77,7 @@
     });
     await MapBoard.paint({
       wrapId: "korea-wrap",
-      host: { name: "수현", sidoCode: "11" },
+      host: { name: "수현", sidoCode: "11", sigunguCode: "11680" },
       people: sampleFriends,
       extras
     });

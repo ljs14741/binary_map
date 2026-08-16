@@ -37,6 +37,23 @@ class NameCompatibilityServiceTest {
     }
 
     @Test
+    void twoAndFourLetterNicknamesAlsoWork() {
+        var two = service.calculate("수현", "민지");
+        var four = service.calculate("김수현이", "박민지연");
+        assertThat(two.letters()).containsExactly("수", "민", "현", "지");
+        assertThat(four.letters()).containsExactly("김", "박", "수", "민", "현", "지", "이", "연");
+        assertThat(two.score()).isBetween(0, 100);
+        assertThat(four.score()).isBetween(0, 100);
+    }
+
+    @Test
+    void mixedLengthNicknamesPadTheShorterOne() {
+        var result = service.calculate("수현", "김민수");
+        assertThat(result.letters()).containsExactly("수", "김", "현", "민", "", "수");
+        assertThat(result.score()).isBetween(0, 100);
+    }
+
+    @Test
     void stripsNonHangul() {
         assertThat(service.normalize("Lee이진수!")).isEqualTo("이진수");
     }

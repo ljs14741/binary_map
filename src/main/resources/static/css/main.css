@@ -451,26 +451,37 @@ select {
   line-height: 1.55;
 }
 
+.map-result {
+  overflow-x: hidden;
+}
+
+.map-fold-pane {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .map-fold {
   margin: 0 0 16px;
-  padding: 12px;
+  padding: 12px 8px;
   border-radius: 16px;
   background: #fff7f1;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .map-fold-letters,
 .map-fold-row {
   display: flex;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
   min-width: max-content;
 }
 
 .map-fold-letters span,
 .map-fold-row span {
-  min-width: 28px;
+  min-width: 1.5em;
   text-align: center;
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
   opacity: 0;
   transform: translateY(6px) scale(0.9);
@@ -589,6 +600,12 @@ select {
   fill: #f7e2b8;
   stroke: rgba(196, 148, 82, 0.18);
   stroke-width: 0.65;
+}
+
+.korea-map .sido-land.is-home {
+  fill: #ffe08a;
+  stroke: #e2b84a;
+  stroke-width: 1.1;
 }
 
 .cluster-layer {
@@ -901,6 +918,10 @@ select {
   flex: 1;
 }
 
+.map-sheet-list .map-rank-scores {
+  flex: none;
+}
+
 .map-sheet-list strong {
   display: block;
   font-size: 15px;
@@ -941,17 +962,51 @@ body.is-sheet-open {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 6px;
+  padding: 10px 8px;
+  border-radius: 14px;
+}
+
+.map-rank li.is-rank-1 {
+  background: linear-gradient(90deg, #fff4c4 0%, #fffdf3 70%);
+}
+
+.map-rank li.is-rank-2 {
+  background: linear-gradient(90deg, #eef2f6 0%, #fff 70%);
+}
+
+.map-rank li.is-rank-3 {
+  background: linear-gradient(90deg, #f8e6d4 0%, #fff 70%);
 }
 
 .map-rank em {
-  width: 22px;
+  width: 28px;
+  height: 28px;
   flex-shrink: 0;
-  color: #c4b0a4;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #f4ebe4;
+  color: #8a7468;
   font-style: normal;
   font-weight: 800;
   text-align: center;
   font-variant-numeric: tabular-nums;
+}
+
+.map-rank li.is-rank-1 em {
+  background: #f5c542;
+  color: #3a2a20;
+  box-shadow: 0 0 0 3px rgba(245, 197, 66, 0.28);
+}
+
+.map-rank li.is-rank-2 em {
+  background: #c5d0dc;
+  color: #2a3340;
+}
+
+.map-rank li.is-rank-3 em {
+  background: #e0a070;
+  color: #3a2414;
 }
 
 .map-rank li > div {
@@ -1026,9 +1081,11 @@ body.is-sheet-open {
   grid-template-columns: 1fr 1fr;
   gap: 10px;
   margin: 14px 0 4px;
+  min-width: 0;
 }
 
 .map-dual-card {
+  min-width: 0;
   padding: 12px;
   border-radius: 14px;
   background: #fff;
@@ -1040,6 +1097,8 @@ body.is-sheet-open {
   display: block;
   color: var(--muted);
   font-size: 12px;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
 }
 
 .map-dual-card b {
@@ -1058,9 +1117,10 @@ body.is-sheet-open {
 
 .map-folds {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 10px;
   margin-top: 12px;
+  min-width: 0;
 }
 
 .map-fold-cap {
@@ -1122,8 +1182,7 @@ body.is-sheet-open {
   line-height: 1.5;
 }
 
-@media (max-width: 640px) {
-  .map-folds,
+@media (max-width: 360px) {
   .map-dual,
   .map-region-row {
     grid-template-columns: 1fr;

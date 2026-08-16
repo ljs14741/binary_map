@@ -80,15 +80,15 @@
 
   <section class="map-card" aria-label="이름궁합">
     <p class="map-card-kicker">1. 이름궁합</p>
-    <h2>두 이름 궁합 보기</h2>
+    <h2>두 닉네임 궁합 보기</h2>
     <form id="compat-form" class="map-form">
       <label>
-        내 이름
-        <input id="host-name" type="text" name="hostName" maxlength="20" placeholder="이진수" autocomplete="name" required>
+        내 이름 (닉네임)
+        <input id="host-name" type="text" name="hostName" minlength="2" maxlength="8" placeholder="수현" autocomplete="off" required>
       </label>
       <label>
-        상대 이름
-        <input id="guest-name" type="text" name="guestName" maxlength="20" placeholder="홍길동" autocomplete="off" required>
+        상대 이름 (닉네임)
+        <input id="guest-name" type="text" name="guestName" minlength="2" maxlength="8" placeholder="민지" autocomplete="off" required>
       </label>
       <p id="compat-error" class="map-error" hidden></p>
       <button type="submit" id="compat-submit">궁합 보기</button>
@@ -110,8 +110,8 @@
     </div>
     <form id="create-form" class="map-form" hidden>
       <label>
-        내 이름
-        <input id="create-name" type="text" maxlength="20" placeholder="이진수" autocomplete="name" required>
+        내 이름 (닉네임)
+        <input id="create-name" type="text" minlength="2" maxlength="8" placeholder="수현" autocomplete="off" required>
       </label>
       <div class="map-region-row">
         <label>
@@ -151,7 +151,7 @@
         <span th:text="|${sampleTotal}명|">50명</span>
       </div>
       <div class="korea-wrap" id="korea-wrap" aria-label="대한민국 시도 예시 지도"></div>
-      <p class="map-stage-caption">빛나는 금색이 고향 · 핀을 누르면 그 동네 친구가 나와요</p>
+      <p class="map-stage-caption">금색이 고향 · 핀은 시도, 누르면 시군구가 나와요</p>
       <div class="map-stats" id="map-stats">
         <button type="button" class="map-stat" th:each="count : ${sampleCounts}"
                 th:style="|--stat:${count.color()}|"

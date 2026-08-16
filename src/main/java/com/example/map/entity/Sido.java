@@ -4,8 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * 1차 표시/입력 단위. 시군구는 쓰지 않는다.
- * 코드는 법정동 시도 코드 앞 2자리다.
+ * 시도. 드롭다운은 법정동 코드순(서울→제주)이다.
  */
 public enum Sido {
     SEOUL("11", "서울"),

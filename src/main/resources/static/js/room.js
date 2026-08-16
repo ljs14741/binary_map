@@ -27,11 +27,15 @@
   async function render(next) {
     view = next;
     document.title = `${view.hostName}님의 짝꿍지도`;
+    const hostTitle = document.getElementById("room-host-name");
+    if (hostTitle) {
+      hostTitle.textContent = view.hostName;
+    }
     document.getElementById("room-lead").textContent = `${view.hostSido} · ${view.total}명`;
     document.getElementById("stage-title").textContent = `${view.hostName}님의 짝꿍지도`;
     document.getElementById("stage-count").textContent = `${view.total}명`;
     document.getElementById("stage-caption").textContent = view.total
-      ? "빛나는 금색이 고향 · 핀을 누르면 그 동네 친구가 나와요"
+      ? "금색이 고향 · 핀은 시도, 누르면 시군구가 나와요"
       : "카톡으로 보내면 친구가 사는 곳에 핀이 찍혀요";
     renderStats(view.counts);
     renderRank(view.people);
@@ -55,17 +59,17 @@
         status.textContent = me.nickname
           ? `카카오 계정에 저장됨 · ${me.nickname}`
           : "카카오 계정에 저장됨";
-        keep.textContent = "카톡으로 보내면 친구는 이름과 사는 곳만 적어요.";
+        keep.textContent = "카톡으로 보내면 친구는 닉네임과 사는 곳만 적어요.";
       } else {
         loginBox.hidden = false;
         status.hidden = true;
         document.getElementById("host-login").href = MapApp.loginUrl(`/m/${view.id}`);
-        keep.textContent = "카톡으로 보내면 친구는 이름과 사는 곳만 적어요.";
+        keep.textContent = "카톡으로 보내면 친구는 닉네임과 사는 곳만 적어요.";
       }
     }
     await MapBoard.paint({
       wrapId: "korea-wrap",
-      host: { name: view.hostName, sidoCode: view.hostSidoCode },
+      host: { name: view.hostName, sidoCode: view.hostSidoCode, sigunguCode: view.hostSigunguCode },
       people: view.people,
       onDeletePerson: view.host ? deletePerson : null
     });
@@ -81,21 +85,43 @@
     `).join("");
   }
 
+  function rankOf(person) {
+    if ((person.reverseScore || 0) > person.score) {
+      return {
+        high: person.reverseScore,
+        low: person.score,
+        label: person.reverseLabel || person.label,
+        color: person.reverseColor || person.color,
+        otherColor: person.color
+      };
+    }
+    return {
+      high: person.score,
+      low: person.reverseScore,
+      label: person.label,
+      color: person.color,
+      otherColor: person.reverseColor
+    };
+  }
+
   function renderRank(people) {
     const list = document.getElementById("map-rank");
-    list.innerHTML = people.map((person, index) => `
-      <li data-label="${person.label}">
+    list.innerHTML = people.map((person, index) => {
+      const rank = rankOf(person);
+      const place = index < 3 ? ` is-rank-${index + 1}` : "";
+      return `
+      <li class="${place.trim()}" data-label="${rank.label}">
         <em>${index + 1}</em>
         <div>
           <strong>${MapBoard.escapeHtml(person.name)}</strong>
-          <small>${MapBoard.escapeHtml(person.sido)} · ${MapBoard.escapeHtml(person.label)}</small>
+          <small>${MapBoard.escapeHtml(person.sido)} · ${MapBoard.escapeHtml(rank.label)}</small>
         </div>
         <div class="map-rank-scores">
-          <b style="color:${person.color}">${person.score}</b>
-          <em style="color:${person.reverseColor}">← ${person.reverseScore}</em>
+          <b style="color:${rank.color}">${rank.high}</b>
+          <em style="color:${rank.otherColor}">${rank.low}</em>
         </div>
-      </li>
-    `).join("");
+      </li>`;
+    }).join("");
   }
 
   function bind() {

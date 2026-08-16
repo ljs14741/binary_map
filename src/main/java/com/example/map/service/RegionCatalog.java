@@ -7,7 +7,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
+import java.text.Collator;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -48,8 +52,12 @@ public class RegionCatalog {
             if (input == null) {
                 throw new IllegalStateException("시군구 데이터가 없어요.");
             }
-            return objectMapper.readValue(input, new TypeReference<>() {
+            List<Sigungu> loaded = objectMapper.readValue(input, new TypeReference<>() {
             });
+            Collator korean = Collator.getInstance(Locale.KOREAN);
+            loaded = new ArrayList<>(loaded);
+            loaded.sort(Comparator.comparing(Sigungu::sidoCode).thenComparing(Sigungu::label, korean));
+            return loaded;
         } catch (Exception exception) {
             throw new IllegalStateException("시군구 데이터를 읽지 못했어요.", exception);
         }

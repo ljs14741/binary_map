@@ -19,6 +19,16 @@ class RegionCatalogTest {
     }
 
     @Test
+    void sortsSigunguByHangulWithinSido() {
+        var seoul = catalog.all().stream()
+                .filter(item -> item.sidoCode().equals("11"))
+                .map(com.example.map.entity.Sigungu::label)
+                .toList();
+        assertThat(seoul.get(0)).isEqualTo("강남구");
+        assertThat(seoul.indexOf("강남구")).isLessThan(seoul.indexOf("종로구"));
+    }
+
+    @Test
     void rejectsUnknownCode() {
         assertThatThrownBy(() -> catalog.fromCode("00000"))
                 .isInstanceOf(IllegalArgumentException.class);

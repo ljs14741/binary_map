@@ -21,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -88,7 +89,7 @@ public class CoupleMapService {
         String name = requireName(guestName);
         Sigungu sigungu = regionCatalog.fromCode(sigunguCode);
         if (name.equals(map.getHostName())) {
-            throw new IllegalArgumentException("지도 이름과 같은 이름은 쓸 수 없어요. 별명을 적어 주세요.");
+            throw new IllegalArgumentException("지도 닉네임과 같은 이름은 쓸 수 없어요. 다른 닉네임을 적어 주세요.");
         }
 
         var forward = nameCompatibilityService.calculate(map.getHostName(), name);
@@ -235,7 +236,13 @@ public class CoupleMapService {
 
     private MapView toView(CoupleMap map, boolean host) {
         List<CoupleMapPerson> rows = coupleMapPersonRepository.findByMap_IdOrderByScoreDescCreatedAtAsc(map.getId());
-        List<MapPersonView> people = rows.stream().map(this::toPerson).toList();
+        List<MapPersonView> people = rows.stream()
+                .map(this::toPerson)
+                .sorted(Comparator
+                        .comparingInt((MapPersonView person) -> Math.max(person.score(), person.reverseScore())).reversed()
+                        .thenComparingInt((MapPersonView person) -> Math.min(person.score(), person.reverseScore())).reversed()
+                        .thenComparing(MapPersonView::name))
+                .toList();
         Sigungu sigungu = regionCatalog.fromCode(map.getHostSigunguCode());
         return new MapView(
                 map.getId(),
@@ -283,7 +290,7 @@ public class CoupleMapService {
 
     private List<SampleLabelCount> countsOf(List<MapPersonView> people) {
         Map<String, Long> grouped = people.stream()
-                .collect(Collectors.groupingBy(MapPersonView::label, Collectors.counting()));
+                .collect(Collectors.groupingBy(this::rankLabel, Collectors.counting()));
         List<SampleLabelCount> counts = new ArrayList<>();
         for (RelationLabel label : RelationLabel.values()) {
             counts.add(new SampleLabelCount(
@@ -298,13 +305,17 @@ public class CoupleMapService {
 
     private String requireName(String value) {
         String name = nameCompatibilityService.normalize(value);
-        if (name.isEmpty()) {
-            throw new IllegalArgumentException("한글 이름을 입력해 주세요.");
+        if (name.length() < 2) {
+            throw new IllegalArgumentException("한글 닉네임을 두 글자 이상 적어 주세요.");
         }
-        if (name.length() > 20) {
-            throw new IllegalArgumentException("이름이 너무 길어요.");
+        if (name.length() > 8) {
+            throw new IllegalArgumentException("닉네임은 여덟 글자까지예요.");
         }
         return name;
+    }
+
+    private String rankLabel(MapPersonView person) {
+        return person.score() >= person.reverseScore() ? person.label() : person.reverseLabel();
     }
 
     private String shareUrl(String mapId) {
