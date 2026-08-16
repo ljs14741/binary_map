@@ -89,29 +89,26 @@ public class CoupleMapService {
         if (name.equals(map.getHostName())) {
             throw new IllegalArgumentException("지도 닉네임과 같은 이름은 쓸 수 없어요. 다른 닉네임을 적어 주세요.");
         }
+        if (coupleMapPersonRepository.findByMap_IdAndPersonName(mapId, name).isPresent()) {
+            throw new IllegalArgumentException("이미 그 닉네임으로 들어온 친구가 있어요. 다른 닉네임을 써 주세요.");
+        }
+        if (coupleMapPersonRepository.countByMap_Id(mapId) >= MAX_PEOPLE) {
+            throw new IllegalArgumentException("이 지도는 친구가 가득 찼어요.");
+        }
 
         var forward = nameCompatibilityService.calculate(map.getHostName(), name);
         var reverse = nameCompatibilityService.calculate(name, map.getHostName());
         RelationLabel label = forward.label();
         LocalDateTime now = LocalDateTime.now();
 
-        CoupleMapPerson person = coupleMapPersonRepository
-                .findByMap_IdAndPersonName(mapId, name)
-                .orElseGet(CoupleMapPerson::new);
-
-        if (person.getId() == null && coupleMapPersonRepository.countByMap_Id(mapId) >= MAX_PEOPLE) {
-            throw new IllegalArgumentException("이 지도는 친구가 가득 찼어요.");
-        }
-
+        CoupleMapPerson person = new CoupleMapPerson();
         person.setMap(map);
         person.setPersonName(name);
         person.setSigunguCode(sigungu.code());
         person.setScore(forward.score());
         person.setReverseScore(reverse.score());
         person.setLabel(label.displayName());
-        if (person.getCreatedAt() == null) {
-            person.setCreatedAt(now);
-        }
+        person.setCreatedAt(now);
         person.setUpdatedAt(now);
         coupleMapPersonRepository.save(person);
 

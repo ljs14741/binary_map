@@ -55,6 +55,21 @@ public class MapController {
         return "room";
     }
 
+    @GetMapping("/privacy-policy")
+    public String privacy() {
+        return "privacy-policy";
+    }
+
+    @GetMapping("/about")
+    public String about() {
+        return "redirect:https://binaryworld.kr/about";
+    }
+
+    @GetMapping("/contact")
+    public String contact() {
+        return "redirect:https://binaryworld.kr/contact";
+    }
+
     private void addRegionAttrs(Model model) throws JsonProcessingException {
         model.addAttribute("sidos", Sido.all());
         model.addAttribute("sigungusJson", objectMapper.writeValueAsString(regionCatalog.all()));
