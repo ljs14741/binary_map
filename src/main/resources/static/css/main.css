@@ -558,10 +558,11 @@ select {
 
 .map-stage-caption {
   margin: 8px 0 12px;
-  color: #8a6d52;
-  font-size: 12px;
+  color: #5c4a40;
+  font-size: 13px;
   line-height: 1.45;
   text-align: center;
+  font-weight: 600;
 }
 
 .korea-wrap {
@@ -738,7 +739,7 @@ select {
 
 .cluster-badge,
 .host-badge {
-  max-width: 128px;
+  max-width: 168px;
   padding: 4px 8px;
   border-radius: 999px;
   background: rgba(255, 248, 234, 0.94);
@@ -903,7 +904,7 @@ select {
 
 .map-sheet-list li {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   padding: 12px 2px;
   border-bottom: 1px solid #f3e4d8;
@@ -928,9 +929,8 @@ select {
   line-height: 1.3;
 }
 
-.map-sheet-list small {
-  color: var(--muted);
-  font-size: 12px;
+.map-sheet-list .map-rank-meta {
+  margin-top: 4px;
 }
 
 .map-sheet-list b {
@@ -960,7 +960,7 @@ body.is-sheet-open {
 
 .map-rank li {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   padding: 10px 8px;
   border-radius: 14px;
@@ -981,6 +981,7 @@ body.is-sheet-open {
 .map-rank em {
   width: 28px;
   height: 28px;
+  margin-top: 2px;
   flex-shrink: 0;
   display: grid;
   place-items: center;
@@ -1020,12 +1021,39 @@ body.is-sheet-open {
   line-height: 1.3;
 }
 
+.map-rank-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 0;
+}
+
+.map-rank-place {
+  color: #5c4a40;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.map-rank-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tag) 16%, #fff);
+  color: var(--tag);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
 .map-rank small {
   color: var(--muted);
   font-size: 12px;
 }
 
-.map-rank b {
+.map-rank > li > b {
   margin-left: auto;
   flex-shrink: 0;
   min-width: 2ch;
@@ -1211,13 +1239,44 @@ body.is-sheet-open {
 .map-rank-scores {
   display: grid;
   justify-items: end;
-  gap: 2px;
+  gap: 6px;
+  flex-shrink: 0;
+  min-width: 6.8rem;
 }
 
-.map-rank-scores em {
-  font-style: normal;
-  font-size: 12px;
+.map-score-cell {
+  display: grid;
+  justify-items: end;
+  gap: 0;
+}
+
+.map-score-cell small {
+  color: #6b5344;
+  font-size: 11px;
   font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.map-score-cell b {
+  margin-left: 0;
+  font-size: 18px;
+  letter-spacing: -0.03em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 720px) {
+  .map-rank-place {
+    font-size: 14px;
+  }
+
+  .map-score-cell small {
+    font-size: 12px;
+  }
+
+  .map-stage-caption {
+    font-size: 14px;
+  }
 }
 
 .map-mine {
@@ -1263,6 +1322,7 @@ body.is-sheet-open {
 
 .map-sheet-remove {
   flex-shrink: 0;
+  margin-top: 4px;
   padding: 6px 10px;
   border: 0;
   border-radius: 999px;

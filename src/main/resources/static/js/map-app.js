@@ -339,6 +339,97 @@
     return me;
   }
 
+  const HEARTS = {
+    "부랄짝꿍": "💖",
+    "찐 짝꿍": "💚",
+    "비즈니스짝꿍": "💙",
+    "어색 짝꿍": "🧡",
+    "위험 짝꿍": "❤️"
+  };
+
+  function heartOf(label) {
+    return HEARTS[label] || "";
+  }
+
+  function rankMeta(person) {
+    if ((person.reverseScore || 0) > (person.score || 0)) {
+      return {
+        label: person.reverseLabel || person.label,
+        color: person.reverseColor || person.color
+      };
+    }
+    return { label: person.label, color: person.color };
+  }
+
+  function sortPeople(people) {
+    return [...(people || [])].sort((a, b) => {
+      const ah = Math.max(a.score || 0, a.reverseScore || 0);
+      const bh = Math.max(b.score || 0, b.reverseScore || 0);
+      if (bh !== ah) {
+        return bh - ah;
+      }
+      const al = Math.min(a.score || 0, a.reverseScore || 0);
+      const bl = Math.min(b.score || 0, b.reverseScore || 0);
+      if (bl !== al) {
+        return bl - al;
+      }
+      return String(a.name || "").localeCompare(String(b.name || ""), "ko");
+    });
+  }
+
+  function personScoresHtml(person, hostName) {
+    const reverse = person.reverseScore;
+    const hasReverse = reverse != null && reverse !== "";
+    return `
+      <div class="map-rank-scores">
+        <span class="map-score-cell">
+          <small>${escapeHtml(hostName)} 먼저</small>
+          <b style="color:${person.color}">${person.score}</b>
+        </span>
+        ${hasReverse ? `<span class="map-score-cell">
+          <small>${escapeHtml(person.name)} 먼저</small>
+          <b style="color:${person.reverseColor || person.color}">${reverse}</b>
+        </span>` : ""}
+      </div>`;
+  }
+
+  function personMetaHtml(person) {
+    const rank = rankMeta(person);
+    const heart = heartOf(rank.label);
+    return `
+      <p class="map-rank-meta">
+        <span class="map-rank-place">${escapeHtml(person.sido || "")}</span>
+        <span class="map-rank-tag" style="--tag:${rank.color}">${heart} ${escapeHtml(rank.label)}</span>
+      </p>`;
+  }
+
+  function rankRowHtml(person, index, hostName) {
+    const rank = rankMeta(person);
+    const place = index < 3 ? ` is-rank-${index + 1}` : "";
+    return `
+      <li class="${place.trim()}" data-label="${escapeHtml(rank.label)}">
+        <em>${index + 1}</em>
+        <div>
+          <strong>${escapeHtml(person.name)}</strong>
+          ${personMetaHtml(person)}
+        </div>
+        ${personScoresHtml(person, hostName)}
+      </li>`;
+  }
+
+  function sheetRowHtml(person, hostName, canDelete) {
+    const rank = rankMeta(person);
+    return `
+      <li data-label="${escapeHtml(rank.label)}">
+        <div>
+          <strong>${escapeHtml(person.name)}</strong>
+          ${personMetaHtml(person)}
+        </div>
+        ${personScoresHtml(person, hostName)}
+        ${canDelete && person.id ? `<button type="button" class="map-sheet-remove" data-id="${person.id}">지우기</button>` : ""}
+      </li>`;
+  }
+
   window.MapApp = {
     showToast,
     wait,
@@ -357,6 +448,12 @@
     shareKakao,
     copyLink,
     api,
-    syncAccount
+    syncAccount,
+    heartOf,
+    rankMeta,
+    sortPeople,
+    rankRowHtml,
+    sheetRowHtml,
+    escapeHtml
   };
 })();

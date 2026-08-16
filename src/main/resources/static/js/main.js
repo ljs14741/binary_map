@@ -3,18 +3,17 @@
   const submit = document.getElementById("compat-submit");
   const errorBox = document.getElementById("compat-error");
   const resultBox = document.getElementById("compat-result");
-  const sampleNode = document.getElementById("sample-json");
-  const friendsNode = document.getElementById("sample-friends-json");
-  const sampleRegions = sampleNode ? JSON.parse(sampleNode.textContent || "[]") : [];
-  const sampleFriends = friendsNode ? JSON.parse(friendsNode.textContent || "[]") : [];
+  const sampleNode = document.getElementById("sample-friends-json");
+  const sampleFriends = sampleNode ? JSON.parse(sampleNode.textContent || "[]") : [];
 
   MapBoard.bindUi();
   paintSample();
-  renderMyMaps();
   bindCreate();
-  if (window.location.hash === "#create-map") {
-    openCreate();
-  }
+  renderMyMaps().then(() => {
+    if (window.location.hash === "#create-map") {
+      openCreate();
+    }
+  });
   document.getElementById("kakao-share")?.addEventListener("click", () => {
     MapApp.shareKakao({
       title: "짝꿍지도",
@@ -62,44 +61,31 @@
   }
 
   async function paintSample() {
-    const extras = [];
-    sampleRegions.forEach((region) => {
-      const used = sampleFriends.filter((friend) => friend.sidoCode === region.code).length;
-      for (let i = 0; i < Math.max(0, region.count - used); i += 1) {
-        extras.push({
-          sido: region.name,
-          sidoCode: region.code,
-          score: scoreForLabel(region.label),
-          label: region.label,
-          color: region.color
-        });
-      }
-    });
+    const friends = MapApp.sortPeople(sampleFriends);
     await MapBoard.paint({
       wrapId: "korea-wrap",
       host: { name: "수현", sidoCode: "11", sigunguCode: "11680" },
-      people: sampleFriends,
-      extras
+      people: friends
     });
-  }
-
-  function scoreForLabel(label) {
-    if (label.includes("부랄")) return 92;
-    if (label.includes("찐")) return 76;
-    if (label.includes("비즈니스")) return 58;
-    if (label.includes("어색")) return 38;
-    return 16;
+    const list = document.getElementById("map-rank");
+    if (list) {
+      list.innerHTML = friends.map((person, index) => MapApp.rankRowHtml(person, index, "수현")).join("");
+    }
   }
 
   function openCreate() {
-    const card = document.getElementById("create-map");
+    const createCard = document.getElementById("create-map");
+    const myMaps = document.getElementById("my-maps");
     const hostName = document.getElementById("host-name");
     const createName = document.getElementById("create-name");
     if (hostName.value && createName && !createName.value) {
       createName.value = hostName.value;
     }
-    card.scrollIntoView({ behavior: "smooth", block: "center" });
-    if (createName && !document.getElementById("create-form").hidden) {
+    const target = createCard && !createCard.hidden ? createCard : myMaps;
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    if (createCard && !createCard.hidden && createName && !document.getElementById("create-form").hidden) {
       createName.focus();
     }
   }
@@ -158,72 +144,59 @@
     } catch (error) {
       me = { loggedIn: false, maps: [] };
     }
-    const byId = new Map();
-    (me.maps || []).forEach((item) => {
-      byId.set(item.id, {
-        id: item.id,
-        name: item.hostName,
-        note: item.place ? `${item.place} · ${item.total}명` : ""
-      });
-    });
-    MapApp.listMaps().forEach((item) => {
-      if (!byId.has(item.id)) {
-        byId.set(item.id, { id: item.id, name: item.name, note: "" });
-      }
-    });
-    const maps = [...byId.values()];
     applyCreateGate(me);
+    const maps = me.loggedIn ? (me.maps || []) : [];
     if (!maps.length) {
       box.hidden = true;
       return;
     }
     box.hidden = false;
-    title.textContent = me.loggedIn && me.nickname ? `${me.nickname}님의 지도` : "내 짝꿍지도";
-    lead.textContent = "카카오 계정에 저장된 내 지도예요.";
+    title.textContent = me.nickname ? `${me.nickname}님의 지도` : "내 짝꿍지도";
+    lead.textContent = "이미 만든 지도예요. 눌러서 친구를 초대하면 됩니다.";
     list.innerHTML = maps.map((item) => `
       <li>
         <a href="/m/${item.id}">
-          <strong>${MapBoard.escapeHtml(item.name)}님의 짝꿍지도</strong>
-          ${item.note ? `<small>${MapBoard.escapeHtml(item.note)}</small>` : ""}
+          <strong>${MapApp.escapeHtml(item.hostName)}님의 짝꿍지도</strong>
+          ${item.place ? `<small>${MapApp.escapeHtml(item.place)} · ${item.total}명</small>` : ""}
         </a>
       </li>
     `).join("");
   }
 
+  function fillAccount(el, me) {
+    if (!el) {
+      return;
+    }
+    el.hidden = !me.loggedIn;
+    if (me.loggedIn) {
+      el.innerHTML = `<b>카카오 로그인됨</b> · ${MapApp.escapeHtml(me.nickname || "계정")} · <a href="/logout">로그아웃</a>`;
+    }
+  }
+
   function applyCreateGate(me) {
+    const createCard = document.getElementById("create-map");
     const form = document.getElementById("create-form");
     const gate = document.getElementById("create-gate");
-    const bar = document.getElementById("account-bar");
     const login = document.getElementById("create-login");
-    const open = document.getElementById("create-open");
     const lead = document.getElementById("create-lead");
     const title = document.querySelector("#create-map h2");
+    const maps = me.maps || [];
+    const hasMap = me.loggedIn && maps.length > 0;
     if (login) {
       login.href = MapApp.loginUrl("/#create-map");
     }
-    const maps = me.maps || [];
-    const hasMap = me.loggedIn && maps.length > 0;
+    if (createCard) {
+      createCard.hidden = hasMap;
+    }
     if (form) form.hidden = !(me.loggedIn && !hasMap);
     if (gate) gate.hidden = me.loggedIn;
-    if (open) {
-      open.hidden = !hasMap;
-      if (hasMap) {
-        open.href = `/m/${maps[0].id}`;
-      }
-    }
-    if (bar) {
-      bar.hidden = !me.loggedIn;
-      if (me.loggedIn) {
-        bar.innerHTML = `<b>카카오 로그인됨</b> · ${MapBoard.escapeHtml(me.nickname || "계정")} · <a href="/logout">로그아웃</a>`;
-      }
-    }
+    fillAccount(document.getElementById("account-bar"), me);
+    fillAccount(document.getElementById("account-bar-maps"), me);
     if (title) {
-      title.textContent = hasMap ? "내 짝꿍지도" : "내 짝꿍지도 만들기";
+      title.textContent = "내 짝꿍지도 만들기";
     }
     if (lead) {
-      lead.textContent = hasMap
-        ? "카카오 계정에는 지도가 하나예요. 이미 있는 지도를 열면 됩니다."
-        : "지도를 만들려면 카카오 로그인이 필요해요. 계정에 저장돼서 휴대폰을 바꿔도 다시 볼 수 있어요. 친구가 들어오는 건 로그인 없이 됩니다.";
+      lead.textContent = "지도를 만들려면 카카오 로그인이 필요해요. 계정에 저장돼서 휴대폰을 바꿔도 다시 볼 수 있어요. 친구가 들어오는 건 로그인 없이 됩니다.";
     }
   }
 

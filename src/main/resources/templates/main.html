@@ -109,7 +109,6 @@
       </a>
       <p class="map-legal">카카오 닉네임만 받아요. <a href="/privacy-policy">개인정보처리방침</a></p>
     </div>
-    <a class="map-cta" id="create-open" hidden href="/">내 짝꿍지도 열기</a>
     <form id="create-form" class="map-form" hidden>
       <label>
         내 이름 (닉네임)
@@ -136,8 +135,9 @@
   </section>
 
   <section id="my-maps" class="map-card" hidden>
-    <p class="map-card-kicker">내가 만든 지도</p>
+    <p class="map-card-kicker" id="my-maps-kicker">2. 내 지도</p>
     <h2 id="my-maps-title">내 짝꿍지도</h2>
+    <p id="account-bar-maps" class="map-account" hidden></p>
     <p class="map-sample-lead" id="my-maps-lead"></p>
     <ul class="map-mine" id="my-maps-list"></ul>
   </section>
@@ -145,15 +145,15 @@
   <section id="sample-map" class="map-sample">
     <p class="map-card-kicker">미리보기</p>
     <h2>친구가 들어오면<br>이렇게 보여요</h2>
-    <p class="map-sample-lead">같은 동네 친구는 핀 하나로 묶여요. 핀을 누르면 누가 있는지 나와요.</p>
+    <p class="map-sample-lead">같은 시라도 구가 다르면 핀이 갈라져요. 핀을 누르면 누가 있는지 나와요.</p>
 
     <div class="map-stage">
       <div class="map-stage-head">
         <strong>수현님의 짝꿍지도</strong>
-        <span th:text="|${sampleTotal}명|">50명</span>
+        <span th:text="|${sampleTotal}명 참여|">12명 참여</span>
       </div>
       <div class="korea-wrap" id="korea-wrap" aria-label="대한민국 시도 예시 지도"></div>
-      <p class="map-stage-caption">금색이 고향 · 핀은 시도, 누르면 시군구가 나와요</p>
+      <p class="map-stage-caption">금색이 고향 · 같은 시라도 구가 다르면 핀이 갈라져요</p>
       <div class="map-stats" id="map-stats">
         <button type="button" class="map-stat" th:each="count : ${sampleCounts}"
                 th:style="|--stat:${count.color()}|"
@@ -164,16 +164,7 @@
       </div>
     </div>
 
-    <ol class="map-rank" id="map-rank">
-      <li th:each="friend, iter : ${sampleFriends}" th:attr="data-label=${friend.label()}">
-        <em th:text="${iter.count}">1</em>
-        <div>
-          <strong th:text="${friend.name()}">민지</strong>
-          <small th:text="|${friend.sido()} · ${friend.label()}|">서울 · 부랄짝꿍</small>
-        </div>
-        <b th:style="|color:${friend.color()}|" th:text="${friend.score()}">88</b>
-      </li>
-    </ol>
+    <ol class="map-rank" id="map-rank"></ol>
   </section>
 </main>
 
@@ -194,7 +185,6 @@
 
 <footer id="global-footer" aria-label="Binary World 푸터"></footer>
 
-<script id="sample-json" type="application/json" th:utext="${sampleJson}">[]</script>
 <script id="sample-friends-json" type="application/json" th:utext="${sampleFriendsJson}">[]</script>
 <script id="sigungus-json" type="application/json" th:utext="${sigungusJson}">[]</script>
 <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>

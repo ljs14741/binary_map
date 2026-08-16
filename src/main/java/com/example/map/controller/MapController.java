@@ -2,7 +2,6 @@ package com.example.map.controller;
 
 import com.example.map.dto.SampleFriend;
 import com.example.map.dto.SampleLabelCount;
-import com.example.map.dto.SampleRegion;
 import com.example.map.entity.RelationLabel;
 import com.example.map.entity.Sido;
 import com.example.map.service.CoupleMapService;
@@ -17,7 +16,11 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
@@ -29,14 +32,11 @@ public class MapController {
 
     @GetMapping("/")
     public String home(Model model) throws JsonProcessingException {
-        List<SampleRegion> regions = sampleRegions();
-        model.addAttribute("sampleRegions", regions);
-        model.addAttribute("sampleJson", objectMapper.writeValueAsString(regions));
         List<SampleFriend> friends = sampleFriends();
         model.addAttribute("sampleFriends", friends);
         model.addAttribute("sampleFriendsJson", objectMapper.writeValueAsString(friends));
-        model.addAttribute("sampleCounts", sampleCounts());
-        model.addAttribute("sampleTotal", 50);
+        model.addAttribute("sampleCounts", sampleCounts(friends));
+        model.addAttribute("sampleTotal", friends.size());
         addRegionAttrs(model);
         return "main";
     }
@@ -75,63 +75,69 @@ public class MapController {
         model.addAttribute("sigungusJson", objectMapper.writeValueAsString(regionCatalog.all()));
     }
 
-    private List<SampleRegion> sampleRegions() {
-        return List.of(
-                region("11", "서울", 8, RelationLabel.BURAL_MATE),
-                region("41", "경기", 10, RelationLabel.TRUE_MATE),
-                region("26", "부산", 4, RelationLabel.TRUE_MATE),
-                region("28", "인천", 3, RelationLabel.BIZ_MATE),
-                region("27", "대구", 3, RelationLabel.AWKWARD_MATE),
-                region("29", "광주", 2, RelationLabel.BURAL_MATE),
-                region("30", "대전", 2, RelationLabel.BIZ_MATE),
-                region("31", "울산", 2, RelationLabel.DANGER_MATE),
-                region("36", "세종", 1, RelationLabel.BIZ_MATE),
-                region("42", "강원", 2, RelationLabel.AWKWARD_MATE),
-                region("43", "충북", 2, RelationLabel.TRUE_MATE),
-                region("44", "충남", 3, RelationLabel.BIZ_MATE),
-                region("45", "전북", 2, RelationLabel.AWKWARD_MATE),
-                region("46", "전남", 1, RelationLabel.TRUE_MATE),
-                region("47", "경북", 2, RelationLabel.BIZ_MATE),
-                region("48", "경남", 2, RelationLabel.BURAL_MATE),
-                region("50", "제주", 1, RelationLabel.BURAL_MATE)
-        );
-    }
-
     private List<SampleFriend> sampleFriends() {
-        return List.of(
-                friend("민지", "서울 강남구", "11", 96, RelationLabel.BURAL_MATE),
-                friend("하은", "제주 제주시", "50", 88, RelationLabel.BURAL_MATE),
-                friend("예린", "광주 북구", "29", 91, RelationLabel.BURAL_MATE),
-                friend("서준", "부산 해운대구", "26", 82, RelationLabel.TRUE_MATE),
-                friend("도윤", "경기 성남 분당구", "41", 74, RelationLabel.TRUE_MATE),
-                friend("나연", "충북 청주 흥덕구", "43", 78, RelationLabel.TRUE_MATE),
-                friend("지아", "인천 연수구", "28", 61, RelationLabel.BIZ_MATE),
-                friend("시우", "대전 유성구", "30", 58, RelationLabel.BIZ_MATE),
-                friend("현우", "대구 수성구", "27", 41, RelationLabel.AWKWARD_MATE),
-                friend("수아", "강원 춘천시", "42", 35, RelationLabel.AWKWARD_MATE),
-                friend("태민", "울산 남구", "31", 18, RelationLabel.DANGER_MATE)
+        List<SampleFriend> friends = List.of(
+                friend("민지", "서울 강남구", "11", "11680", 97, 97, RelationLabel.BURAL_MATE, RelationLabel.BURAL_MATE),
+                friend("하은", "제주 제주시", "50", "50110", 88, 91, RelationLabel.BURAL_MATE, RelationLabel.BURAL_MATE),
+                friend("예린", "광주 북구", "29", "29170", 91, 72, RelationLabel.BURAL_MATE, RelationLabel.TRUE_MATE),
+                friend("서준", "부산 해운대구", "26", "26350", 82, 70, RelationLabel.TRUE_MATE, RelationLabel.TRUE_MATE),
+                friend("도윤", "경기 성남 분당구", "41", "41135", 74, 80, RelationLabel.TRUE_MATE, RelationLabel.TRUE_MATE),
+                friend("나연", "충북 청주 흥덕구", "43", "43113", 78, 55, RelationLabel.TRUE_MATE, RelationLabel.BIZ_MATE),
+                friend("지아", "인천 연수구", "28", "28185", 61, 58, RelationLabel.BIZ_MATE, RelationLabel.BIZ_MATE),
+                friend("시우", "대전 유성구", "30", "30200", 58, 42, RelationLabel.BIZ_MATE, RelationLabel.AWKWARD_MATE),
+                friend("현우", "대구 수성구", "27", "27260", 41, 35, RelationLabel.AWKWARD_MATE, RelationLabel.AWKWARD_MATE),
+                friend("지민", "대구 달서구", "27", "27290", 38, 48, RelationLabel.AWKWARD_MATE, RelationLabel.AWKWARD_MATE),
+                friend("수아", "강원 춘천시", "42", "42110", 35, 22, RelationLabel.AWKWARD_MATE, RelationLabel.DANGER_MATE),
+                friend("태민", "울산 남구", "31", "31140", 18, 7, RelationLabel.DANGER_MATE, RelationLabel.DANGER_MATE)
+        );
+        return friends.stream()
+                .sorted(Comparator
+                        .comparingInt((SampleFriend person) -> Math.max(person.score(), person.reverseScore())).reversed()
+                        .thenComparingInt((SampleFriend person) -> Math.min(person.score(), person.reverseScore())).reversed()
+                        .thenComparing(SampleFriend::name))
+                .toList();
+    }
+
+    private SampleFriend friend(
+            String name,
+            String sido,
+            String sidoCode,
+            String sigunguCode,
+            int score,
+            int reverseScore,
+            RelationLabel label,
+            RelationLabel reverse
+    ) {
+        return new SampleFriend(
+                name,
+                sido,
+                sidoCode,
+                sigunguCode,
+                score,
+                label.displayName(),
+                label.mapColor(),
+                reverseScore,
+                reverse.displayName(),
+                reverse.mapColor()
         );
     }
 
-    private SampleFriend friend(String name, String sido, String sidoCode, int score, RelationLabel label) {
-        return new SampleFriend(name, sido, sidoCode, score, label.displayName(), label.mapColor());
+    private List<SampleLabelCount> sampleCounts(List<SampleFriend> friends) {
+        Map<String, Long> grouped = friends.stream()
+                .collect(Collectors.groupingBy(this::rankLabel, Collectors.counting()));
+        List<SampleLabelCount> counts = new ArrayList<>();
+        for (RelationLabel label : RelationLabel.values()) {
+            counts.add(new SampleLabelCount(
+                    label.titledName(),
+                    label.mapColor(),
+                    grouped.getOrDefault(label.displayName(), 0L).intValue(),
+                    label.displayName()
+            ));
+        }
+        return counts;
     }
 
-    private List<SampleLabelCount> sampleCounts() {
-        return List.of(
-                countOf(RelationLabel.BURAL_MATE, 13),
-                countOf(RelationLabel.TRUE_MATE, 17),
-                countOf(RelationLabel.BIZ_MATE, 11),
-                countOf(RelationLabel.AWKWARD_MATE, 7),
-                countOf(RelationLabel.DANGER_MATE, 2)
-        );
-    }
-
-    private SampleLabelCount countOf(RelationLabel label, int count) {
-        return new SampleLabelCount(label.titledName(), label.mapColor(), count, label.displayName());
-    }
-
-    private SampleRegion region(String code, String name, int count, RelationLabel label) {
-        return new SampleRegion(code, name, count, label.displayName(), label.mapColor());
+    private String rankLabel(SampleFriend friend) {
+        return friend.reverseScore() > friend.score() ? friend.reverseLabel() : friend.label();
     }
 }

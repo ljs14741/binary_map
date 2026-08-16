@@ -35,7 +35,7 @@
     document.getElementById("stage-title").textContent = `${view.hostName}님의 짝꿍지도`;
     document.getElementById("stage-count").textContent = `${view.total}명 참여`;
     document.getElementById("stage-caption").textContent = view.total
-      ? "금색이 고향 · 핀은 시도, 누르면 시군구가 나와요"
+      ? "금색이 고향 · 같은 시라도 구가 다르면 핀이 갈라져요"
       : "카톡으로 보내면 친구가 사는 곳에 핀이 찍혀요";
     renderStats(view.counts);
     renderRank(view.people);
@@ -91,43 +91,9 @@
     `).join("");
   }
 
-  function rankOf(person) {
-    if ((person.reverseScore || 0) > person.score) {
-      return {
-        high: person.reverseScore,
-        low: person.score,
-        label: person.reverseLabel || person.label,
-        color: person.reverseColor || person.color,
-        otherColor: person.color
-      };
-    }
-    return {
-      high: person.score,
-      low: person.reverseScore,
-      label: person.label,
-      color: person.color,
-      otherColor: person.reverseColor
-    };
-  }
-
   function renderRank(people) {
     const list = document.getElementById("map-rank");
-    list.innerHTML = people.map((person, index) => {
-      const rank = rankOf(person);
-      const place = index < 3 ? ` is-rank-${index + 1}` : "";
-      return `
-      <li class="${place.trim()}" data-label="${rank.label}">
-        <em>${index + 1}</em>
-        <div>
-          <strong>${MapBoard.escapeHtml(person.name)}</strong>
-          <small>${MapBoard.escapeHtml(person.sido)} · ${MapBoard.escapeHtml(rank.label)}</small>
-        </div>
-        <div class="map-rank-scores">
-          <b style="color:${rank.color}">${rank.high}</b>
-          <em style="color:${rank.otherColor}">${rank.low}</em>
-        </div>
-      </li>`;
-    }).join("");
+    list.innerHTML = people.map((person, index) => MapApp.rankRowHtml(person, index, view.hostName)).join("");
   }
 
   function bind() {

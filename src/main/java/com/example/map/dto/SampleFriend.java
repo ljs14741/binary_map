@@ -1,4 +1,15 @@
 package com.example.map.dto;
 
-public record SampleFriend(String name, String sido, String sidoCode, int score, String label, String color) {
+public record SampleFriend(
+        String name,
+        String sido,
+        String sidoCode,
+        String sigunguCode,
+        int score,
+        String label,
+        String color,
+        int reverseScore,
+        String reverseLabel,
+        String reverseColor
+) {
 }

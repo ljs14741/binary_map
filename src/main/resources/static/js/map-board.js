@@ -1,17 +1,64 @@
 (() => {
   const VIEW = { w: 800, h: 759 };
-  const CENTER_FIX = { 28: [200, 152], 11: [251, 146] };
+  const CENTER_FIX = { 28: [200, 152], 11: [252, 154] };
   const SIDO_NAME = {
     "11": "서울", "26": "부산", "27": "대구", "28": "인천", "29": "광주",
     "30": "대전", "31": "울산", "36": "세종", "41": "경기", "42": "강원",
     "43": "충북", "44": "충남", "45": "전북", "46": "전남", "47": "경북",
     "48": "경남", "50": "제주"
   };
+  const SIGUNGU_XY = {
+    11110: [0.02, -0.08], 11140: [0.04, 0.02], 11170: [-0.02, 0.18],
+    11200: [0.18, 0.08], 11215: [0.32, 0.12], 11230: [0.18, -0.08],
+    11260: [0.32, -0.18], 11290: [0.08, -0.22], 11305: [0.05, -0.38],
+    11320: [0.08, -0.48], 11350: [0.28, -0.38], 11380: [-0.28, -0.28],
+    11410: [-0.14, -0.08], 11440: [-0.22, 0.08], 11470: [-0.38, 0.18],
+    11500: [-0.48, 0.02], 11530: [-0.38, 0.32], 11545: [-0.28, 0.42],
+    11560: [-0.22, 0.22], 11590: [-0.08, 0.32], 11620: [-0.08, 0.45],
+    11650: [0.08, 0.38], 11680: [0.22, 0.42], 11710: [0.38, 0.32],
+    11740: [0.48, 0.18],
+    26110: [-0.05, 0.18], 26140: [-0.22, 0.12], 26170: [0.12, 0.08],
+    26200: [0.02, 0.42], 26230: [0.02, 0.08], 26260: [0.18, -0.08],
+    26290: [0.18, 0.28], 26320: [-0.08, -0.18], 26350: [0.42, 0.08],
+    26380: [-0.32, 0.28], 26410: [0.22, -0.22], 26440: [-0.48, 0.05],
+    26470: [0.12, 0.02], 26500: [0.32, 0.18], 26530: [-0.18, 0.08],
+    26710: [0.55, -0.12],
+    27110: [0.02, 0.02], 27140: [0.32, -0.08], 27170: [-0.28, 0.05],
+    27200: [0.05, 0.32], 27230: [-0.02, -0.38], 27260: [0.38, 0.28],
+    27290: [-0.32, 0.28], 27710: [-0.48, 0.48], 27720: [0.12, -0.72],
+    28110: [0.18, 0.12], 28140: [0.32, 0.02], 28177: [0.12, 0.22],
+    28185: [0.18, 0.42], 28200: [0.38, 0.22], 28237: [0.08, -0.08],
+    28245: [0.05, -0.28], 28260: [-0.08, 0.08], 28710: [-0.55, -0.55],
+    28720: [-0.35, 0.55],
+    29110: [0.28, 0.02], 29140: [-0.12, 0.08], 29155: [0.08, 0.32],
+    29170: [0.05, -0.32], 29200: [-0.38, 0.08],
+    30110: [0.32, 0.08], 30140: [0.05, 0.08], 30170: [-0.18, 0.12],
+    30200: [-0.32, -0.08], 30230: [0.18, -0.28],
+    31110: [-0.08, 0.08], 31140: [0.02, 0.32], 31170: [0.28, 0.05],
+    31200: [0.08, -0.28], 31710: [-0.22, 0.18],
+    36110: [0, 0],
+    41111: [-0.08, 0.22], 41113: [-0.05, 0.28], 41115: [-0.02, 0.25],
+    41117: [0.05, 0.28], 41131: [0.08, 0.12], 41133: [0.12, 0.15],
+    41135: [0.12, 0.22], 41150: [0.08, -0.32], 41171: [-0.18, 0.12],
+    41173: [-0.12, 0.12], 41192: [-0.28, 0.02], 41194: [-0.28, 0.08],
+    41196: [-0.25, -0.02], 41210: [-0.22, 0.08], 41220: [-0.08, 0.55],
+    41250: [0.05, -0.48], 41271: [-0.28, 0.22], 41273: [-0.35, 0.22],
+    41281: [-0.12, -0.18], 41285: [-0.22, -0.22], 41287: [-0.28, -0.22],
+    41290: [0.02, 0.08], 41310: [0.18, -0.02], 41360: [0.28, -0.12],
+    41370: [-0.02, 0.38], 41390: [-0.32, 0.18], 41410: [-0.15, 0.18],
+    41430: [-0.08, 0.15], 41450: [0.22, 0.05], 41461: [0.18, 0.38],
+    41463: [0.12, 0.32], 41465: [0.08, 0.28], 41480: [-0.22, -0.42],
+    41500: [0.42, 0.28], 41550: [0.18, 0.55], 41570: [-0.42, -0.08],
+    41590: [-0.02, 0.42], 41610: [0.32, 0.18], 41630: [0.02, -0.38],
+    41650: [0.28, -0.42], 41670: [0.48, 0.22], 41800: [-0.08, -0.62],
+    41820: [0.38, -0.32], 41830: [0.42, 0.05]
+  };
 
   let svgCache = "";
   let activeFilter = "";
   let clusterState = [];
   let onDeletePerson = null;
+  let hostName = "";
 
   async function paint(options) {
     const wrap = document.getElementById(options.wrapId || "korea-wrap");
@@ -19,6 +66,7 @@
       return;
     }
     onDeletePerson = options.onDeletePerson || null;
+    hostName = options.host.name;
     if (!svgCache) {
       svgCache = await fetch("/img/korea-sido.svg").then((res) => res.text());
     }
@@ -74,7 +122,7 @@
     return [400, 380];
   }
 
-  function hashOffset(code, spreadX, spreadY) {
+  function hashOffset(code) {
     let hash = 2166136261;
     const text = String(code || "");
     for (let i = 0; i < text.length; i += 1) {
@@ -83,16 +131,24 @@
     }
     const nx = ((hash >>> 0) % 1000) / 1000 - 0.5;
     const ny = ((hash >>> 11) % 1000) / 1000 - 0.5;
-    return [nx * spreadX * 2, ny * spreadY * 2];
+    return [nx * 0.7, ny * 0.7];
+  }
+
+  function sigunguOffset(sigunguCode) {
+    const known = SIGUNGU_XY[Number(sigunguCode)];
+    if (known) {
+      return known;
+    }
+    return hashOffset(sigunguCode);
   }
 
   function pinPoint(svg, sidoCode, sigunguCode) {
     const center = sidoCenter(svg, sidoCode);
     const box = sidoBox(svg, sidoCode);
-    const spreadX = box ? Math.max(12, box.width * 0.28) : 16;
-    const spreadY = box ? Math.max(12, box.height * 0.28) : 16;
-    const offset = hashOffset(sigunguCode || sidoCode, spreadX, spreadY);
-    return [center[0] + offset[0], center[1] + offset[1]];
+    const [nx, ny] = sigunguOffset(sigunguCode || sidoCode);
+    const w = box ? box.width : 24;
+    const h = box ? box.height : 24;
+    return [center[0] + nx * w * 0.42, center[1] + ny * h * 0.42];
   }
 
   function rankScore(person) {
@@ -100,43 +156,34 @@
   }
 
   function rankLabelOf(person) {
-    if ((person.reverseScore || 0) > (person.score || 0)) {
-      return person.reverseLabel || person.label;
-    }
-    return person.label;
+    return MapApp.rankMeta(person).label;
   }
 
   function rankColorOf(person) {
-    if ((person.reverseScore || 0) > (person.score || 0)) {
-      return person.reverseColor || person.color;
-    }
-    return person.color;
+    return MapApp.rankMeta(person).color;
   }
 
   function buildClusters(svg, people, extras) {
     const all = people.map((person) => ({ ...person, named: true })).concat(extras);
-    const bySido = new Map();
+    const byKey = new Map();
     all.forEach((person) => {
-      const code = person.sidoCode;
-      if (!code) {
+      const key = person.sigunguCode || person.sidoCode;
+      if (!key) {
         return;
       }
-      if (!bySido.has(code)) {
-        bySido.set(code, []);
+      if (!byKey.has(key)) {
+        byKey.set(key, []);
       }
-      bySido.get(code).push(person);
+      byKey.get(key).push(person);
     });
-    return [...bySido.entries()].map(([code, grouped]) => {
-      grouped.sort((a, b) => rankScore(b) - rankScore(a) || Math.min(b.score || 0, b.reverseScore || 0) - Math.min(a.score || 0, a.reverseScore || 0));
+    return [...byKey.entries()].map(([key, grouped]) => {
+      grouped.sort((a, b) => rankScore(b) - rankScore(a)
+        || Math.min(b.score || 0, b.reverseScore || 0) - Math.min(a.score || 0, a.reverseScore || 0));
       const best = grouped[0];
-      const point = sidoCenter(svg, code);
-      const places = [...new Set(grouped.map((person) => person.sigunguCode).filter(Boolean))];
-      const name = places.length === 1 && grouped[0].sido
-        ? grouped[0].sido
-        : (SIDO_NAME[code] || code);
+      const point = pinPoint(svg, best.sidoCode, best.sigunguCode);
       return {
-        id: code,
-        name,
+        id: key,
+        name: best.sido || SIDO_NAME[best.sidoCode] || key,
         x: point[0],
         y: point[1],
         count: grouped.length,
@@ -170,12 +217,12 @@
     const host = document.createElement("div");
     host.className = "host-pin";
     host.style.left = `${(point[0] / VIEW.w) * 100}%`;
-    host.style.top = `${(point[1] / VIEW.h) * 100}%`;
+    host.style.top = `${((point[1] - 14) / VIEW.h) * 100}%`;
     host.innerHTML = `
       <span class="host-ring"></span>
       <span class="host-ring is-late"></span>
       <span class="host-dot"></span>
-      <span class="host-badge">${escapeHtml(name)} · 고향</span>
+      <span class="host-badge">${escapeHtml(name)}의 고향</span>
     `;
     return host;
   }
@@ -249,22 +296,8 @@
     const extra = visible.length - named.length;
     document.getElementById("map-sheet-title").textContent = cluster.name;
     document.getElementById("map-sheet-count").textContent = `${visible.length}명`;
-    list.innerHTML = named.map((person) => {
-      const other = Math.min(person.score || 0, person.reverseScore || 0);
-      const otherColor = (person.reverseScore || 0) > (person.score || 0) ? person.color : person.reverseColor;
-      return `
-      <li>
-        <div>
-          <strong>${escapeHtml(person.name)}</strong>
-          <small>${escapeHtml(person.sido)} · ${escapeHtml(rankLabelOf(person))}</small>
-        </div>
-        <div class="map-rank-scores">
-          <b style="color:${rankColorOf(person)}">${rankScore(person)}</b>
-          ${person.reverseScore != null ? `<em style="color:${otherColor || person.color}">${other}</em>` : ""}
-        </div>
-        ${onDeletePerson && person.id ? `<button type="button" class="map-sheet-remove" data-id="${person.id}">지우기</button>` : ""}
-      </li>`;
-    }).join("") + (extra > 0 ? `<li class="is-extra"><span>그 외 ${extra}명</span></li>` : "");
+    list.innerHTML = named.map((person) => MapApp.sheetRowHtml(person, hostName, !!onDeletePerson)).join("")
+      + (extra > 0 ? `<li class="is-extra"><span>그 외 ${extra}명</span></li>` : "");
     list.querySelectorAll(".map-sheet-remove").forEach((button) => {
       button.addEventListener("click", () => onDeletePerson(Number(button.dataset.id)));
     });
@@ -288,11 +321,7 @@
   }
 
   function escapeHtml(value) {
-    return String(value)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;");
+    return MapApp.escapeHtml(value);
   }
 
   window.MapBoard = { paint, bindUi, closeSheet, escapeHtml };
