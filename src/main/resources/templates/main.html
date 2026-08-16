@@ -32,8 +32,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
   <link rel="stylesheet" href="https://binaryworld.kr/common/header.css">
   <link rel="stylesheet" href="https://binaryworld.kr/common/footer.css">
-  <link rel="stylesheet" th:href="@{/css/main.css}" id="theme-style">
-  <link rel="stylesheet" href="https://binaryworld.kr/common/guestbook.css">
+  <link rel="stylesheet" th:href="@{/css/main.css}">
 
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6890085609044109"
           crossorigin="anonymous"></script>
@@ -168,7 +167,35 @@
     <ol class="map-rank" id="map-rank"></ol>
   </section>
 
-  <div id="bw-guestbook" aria-label="방명록"></div>
+  <section class="map-card" id="guestbook" aria-label="방명록">
+    <p class="map-card-kicker">의견</p>
+    <h2>방명록</h2>
+    <p class="map-sample-lead">이상한 점이나, 이런 거 있으면 좋겠어요를 남겨 주세요.</p>
+    <form id="gb-form" class="map-form">
+      <div class="map-region-row">
+        <label>
+          닉네임
+          <input id="gb-nickname" type="text" maxlength="10" placeholder="진뚜" autocomplete="nickname" required>
+        </label>
+        <label>
+          삭제 비밀번호
+          <input id="gb-password" type="password" maxlength="20" placeholder="글 지울 때" autocomplete="new-password" required>
+        </label>
+      </div>
+      <label>
+        내용
+        <textarea id="gb-content" maxlength="1000" rows="3" placeholder="한 줄만 남겨도 돼요" required></textarea>
+      </label>
+      <p id="gb-error" class="map-error" hidden></p>
+      <button type="submit" id="gb-submit">남기기</button>
+    </form>
+    <ul class="map-gb-list" id="gb-list"></ul>
+    <div class="map-gb-page">
+      <button type="button" class="map-gb-nav" id="gb-prev">이전</button>
+      <span id="gb-page">1 / 1</span>
+      <button type="button" class="map-gb-nav" id="gb-next">다음</button>
+    </div>
+  </section>
 </main>
 
 <div id="map-sheet" class="map-sheet" hidden>
@@ -194,8 +221,10 @@
 <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
 <script src="https://binaryworld.kr/common/header.js" defer></script>
 <script src="https://binaryworld.kr/common/footer.js" defer></script>
-<script src="https://binaryworld.kr/common/guestbook.js" defer></script>
 <script th:src="@{/js/map-app.js}" defer></script>
+<script th:src="@{/js/map-board.js}" defer></script>
+<script th:src="@{/js/guestbook.js}" defer></script>
+<script th:src="@{/js/main.js}" defer></script>
 <script th:src="@{/js/map-board.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>
 </body>

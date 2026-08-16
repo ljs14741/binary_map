@@ -196,6 +196,7 @@ select {
 
 .map-form input,
 .map-form select,
+.map-form textarea,
 .map-select-btn {
   width: 100%;
   padding: 13px 14px;
@@ -209,7 +210,14 @@ select {
   outline: none;
 }
 
+.map-form textarea {
+  min-height: 92px;
+  resize: vertical;
+  line-height: 1.45;
+}
+
 .map-form input:focus,
+.map-form textarea:focus,
 .map-select.is-open .map-select-btn,
 .map-select-btn:focus-visible {
   border-color: #ffb39d;
@@ -1378,10 +1386,96 @@ body.is-sheet-open {
   padding: 4px 2px 8px;
 }
 
-#bw-guestbook {
-  width: 100%;
-  margin: 8px 0 12px;
+.map-gb-list {
+  list-style: none;
+  margin: 16px 0 0;
   padding: 0;
+}
+
+.map-gb-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 2px;
+  border-top: 1px solid var(--line);
+}
+
+.map-gb-list li:first-child {
+  border-top: 0;
+}
+
+.map-gb-list li > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.map-gb-list strong {
+  margin-right: 8px;
+  font-size: 15px;
+}
+
+.map-gb-list small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.map-gb-list p {
+  margin: 6px 0 0;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.map-gb-list button {
+  flex-shrink: 0;
+  margin-top: 2px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff4ea;
+  color: #c2410c;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.map-gb-empty {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.map-gb-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.map-gb-page span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.map-gb-nav {
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.map-gb-nav:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 @keyframes map-pulse {
