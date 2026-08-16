@@ -35,7 +35,7 @@
     <h1 class="map-room-title">
       <span id="room-host-name" th:text="${mapView.hostName()}">수현</span>님의<br>짝꿍지도
     </h1>
-    <p class="map-lead" id="room-lead" th:text="|${mapView.hostSido()} · ${mapView.total()}명|">서울 · 0명</p>
+    <p class="map-lead" id="room-lead" th:text="${mapView.leadText()}">서울 강남구 · 0명 참여 · 부랄친구 0명</p>
   </section>
 
   <section class="map-card" id="host-tools" th:hidden="${!mapView.host()}">
@@ -113,7 +113,7 @@
     <div class="map-stage">
       <div class="map-stage-head">
         <strong id="stage-title" th:text="|${mapView.hostName()}님의 짝꿍지도|">수현님의 짝꿍지도</strong>
-        <span id="stage-count" th:text="|${mapView.total()}명|">0명</span>
+        <span id="stage-count" th:text="|${mapView.total()}명 참여|">0명 참여</span>
       </div>
       <div class="korea-wrap" id="korea-wrap" aria-label="대한민국 시도 지도"></div>
       <p class="map-stage-caption" id="stage-caption">금색이 고향 · 핀은 시도, 누르면 시군구가 나와요</p>

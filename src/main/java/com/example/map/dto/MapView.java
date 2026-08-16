@@ -15,4 +15,16 @@ public record MapView(
         List<SampleLabelCount> counts,
         List<MapPersonView> people
 ) {
+    public String leadText() {
+        int bural = 0;
+        if (counts != null) {
+            for (SampleLabelCount count : counts) {
+                if ("부랄짝꿍".equals(count.filterKey())) {
+                    bural = count.count();
+                    break;
+                }
+            }
+        }
+        return hostSido + " · " + total + "명 참여 · 부랄친구 " + bural + "명";
+    }
 }

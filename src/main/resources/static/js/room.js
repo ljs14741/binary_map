@@ -31,9 +31,9 @@
     if (hostTitle) {
       hostTitle.textContent = view.hostName;
     }
-    document.getElementById("room-lead").textContent = `${view.hostSido} · ${view.total}명`;
+    document.getElementById("room-lead").textContent = leadText(view);
     document.getElementById("stage-title").textContent = `${view.hostName}님의 짝꿍지도`;
-    document.getElementById("stage-count").textContent = `${view.total}명`;
+    document.getElementById("stage-count").textContent = `${view.total}명 참여`;
     document.getElementById("stage-caption").textContent = view.total
       ? "금색이 고향 · 핀은 시도, 누르면 시군구가 나와요"
       : "카톡으로 보내면 친구가 사는 곳에 핀이 찍혀요";
@@ -73,6 +73,12 @@
       people: view.people,
       onDeletePerson: view.host ? deletePerson : null
     });
+  }
+
+  function leadText(view) {
+    const bural = (view.counts || []).find((item) => item.filterKey === "부랄짝꿍");
+    const n = bural ? bural.count : 0;
+    return `${view.hostSido} · ${view.total}명 참여 · 부랄친구 ${n}명`;
   }
 
   function renderStats(counts) {
