@@ -215,18 +215,29 @@
   }
 
   function dualScores(data) {
+    const hostCard = {
+      color: data.color,
+      caption: `${data.hostName} → ${data.guestName}`,
+      score: data.score,
+      label: data.label
+    };
+    const guestCard = {
+      color: data.reverseColor,
+      caption: `${data.guestName} → ${data.hostName}`,
+      score: data.reverseScore,
+      label: data.reverseLabel
+    };
+    const cards = Number(guestCard.score) > Number(hostCard.score)
+      ? [guestCard, hostCard]
+      : [hostCard, guestCard];
     return `
       <div class="map-dual">
-        <div class="map-dual-card" style="--score-color:${data.color}">
-          <small>${escapeHtml(data.hostName)} → ${escapeHtml(data.guestName)}</small>
-          <b>${data.score}</b>
-          <span>${escapeHtml(data.label)}</span>
-        </div>
-        <div class="map-dual-card" style="--score-color:${data.reverseColor}">
-          <small>${escapeHtml(data.guestName)} → ${escapeHtml(data.hostName)}</small>
-          <b>${data.reverseScore}</b>
-          <span>${escapeHtml(data.reverseLabel)}</span>
-        </div>
+        ${cards.map((card) => `
+        <div class="map-dual-card" style="--score-color:${card.color}">
+          <small>${escapeHtml(card.caption)}</small>
+          <b>${card.score}</b>
+          <span>${escapeHtml(card.label)}</span>
+        </div>`).join("")}
       </div>`;
   }
 
@@ -244,10 +255,24 @@
   }
 
   function dualFolds(data) {
+    const hostFold = {
+      letters: data.letters,
+      stages: data.stages,
+      caption: `${data.hostName} → ${data.guestName}`,
+      score: data.score
+    };
+    const guestFold = {
+      letters: data.reverseLetters,
+      stages: data.reverseStages,
+      caption: `${data.guestName} → ${data.hostName}`,
+      score: data.reverseScore
+    };
+    const folds = Number(guestFold.score) > Number(hostFold.score)
+      ? [guestFold, hostFold]
+      : [hostFold, guestFold];
     return `
       <div class="map-folds">
-        ${foldPane(data.letters, data.stages, `${data.hostName} → ${data.guestName}`)}
-        ${foldPane(data.reverseLetters, data.reverseStages, `${data.guestName} → ${data.hostName}`)}
+        ${folds.map((fold) => foldPane(fold.letters, fold.stages, fold.caption)).join("")}
       </div>`;
   }
 
@@ -717,16 +742,28 @@
   function personScoresHtml(person, hostName) {
     const reverse = person.reverseScore;
     const hasReverse = reverse != null && reverse !== "";
+    const hostCell = {
+      name: hostName,
+      score: person.score,
+      color: person.color
+    };
+    const guestCell = hasReverse ? {
+      name: person.name,
+      score: reverse,
+      color: person.reverseColor || person.color
+    } : null;
+    const cells = guestCell && Number(guestCell.score) > Number(hostCell.score)
+      ? [guestCell, hostCell]
+      : guestCell
+        ? [hostCell, guestCell]
+        : [hostCell];
     return `
       <div class="map-rank-scores">
+        ${cells.map((cell) => `
         <span class="map-score-cell">
-          <small>${escapeHtml(hostName)} 먼저</small>
-          <b style="color:${person.color}">${person.score}</b>
-        </span>
-        ${hasReverse ? `<span class="map-score-cell">
-          <small>${escapeHtml(person.name)} 먼저</small>
-          <b style="color:${person.reverseColor || person.color}">${reverse}</b>
-        </span>` : ""}
+          <small>${escapeHtml(cell.name)} 먼저</small>
+          <b style="color:${cell.color}">${cell.score}</b>
+        </span>`).join("")}
       </div>`;
   }
 
