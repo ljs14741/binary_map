@@ -116,13 +116,11 @@
         내 이름 (닉네임)
         <input id="create-name" type="text" minlength="2" maxlength="8" placeholder="수현" autocomplete="off" required>
       </label>
-      <label class="map-field">
-        생년월일
-        <span class="map-date-shell">
-          <input id="create-birth" type="date" min="1920-01-01" required>
-        </span>
-      </label>
-      <p class="map-field-hint">띠랑 별자리 보려고 받아요. 목록에는 생일도 보여요.</p>
+      <div class="map-field">
+        <span>생년월일</span>
+        <input id="create-birth" type="hidden">
+      </div>
+      <p class="map-field-hint">연도를 고르거나 1996.07.10처럼 직접 적어도 돼요. 띠랑 별자리 보려고 받아요.</p>
       <div class="map-region-row">
         <div class="map-field">
           <span>시도</span>

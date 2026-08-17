@@ -124,9 +124,11 @@
     document.getElementById("join-submit").textContent = editing
       ? "내 정보 수정"
       : "궁합 확인하고 들어가기";
+    const birthEl = document.getElementById("join-birth");
+    MapApp.bindBirthInput(birthEl);
     if (editing) {
       document.getElementById("join-name").value = mine.name;
-      document.getElementById("join-birth").value = (mine.birthDate || "").slice(0, 10);
+      birthEl.value = (mine.birthDate || "").slice(0, 10);
       MapApp.bindRegionSelects(
         document.getElementById("join-sido"),
         document.getElementById("join-sigungu"),

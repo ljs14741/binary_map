@@ -226,15 +226,333 @@
     fill();
   }
 
+  function pad2(value) {
+    return String(value).padStart(2, "0");
+  }
+
+  function todayDate() {
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  }
+
+  function birthIso(year, month, day) {
+    if (!year || !month || !day) {
+      return "";
+    }
+    return `${year}-${pad2(month)}-${pad2(day)}`;
+  }
+
+  function parseBirthIso(value) {
+    const text = Array.isArray(value)
+      ? birthIso(value[0], value[1], value[2])
+      : String(value || "").trim();
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text.slice(0, 10));
+    if (!match) {
+      return "";
+    }
+    return `${match[1]}-${match[2]}-${match[3]}`;
+  }
+
+  function parseBirthTyped(raw, minYear, maxYear) {
+    const digits = String(raw || "").replace(/\D/g, "");
+    if (digits.length === 6) {
+      const yy = Number(digits.slice(0, 2));
+      const y2000 = 2000 + yy;
+      const year = y2000 <= maxYear && y2000 >= minYear ? y2000 : 1900 + yy;
+      return parseBirthTyped(`${year}${digits.slice(2)}`, minYear, maxYear);
+    }
+    if (digits.length !== 8) {
+      return "";
+    }
+    return birthIso(digits.slice(0, 4), digits.slice(4, 6), digits.slice(6, 8));
+  }
+
+  function formatBirthDots(iso) {
+    const parsed = parseBirthIso(iso);
+    return parsed ? parsed.replace(/-/g, ".") : "";
+  }
+
+  function isValidBirthIso(iso, minYear, maxDate) {
+    const parsed = parseBirthIso(iso);
+    if (!parsed) {
+      return false;
+    }
+    const year = Number(parsed.slice(0, 4));
+    const month = Number(parsed.slice(5, 7));
+    const day = Number(parsed.slice(8, 10));
+    const date = new Date(year, month - 1, day);
+    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+      return false;
+    }
+    if (year < minYear || date > maxDate) {
+      return false;
+    }
+    return true;
+  }
+
+  function formatBirthTyping(raw) {
+    const digits = String(raw || "").replace(/\D/g, "").slice(0, 8);
+    if (digits.length <= 4) {
+      return digits;
+    }
+    if (digits.length <= 6) {
+      return `${digits.slice(0, 4)}.${digits.slice(4)}`;
+    }
+    return `${digits.slice(0, 4)}.${digits.slice(4, 6)}.${digits.slice(6)}`;
+  }
+
+  function fillBirthDays(ui) {
+    const year = Number(ui.year.value) || 0;
+    const month = Number(ui.month.value) || 0;
+    const max = year && month ? new Date(year, month, 0).getDate() : 31;
+    const keep = ui.day.value;
+    if (ui.day.dataset.maxDays === String(max) && ui.day.options.length === max + 1) {
+      if (keep && Number(keep) > max) {
+        ui.day.value = "";
+      }
+      return;
+    }
+    ui.day.dataset.maxDays = String(max);
+    ui.day.innerHTML = `<option value="">일</option>`
+      + Array.from({ length: max }, (_, index) => {
+        const day = index + 1;
+        return `<option value="${day}">${day}일</option>`;
+      }).join("");
+    if (keep && Number(keep) <= max) {
+      ui.day.value = keep;
+    }
+  }
+
+  function writeBirthValue(el, iso) {
+    const ui = el._birth;
+    ui.lock = true;
+    ui.valueDesc.set.call(el, iso || "");
+    ui.lock = false;
+  }
+
+  function setBirthValidity(ui, iso) {
+    const pickIso = birthIso(ui.year.value, ui.month.value, ui.day.value);
+    const pickOk = !pickIso || isValidBirthIso(pickIso, ui.minYear, ui.maxDate);
+    ui.year.setCustomValidity(pickOk ? "" : "생년월일을 확인해 주세요.");
+    const typedDigits = String(ui.typed.value || "").replace(/\D/g, "");
+    const typedIso = parseBirthTyped(ui.typed.value, ui.minYear, ui.maxDate.getFullYear());
+    const typedOk = typedDigits.length < 8 || isValidBirthIso(typedIso || iso, ui.minYear, ui.maxDate);
+    ui.typed.setCustomValidity(typedOk ? "" : "생년월일을 확인해 주세요.");
+  }
+
+  function commitBirthSelects(el) {
+    const ui = el._birth;
+    fillBirthDays(ui);
+    const iso = birthIso(ui.year.value, ui.month.value, ui.day.value);
+    if (!iso) {
+      writeBirthValue(el, "");
+      setBirthValidity(ui, "");
+      return;
+    }
+    if (!isValidBirthIso(iso, ui.minYear, ui.maxDate)) {
+      writeBirthValue(el, "");
+      setBirthValidity(ui, iso);
+      return;
+    }
+    writeBirthValue(el, iso);
+    ui.typed.value = formatBirthDots(iso);
+    setBirthValidity(ui, iso);
+  }
+
+  function commitBirthTyped(el, draft) {
+    const ui = el._birth;
+    const iso = parseBirthTyped(draft, ui.minYear, ui.maxDate.getFullYear());
+    if (!iso) {
+      if (!String(draft || "").replace(/\D/g, "")) {
+        writeBirthValue(el, "");
+        setBirthValidity(ui, "");
+      }
+      return false;
+    }
+    if (!isValidBirthIso(iso, ui.minYear, ui.maxDate)) {
+      setBirthValidity(ui, iso);
+      return false;
+    }
+    ui.lock = true;
+    ui.year.value = String(Number(iso.slice(0, 4)));
+    ui.month.value = String(Number(iso.slice(5, 7)));
+    fillBirthDays(ui);
+    ui.day.value = String(Number(iso.slice(8, 10)));
+    ui.lock = false;
+    writeBirthValue(el, iso);
+    ui.typed.value = formatBirthDots(iso);
+    setBirthValidity(ui, iso);
+    return true;
+  }
+
+  function syncBirthFromValue(el) {
+    const ui = el._birth;
+    if (!ui || ui.lock) {
+      return;
+    }
+    const iso = parseBirthIso(ui.valueDesc.get.call(el));
+    ui.lock = true;
+    if (iso && isValidBirthIso(iso, ui.minYear, ui.maxDate)) {
+      ui.year.value = String(Number(iso.slice(0, 4)));
+      ui.month.value = String(Number(iso.slice(5, 7)));
+      fillBirthDays(ui);
+      ui.day.value = String(Number(iso.slice(8, 10)));
+      if (document.activeElement !== ui.typed) {
+        ui.typed.value = formatBirthDots(iso);
+      }
+      setBirthValidity(ui, iso);
+    } else if (!iso && document.activeElement !== ui.typed) {
+      ui.year.value = "";
+      ui.month.value = "";
+      fillBirthDays(ui);
+      ui.day.value = "";
+      ui.typed.value = "";
+      setBirthValidity(ui, "");
+    }
+    ui.lock = false;
+  }
+
+  function mountBirthPicker(el) {
+    const minYear = 1920;
+    const maxDate = todayDate();
+    const maxYear = maxDate.getFullYear();
+    const valueDesc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+
+    const wrap = document.createElement("div");
+    wrap.className = "map-birth";
+
+    const picks = document.createElement("div");
+    picks.className = "map-birth-picks";
+
+    const year = document.createElement("select");
+    year.className = "map-birth-year";
+    year.setAttribute("aria-label", "출생연도");
+    year.required = true;
+    year.innerHTML = `<option value="">출생연도</option>`
+      + Array.from({ length: maxYear - minYear + 1 }, (_, index) => {
+        const value = maxYear - index;
+        return `<option value="${value}">${value}년</option>`;
+      }).join("");
+
+    const month = document.createElement("select");
+    month.className = "map-birth-month";
+    month.setAttribute("aria-label", "월");
+    month.required = true;
+    month.innerHTML = `<option value="">월</option>`
+      + Array.from({ length: 12 }, (_, index) => {
+        const value = index + 1;
+        return `<option value="${value}">${value}월</option>`;
+      }).join("");
+
+    const day = document.createElement("select");
+    day.className = "map-birth-day";
+    day.setAttribute("aria-label", "일");
+    day.required = true;
+    day.innerHTML = `<option value="">일</option>`
+      + Array.from({ length: 31 }, (_, index) => {
+        const value = index + 1;
+        return `<option value="${value}">${value}일</option>`;
+      }).join("");
+
+    const typed = document.createElement("input");
+    typed.type = "text";
+    typed.className = "map-birth-typed";
+    typed.inputMode = "numeric";
+    typed.autocomplete = "bday";
+    typed.placeholder = "1996.07.10 직접 입력";
+    typed.maxLength = 10;
+    typed.setAttribute("enterkeyhint", "done");
+    typed.setAttribute("aria-label", "생년월일 직접 입력");
+
+    picks.append(year, month, day);
+    wrap.append(picks, typed);
+
+    el.type = "hidden";
+    el.required = false;
+    el.removeAttribute("min");
+    el.removeAttribute("max");
+    const shell = el.closest(".map-date-shell");
+    const host = shell || el;
+    host.parentNode.insertBefore(wrap, host);
+    wrap.appendChild(el);
+    if (shell) {
+      shell.remove();
+    }
+
+    el._birth = { year, month, day, typed, minYear, maxDate, valueDesc, lock: false };
+
+    Object.defineProperty(el, "value", {
+      configurable: true,
+      enumerable: true,
+      get() {
+        return valueDesc.get.call(this);
+      },
+      set(next) {
+        valueDesc.set.call(this, parseBirthIso(next));
+        syncBirthFromValue(el);
+      }
+    });
+
+    const onPick = () => {
+      if (el._birth.lock) {
+        return;
+      }
+      commitBirthSelects(el);
+    };
+    year.addEventListener("change", onPick);
+    month.addEventListener("change", onPick);
+    day.addEventListener("change", onPick);
+
+    typed.addEventListener("input", () => {
+      const next = formatBirthTyping(typed.value);
+      if (typed.value !== next) {
+        typed.value = next;
+      }
+      if (next.replace(/\D/g, "").length === 8) {
+        commitBirthTyped(el, next);
+      } else {
+        el._birth.typed.setCustomValidity("");
+      }
+    });
+    typed.addEventListener("blur", () => {
+      if (!commitBirthTyped(el, typed.value) && el.value) {
+        typed.value = formatBirthDots(el.value);
+        setBirthValidity(el._birth, el.value);
+      }
+    });
+
+    const form = el.form;
+    if (form && !form.dataset.birthSubmitBound) {
+      form.dataset.birthSubmitBound = "true";
+      const flushBirthFields = () => {
+        form.querySelectorAll("input[data-birth-bound]").forEach((input) => {
+          const ui = input._birth;
+          if (!ui) {
+            return;
+          }
+          if (!commitBirthTyped(input, ui.typed.value)) {
+            commitBirthSelects(input);
+          }
+        });
+      };
+      form.addEventListener("click", (event) => {
+        if (event.target.closest("button[type='submit'], input[type='submit']")) {
+          flushBirthFields();
+        }
+      }, true);
+      form.addEventListener("submit", flushBirthFields);
+    }
+  }
+
   function bindBirthInput(el) {
     if (!el) {
       return;
     }
-    const today = new Date();
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const day = String(today.getDate()).padStart(2, "0");
-    el.max = `${today.getFullYear()}-${month}-${day}`;
-    el.min = el.min || "1920-01-01";
+    if (!el.dataset.birthBound) {
+      el.dataset.birthBound = "true";
+      mountBirthPicker(el);
+    }
+    syncBirthFromValue(el);
   }
 
   function chemRowText(row) {
