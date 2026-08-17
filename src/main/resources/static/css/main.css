@@ -710,6 +710,14 @@ textarea {
 .cluster-layer {
   position: absolute;
   inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.pin-name-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   pointer-events: none;
 }
 
@@ -760,6 +768,24 @@ textarea {
   animation: none;
 }
 
+.cluster-pin.is-many {
+  width: 48px;
+  height: 48px;
+}
+
+.cluster-pin.is-many .cluster-dot {
+  width: 8px;
+  height: 8px;
+  border-width: 1.5px;
+}
+
+.cluster-pin.is-many .cluster-glow {
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
+  opacity: 0.28;
+}
+
 .cluster-pin.is-hot {
   z-index: 4;
   opacity: 1;
@@ -788,7 +814,7 @@ textarea {
 .cluster-dot,
 .host-dot {
   position: relative;
-  z-index: 1;
+  z-index: 3;
   width: 11px;
   height: 11px;
   border: 2px solid #fff;
@@ -852,24 +878,18 @@ textarea {
 
 .pin-name {
   position: absolute;
-  top: calc(50% + 10px);
-  left: 50%;
-  z-index: 2;
-  max-width: 52px;
+  z-index: 0;
   padding: 1px 5px;
   border-radius: 999px;
-  background: rgba(255, 248, 234, 0.94);
+  background: rgba(255, 248, 234, 0.86);
   color: #4a3426;
   font-size: 10px;
   font-weight: 800;
   line-height: 1.25;
   letter-spacing: -0.04em;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transform: translateX(-50%);
+  transform: translate(-50%, 11px);
   pointer-events: none;
-  box-shadow: 0 2px 6px rgba(80, 50, 20, 0.12);
 }
 
 .pin-name.is-host {
@@ -877,11 +897,8 @@ textarea {
   background: #fff6cf;
 }
 
-.pin-name.is-count {
-  min-width: 16px;
-  color: #fff;
-  text-align: center;
-  background: var(--pin, #ff2d95);
+.pin-name.is-dim {
+  opacity: 0.16;
 }
 
 .chi-spark {

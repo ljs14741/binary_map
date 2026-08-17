@@ -853,10 +853,27 @@
     if (svg) {
       const mapCanvas = await rasterizeSvg(svg, mapW, mapH);
       ctx.drawImage(mapCanvas, pad, y + 8 * scale, mapW, mapH);
+      const names = [...wrap.querySelectorAll(".pin-name")];
+      names.forEach((nameEl) => {
+        const px = pad + (parseFloat(nameEl.style.left) / 100) * mapW;
+        const py = y + 8 * scale + (parseFloat(nameEl.style.top) / 100) * mapH;
+        const host = nameEl.classList.contains("is-host");
+        ctx.font = `800 ${10 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+        const label = fitText(ctx, nameEl.textContent.trim(), 40 * scale);
+        const tw = ctx.measureText(label).width;
+        roundRect(ctx, px - tw / 2 - 6 * scale, py + 10 * scale, tw + 12 * scale, 16 * scale, 8 * scale);
+        ctx.fillStyle = host ? "#fff6cf" : "rgba(255,248,234,0.86)";
+        ctx.fill();
+        ctx.fillStyle = host ? "#9a7408" : "#4a3426";
+        ctx.textAlign = "center";
+        ctx.fillText(label, px, py + 13 * scale);
+        ctx.textAlign = "left";
+      });
       [...wrap.querySelectorAll(".cluster-pin, .host-pin")].forEach((pin) => {
         const px = pad + (parseFloat(pin.style.left) / 100) * mapW;
         const py = y + 8 * scale + (parseFloat(pin.style.top) / 100) * mapH;
         const host = pin.classList.contains("host-pin");
+        const many = pin.classList.contains("is-many");
         const color = host ? "#f5c542" : cssColorToRgb(getComputedStyle(pin).getPropertyValue("--pin") || "#ff2d95");
         const dots = host ? [[0, 0]] : [...pin.querySelectorAll(".cluster-dot")].map((dot) => {
           const style = getComputedStyle(dot);
@@ -865,25 +882,12 @@
         (dots.length ? dots : [[0, 0]]).forEach(([ox, oy]) => {
           ctx.beginPath();
           ctx.fillStyle = color;
-          ctx.arc(px + ox * scale, py + oy * scale, (host ? 8 : 5) * scale, 0, Math.PI * 2);
+          ctx.arc(px + ox * scale, py + oy * scale, (host ? 8 : (many ? 4 : 5)) * scale, 0, Math.PI * 2);
           ctx.fill();
           ctx.strokeStyle = "#fff";
-          ctx.lineWidth = 2 * scale;
+          ctx.lineWidth = (many ? 1.5 : 2) * scale;
           ctx.stroke();
         });
-        const nameEl = pin.querySelector(".pin-name");
-        if (nameEl) {
-          ctx.font = `800 ${10 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
-          const label = fitText(ctx, nameEl.textContent.trim(), 52 * scale);
-          const tw = ctx.measureText(label).width;
-          roundRect(ctx, px - tw / 2 - 6 * scale, py + 10 * scale, tw + 12 * scale, 16 * scale, 8 * scale);
-          ctx.fillStyle = host ? "#fff6cf" : (nameEl.classList.contains("is-count") ? color : "rgba(255,248,234,0.94)");
-          ctx.fill();
-          ctx.fillStyle = host ? "#9a7408" : (nameEl.classList.contains("is-count") ? "#fff" : "#4a3426");
-          ctx.textAlign = "center";
-          ctx.fillText(label, px, py + 13 * scale);
-          ctx.textAlign = "left";
-        }
       });
     }
     y += mapH + 28 * scale;

@@ -142,15 +142,25 @@
     clusterState = buildClusters(svg, people, options.extras || []);
     separateClusters(svg, clusterState, hostPoint);
     colorSidos(svg, options.host.sidoCode, clusterState);
+    const nameLayer = document.createElement("div");
+    nameLayer.className = "pin-name-layer";
     const layer = document.createElement("div");
     layer.className = "cluster-layer";
     addSparkles(layer);
-    clusterState.forEach((cluster, index) => layer.appendChild(createClusterPin(cluster, index)));
+    clusterState.forEach((cluster, index) => {
+      layer.appendChild(createClusterPin(cluster, index));
+      const caption = clusterCaption(cluster);
+      if (caption) {
+        nameLayer.appendChild(createPinName(cluster.x, cluster.y, caption, "", cluster.labels));
+      }
+    });
     const hostPin = createHostPin(hostPoint, options.host.name);
     layer.appendChild(hostPin);
+    nameLayer.appendChild(createPinName(hostPoint[0], hostPoint[1], clipNick(options.host.name) || "나", "is-host"));
     if (addChiFlow(layer, clusterState, hostPoint)) {
       hostPin.classList.add("is-receiving");
     }
+    canvas.appendChild(nameLayer);
     canvas.appendChild(layer);
     requestAnimationFrame(() => canvas.classList.add("is-ready"));
     applyFilter();
@@ -441,38 +451,49 @@
     if (!text) {
       return "";
     }
-    return text.length > 4 ? text.slice(0, 4) : text;
+    return text.slice(-2);
   }
 
   function clusterCaption(cluster) {
     if (cluster.count > 1) {
-      return String(cluster.count);
+      return "";
     }
     const person = cluster.people.find((item) => item.named && item.name);
     return clipNick(person?.name || "");
   }
 
+  function createPinName(x, y, text, extraClass, labels) {
+    const el = document.createElement("span");
+    el.className = extraClass ? `pin-name ${extraClass}` : "pin-name";
+    el.style.left = `${(x / VIEW.w) * 100}%`;
+    el.style.top = `${(y / VIEW.h) * 100}%`;
+    el.textContent = text;
+    if (labels && labels.length) {
+      el.dataset.labels = labels.join(",");
+    }
+    return el;
+  }
+
   function createClusterPin(cluster, index) {
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "cluster-pin";
+    button.className = cluster.count > 1 ? "cluster-pin is-many" : "cluster-pin";
     button.dataset.labels = cluster.labels.join(",");
     button.style.left = `${(cluster.x / VIEW.w) * 100}%`;
     button.style.top = `${(cluster.y / VIEW.h) * 100}%`;
     button.style.setProperty("--pin", cluster.color);
     button.style.setProperty("--delay", `${0.12 + index * 0.08}s`);
-    const caption = clusterCaption(cluster);
-    button.setAttribute("aria-label", caption
-      ? (cluster.count > 1 ? `${caption}명` : caption)
+    const named = cluster.people.filter((item) => item.named && item.name).map((item) => item.name);
+    button.setAttribute("aria-label", named.length
+      ? `${named.map(clipNick).join(", ")} ${cluster.count}명`
       : `${cluster.name} ${cluster.count}명`);
-    const shown = Math.min(cluster.count, 6);
+    const shown = Math.min(cluster.count, 9);
     const dots = Array.from({ length: shown }, (_, i) => {
-      const extra = shown === 1 ? "" : ` style="--ox:${grapeOffset(i, shown)[0]}px; --oy:${grapeOffset(i, shown)[1]}px"`;
-      return `<span class="cluster-dot"${extra}></span>`;
+      const [ox, oy] = grapeOffset(i, shown);
+      const delay = 0.12 + index * 0.08 + i * 0.1;
+      return `<span class="cluster-dot" style="--ox:${ox}px; --oy:${oy}px; --delay:${delay}s"></span>`;
     }).join("");
-    const nameClass = cluster.count > 1 ? "pin-name is-count" : "pin-name";
-    const nameHtml = caption ? `<span class="${nameClass}">${escapeHtml(caption)}</span>` : "";
-    button.innerHTML = `<span class="cluster-glow"></span>${dots}${nameHtml}`;
+    button.innerHTML = `<span class="cluster-glow"></span>${dots}`;
     button.addEventListener("click", () => openSheet(cluster));
     return button;
   }
@@ -481,8 +502,11 @@
     if (count <= 1) {
       return [0, 0];
     }
+    if (count === 2) {
+      return index === 0 ? [-6, 1] : [6, -1];
+    }
     const angle = (Math.PI * 2 * index) / count - Math.PI / 2;
-    const radius = 4 + Math.min(count, 5) * 1.1;
+    const radius = 6 + Math.min(count, 8) * 1.15;
     return [Math.cos(angle) * radius, Math.sin(angle) * radius];
   }
 
@@ -491,13 +515,11 @@
     host.className = "host-pin";
     host.style.left = `${(point[0] / VIEW.w) * 100}%`;
     host.style.top = `${(point[1] / VIEW.h) * 100}%`;
-    const caption = clipNick(name) || "나";
     host.setAttribute("aria-label", `${name}의 거주지역`);
     host.innerHTML = `
       <span class="host-ring"></span>
       <span class="host-ring is-late"></span>
       <span class="host-dot"></span>
-      <span class="pin-name is-host">${escapeHtml(caption)}</span>
     `;
     return host;
   }
@@ -592,6 +614,11 @@
       const on = !activeFilter || labels.includes(activeFilter);
       pin.classList.toggle("is-dim", !on);
       pin.classList.toggle("is-hot", !!activeFilter && on);
+    });
+    document.querySelectorAll(".pin-name[data-labels]").forEach((el) => {
+      const labels = (el.dataset.labels || "").split(",").filter(Boolean);
+      const on = !activeFilter || labels.includes(activeFilter);
+      el.classList.toggle("is-dim", !on);
     });
     document.querySelectorAll("#map-rank li").forEach((item) => {
       item.hidden = !!activeFilter && item.dataset.label !== activeFilter;
