@@ -45,7 +45,7 @@ public class MapController {
         model.addAttribute("sampleFriendsJson", objectMapper.writeValueAsString(friends));
         model.addAttribute("sampleCounts", sampleCounts(friends));
         model.addAttribute("sampleTotal", friends.size());
-        model.addAttribute("sampleHostSign", host.animalEmoji() + " " + host.animalName() + " · " + host.starSign());
+        model.addAttribute("sampleHostSign", host.animalEmoji() + " " + host.animalName() + " · " + host.starText());
         model.addAttribute("sampleFoldJson", objectMapper.writeValueAsString(Map.of(
                 "letters", sampleFold.letters(),
                 "stages", sampleFold.stages(),
@@ -136,6 +136,7 @@ public class MapController {
                 guest.animalName(),
                 guest.animalEmoji(),
                 guest.starSign(),
+                guest.starEmoji(),
                 birth.toString(),
                 birthFlavorService.rankComment(host, guest, name, SAMPLE_HOST_BIRTH, birth)
         );

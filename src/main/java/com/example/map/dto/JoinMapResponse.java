@@ -29,6 +29,8 @@ public record JoinMapResponse(
         String guestAnimal,
         String guestAnimalEmoji,
         String hostStarSign,
-        String guestStarSign
+        String hostStarEmoji,
+        String guestStarSign,
+        String guestStarEmoji
 ) {
 }

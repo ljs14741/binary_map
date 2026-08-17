@@ -239,6 +239,13 @@
     return [key, pair, fit].filter(Boolean).join("  ");
   }
 
+  function withEmoji(emoji, name) {
+    if (!name) {
+      return "";
+    }
+    return emoji ? `${emoji} ${name}`.trim() : name;
+  }
+
   function chemistryHtml(data) {
     if (!data || !(data.guestAnimal || data.guestStarSign || data.chemistryLine)) {
       return "";
@@ -249,8 +256,8 @@
         ? `${data.guestAnimalEmoji || ""} ${data.guestAnimal}`.trim()
         : "";
     const starPair = data.hostStarSign && data.guestStarSign
-      ? `${data.hostStarSign} × ${data.guestStarSign}`
-      : data.guestStarSign || "";
+      ? `${withEmoji(data.hostStarEmoji, data.hostStarSign)} × ${withEmoji(data.guestStarEmoji, data.guestStarSign)}`
+      : withEmoji(data.guestStarEmoji, data.guestStarSign);
     return `
       <div class="map-chem">
         ${chemRow("띠", animalPair, data.animalFitLabel, "map-chem-animals")}
@@ -904,10 +911,9 @@
 
   function personMetaHtml(person) {
     const birth = formatBirthShort(person.birthDate);
-    const animal = person.animal
-      ? `${person.animalEmoji || ""} ${person.animal}`.trim()
-      : "";
-    const bits = [person.sido, birth, animal, person.starSign].filter(Boolean);
+    const animal = withEmoji(person.animalEmoji, person.animal);
+    const star = withEmoji(person.starEmoji, person.starSign);
+    const bits = [person.sido, birth, animal, star].filter(Boolean);
     if (!bits.length) {
       return "";
     }
@@ -922,17 +928,15 @@
       : "";
     return `
       <div class="map-rank-main">
-        <div class="map-rank-top">
-          <div class="map-rank-info">
-            <p class="map-rank-name">
-              <strong>${escapeHtml(person.name)}</strong>
-              <span class="map-rank-tag" style="--tag:${rank.color}">${heart} ${escapeHtml(rank.label)}</span>
-            </p>
-            ${personMetaHtml(person)}
-          </div>
-          ${personScoresHtml(person, hostName)}
+        <div class="map-rank-info">
+          <p class="map-rank-name">
+            <strong>${escapeHtml(person.name)}</strong>
+            <span class="map-rank-tag" style="--tag:${rank.color}">${heart} ${escapeHtml(rank.label)}</span>
+          </p>
+          ${personMetaHtml(person)}
+          ${comment}
         </div>
-        ${comment}
+        ${personScoresHtml(person, hostName)}
       </div>`;
   }
 

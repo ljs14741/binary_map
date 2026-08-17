@@ -153,8 +153,7 @@ textarea {
 }
 
 .map-card,
-.map-result,
-.map-rank {
+.map-result {
   background: var(--card);
   border: 1px solid rgba(255, 255, 255, 0.8);
   border-radius: 24px;
@@ -1109,15 +1108,21 @@ body.is-sheet-open {
 .map-rank {
   list-style: none;
   margin: 0;
-  padding: 8px 10px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  background: none;
+  border: 0;
+  box-shadow: none;
 }
 
 .map-rank li {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  padding: 10px 8px;
-  border-radius: 14px;
+  padding: 10px 10px;
+  border-radius: 16px;
+  background: #fffdf9;
 }
 
 .map-rank li.is-rank-1 {
@@ -1166,14 +1171,11 @@ body.is-sheet-open {
 
 .map-rank li > div,
 .map-rank-main {
-  min-width: 0;
-  flex: 1;
-}
-
-.map-rank-top {
   display: flex;
   align-items: flex-start;
   gap: 8px;
+  min-width: 0;
+  flex: 1;
 }
 
 .map-rank-info {

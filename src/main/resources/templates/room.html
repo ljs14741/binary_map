@@ -37,7 +37,7 @@
     </h1>
     <p class="map-host-sign" id="host-sign"
        th:hidden="${mapView.hostAnimal() == null}"
-       th:text="${mapView.hostSignText()}">🐰 토끼 · 쌍둥이</p>
+       th:text="${mapView.hostSignText()}">🐰 토끼 · 🦂 전갈</p>
     <p class="map-lead" id="room-lead" th:text="${mapView.leadText()}">서울 강남구 · 0명 참여 · 부랄친구 0명</p>
   </section>
 
@@ -130,7 +130,7 @@
           <strong id="stage-title" th:text="|${mapView.hostName()}님의 짝꿍지도|">수현님의 짝꿍지도</strong>
           <p class="map-stage-host-sign" id="stage-host-sign"
              th:hidden="${mapView.hostAnimal() == null}"
-             th:text="${mapView.hostSignText()}">🐰 토끼 · 쌍둥이</p>
+             th:text="${mapView.hostSignText()}">🐰 토끼 · 🦂 전갈</p>
         </div>
         <span id="stage-count" th:text="|${mapView.total()}명 참여|">0명 참여</span>
       </div>

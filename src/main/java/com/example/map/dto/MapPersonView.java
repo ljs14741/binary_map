@@ -20,6 +20,7 @@ public record MapPersonView(
         String animal,
         String animalEmoji,
         String starSign,
+        String starEmoji,
         String birthDate,
         String comment,
         LocalDateTime createdAt

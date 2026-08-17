@@ -29,6 +29,9 @@ class BirthFlavorServiceTest {
         assertThat(service.starSignOf(LocalDate.of(1999, 10, 23))).isEqualTo("전갈");
         assertThat(service.starSignOf(LocalDate.of(1999, 12, 21))).isEqualTo("사수");
         assertThat(service.starSignOf(LocalDate.of(1999, 12, 22))).isEqualTo("염소");
+        assertThat(service.starEmojiOf(LocalDate.of(1999, 10, 23))).isEqualTo("🦂");
+        assertThat(service.starEmojiOf(LocalDate.of(1998, 6, 15))).isEqualTo("👯");
+        assertThat(service.profile(LocalDate.of(1998, 6, 15)).starText()).isEqualTo("👯 쌍둥이");
     }
 
     @Test

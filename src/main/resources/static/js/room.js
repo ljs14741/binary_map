@@ -34,7 +34,9 @@
     const hostSign = document.getElementById("host-sign");
     if (hostSign) {
       const sign = [view.hostAnimalEmoji, view.hostAnimal].filter(Boolean).join(" ");
-      const text = view.hostStarSign ? `${sign} · ${view.hostStarSign}`.trim() : sign.trim();
+      const text = view.hostStarSign
+        ? `${sign} · ${[view.hostStarEmoji, view.hostStarSign].filter(Boolean).join(" ")}`.trim()
+        : sign.trim();
       hostSign.hidden = !text;
       hostSign.textContent = text;
     }
@@ -43,7 +45,9 @@
     const stageHostSign = document.getElementById("stage-host-sign");
     if (stageHostSign) {
       const sign = [view.hostAnimalEmoji, view.hostAnimal].filter(Boolean).join(" ");
-      const text = view.hostStarSign ? `${sign} · ${view.hostStarSign}`.trim() : sign.trim();
+      const text = view.hostStarSign
+        ? `${sign} · ${[view.hostStarEmoji, view.hostStarSign].filter(Boolean).join(" ")}`.trim()
+        : sign.trim();
       stageHostSign.hidden = !text;
       stageHostSign.textContent = text;
     }

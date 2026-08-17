@@ -21,7 +21,8 @@ public record MapView(
         String hostBirthDate,
         String hostAnimal,
         String hostAnimalEmoji,
-        String hostStarSign
+        String hostStarSign,
+        String hostStarEmoji
 ) {
     public String hostSignText() {
         if (hostAnimal == null || hostAnimal.isBlank()) {
@@ -31,7 +32,8 @@ public record MapView(
         if (hostStarSign == null || hostStarSign.isBlank()) {
             return animal.trim();
         }
-        return animal.trim() + " · " + hostStarSign;
+        String star = (hostStarEmoji == null ? "" : hostStarEmoji + " ") + hostStarSign;
+        return animal.trim() + " · " + star.trim();
     }
 
     public String leadText() {

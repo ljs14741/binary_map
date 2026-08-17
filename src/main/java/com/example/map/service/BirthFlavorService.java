@@ -37,6 +37,11 @@ public class BirthFlavorService {
             "사자", "처녀", "천칭", "전갈", "사수", "염소"
     };
 
+    private static final String[] STAR_EMOJIS = {
+            "🏺", "🐟", "🐏", "🐂", "👯", "🦀",
+            "🦁", "🌸", "⚖️", "🦂", "🏹", "🐐"
+    };
+
     /** 0불 1흙 2바람 3물 */
     private static final int[] STAR_ELEMENT = {
             2, 3, 0, 1, 2, 3,
@@ -71,7 +76,13 @@ public class BirthFlavorService {
             return null;
         }
         ZodiacAnimal animal = animalOf(birthDate);
-        return new BirthProfile(animal, animal.displayName(), animal.emoji(), starSignOf(birthDate));
+        return new BirthProfile(
+                animal,
+                animal.displayName(),
+                animal.emoji(),
+                starSignOf(birthDate),
+                starEmojiOf(birthDate)
+        );
     }
 
     public ZodiacAnimal animalOf(LocalDate birthDate) {
@@ -80,6 +91,11 @@ public class BirthFlavorService {
             year -= 1;
         }
         return ZodiacAnimal.fromIndex(year - 4);
+    }
+
+    public String starEmojiOf(LocalDate birthDate) {
+        int index = indexOfSign(starSignOf(birthDate));
+        return index < 0 ? "" : STAR_EMOJIS[index];
     }
 
     public String starSignOf(LocalDate birthDate) {
@@ -266,6 +282,21 @@ public class BirthFlavorService {
         return false;
     }
 
-    public record BirthProfile(ZodiacAnimal animal, String animalName, String animalEmoji, String starSign) {
+    public record BirthProfile(
+            ZodiacAnimal animal,
+            String animalName,
+            String animalEmoji,
+            String starSign,
+            String starEmoji
+    ) {
+        public String starText() {
+            if (starSign == null || starSign.isBlank()) {
+                return "";
+            }
+            if (starEmoji == null || starEmoji.isBlank()) {
+                return starSign;
+            }
+            return starEmoji + " " + starSign;
+        }
     }
 }

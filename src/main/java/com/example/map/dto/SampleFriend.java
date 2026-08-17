@@ -14,6 +14,7 @@ public record SampleFriend(
         String animal,
         String animalEmoji,
         String starSign,
+        String starEmoji,
         String birthDate,
         String comment
 ) {

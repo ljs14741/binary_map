@@ -288,7 +288,9 @@ public class CoupleMapService {
                 guestProfile == null ? null : guestProfile.animalName(),
                 guestProfile == null ? null : guestProfile.animalEmoji(),
                 hostProfile == null ? null : hostProfile.starSign(),
-                guestProfile == null ? null : guestProfile.starSign()
+                hostProfile == null ? null : hostProfile.starEmoji(),
+                guestProfile == null ? null : guestProfile.starSign(),
+                guestProfile == null ? null : guestProfile.starEmoji()
         );
     }
 
@@ -336,7 +338,8 @@ public class CoupleMapService {
                 map.getHostBirthDate() == null ? null : map.getHostBirthDate().toString(),
                 hostProfile == null ? null : hostProfile.animalName(),
                 hostProfile == null ? null : hostProfile.animalEmoji(),
-                hostProfile == null ? null : hostProfile.starSign()
+                hostProfile == null ? null : hostProfile.starSign(),
+                hostProfile == null ? null : hostProfile.starEmoji()
         );
     }
 
@@ -384,6 +387,7 @@ public class CoupleMapService {
                 profile == null ? null : profile.animalName(),
                 profile == null ? null : profile.animalEmoji(),
                 profile == null ? null : profile.starSign(),
+                profile == null ? null : profile.starEmoji(),
                 person.getBirthDate() == null ? null : person.getBirthDate().toString(),
                 birthFlavorService.rankComment(
                         hostProfile,
