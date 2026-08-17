@@ -50,11 +50,59 @@
     41463: [268, 192], 41465: [262, 186], 41480: [220, 112],
     41500: [318, 186], 41550: [268, 222], 41570: [208, 142],
     41590: [232, 212], 41610: [300, 172], 41630: [248, 108],
-    41650: [288, 95], 41670: [338, 186], 41800: [248, 62],
-    41820: [328, 112], 41830: [332, 158]
+    41650: [288, 95],     41670: [338, 186], 41800: [248, 62],
+    41820: [328, 112], 41830: [332, 158],
+    42110: [-0.32, -0.06], 42130: [-0.22, 0.34], 42150: [0.34, 0.02],
+    42170: [0.40, 0.20], 42190: [0.14, 0.44], 42210: [0.30, -0.34],
+    42230: [0.38, 0.30], 42720: [-0.10, 0.04], 42730: [-0.14, 0.24],
+    42750: [0.02, 0.40], 42760: [0.14, 0.20], 42770: [0.24, 0.24],
+    42780: [-0.34, -0.44], 42790: [-0.24, -0.30], 42800: [-0.08, -0.34],
+    42810: [0.08, -0.22], 42820: [0.24, -0.44], 42830: [0.34, -0.18],
+    43111: [-0.12, 0.30], 43112: [-0.20, 0.32], 43113: [-0.26, 0.28],
+    43114: [-0.08, 0.22], 43130: [0.02, -0.18], 43150: [0.22, -0.28],
+    43720: [0.06, 0.18], 43730: [0.10, 0.34], 43740: [0.18, 0.44],
+    43745: [-0.18, 0.08], 43750: [-0.28, 0.04], 43760: [0.08, 0.02],
+    43770: [-0.10, -0.04], 43800: [0.28, -0.18],
+    44131: [0.22, -0.18], 44133: [0.14, -0.22], 44150: [0.08, 0.08],
+    44180: [-0.28, 0.22], 44200: [0.18, -0.08], 44210: [-0.32, -0.08],
+    44230: [0.12, 0.28], 44250: [0.20, 0.16], 44270: [-0.18, -0.18],
+    44710: [0.28, 0.32], 44760: [-0.08, 0.24], 44770: [-0.16, 0.36],
+    44790: [0.02, 0.18], 44800: [-0.12, 0.06], 44810: [0.06, -0.02],
+    44825: [-0.42, 0.02],
+    45111: [0.08, 0.18], 45113: [0.08, 0.04], 45130: [-0.32, -0.18],
+    45140: [-0.12, -0.12], 45180: [-0.18, 0.28], 45190: [0.18, 0.40],
+    45210: [-0.22, 0.12], 45710: [0.16, 0.08], 45720: [0.28, 0.02],
+    45730: [0.34, -0.12], 45740: [0.30, 0.18], 45750: [0.18, 0.22],
+    45770: [0.08, 0.34], 45790: [-0.28, 0.38], 45800: [-0.34, 0.22],
+    46110: [-0.38, 0.12], 46130: [0.42, 0.18], 46150: [0.22, 0.02],
+    46170: [-0.12, 0.06], 46230: [0.32, -0.04], 46710: [0.02, -0.18],
+    46720: [0.16, -0.08], 46730: [0.28, -0.16], 46770: [0.18, 0.32],
+    46780: [0.12, 0.18], 46790: [0.04, 0.02], 46800: [0.02, 0.22],
+    46810: [-0.08, 0.28], 46820: [-0.22, 0.36], 46830: [-0.18, 0.16],
+    46840: [-0.28, 0.08], 46860: [-0.30, -0.02], 46870: [-0.32, -0.18],
+    46880: [-0.08, -0.12], 46890: [0.08, 0.44], 46900: [-0.38, 0.40],
+    46910: [-0.48, 0.18],
+    47111: [0.38, 0.06], 47113: [0.36, -0.08], 47130: [0.26, 0.28],
+    47150: [-0.42, 0.04], 47170: [0.02, -0.22], 47190: [-0.30, 0.10],
+    47210: [-0.06, -0.40], 47230: [0.08, 0.22], 47250: [-0.36, -0.14],
+    47280: [-0.32, -0.30], 47290: [-0.12, 0.36],
+    47730: [0.00, -0.06], 47750: [0.18, -0.18], 47760: [0.16, -0.36],
+    47770: [0.40, -0.20], 47820: [-0.02, 0.44], 47830: [-0.26, 0.36],
+    47840: [-0.36, 0.26], 47850: [-0.22, 0.20], 47900: [-0.14, -0.26],
+    47920: [0.04, -0.46], 47930: [0.34, -0.46], 47940: [0.48, -0.08],
+    48121: [0.18, 0.04], 48123: [0.22, 0.10], 48125: [0.10, 0.12],
+    48127: [0.12, 0.02], 48129: [0.28, 0.18], 48170: [-0.18, 0.16],
+    48220: [0.08, 0.42], 48240: [-0.04, 0.34], 48250: [0.32, 0.08],
+    48270: [0.08, -0.08], 48310: [0.18, 0.36], 48330: [0.38, -0.02],
+    48720: [-0.08, 0.06], 48730: [0.04, 0.12], 48740: [0.02, -0.04],
+    48820: [0.00, 0.28], 48840: [-0.12, 0.46], 48850: [-0.28, 0.30],
+    48860: [-0.24, 0.14], 48870: [-0.32, 0.04], 48880: [-0.28, -0.12],
+    48890: [-0.16, 0.02],
+    50110: [-0.12, -0.18], 50130: [0.12, 0.28]
   };
 
   let svgCache = "";
+  let landCache = new Map();
   let activeFilter = "";
   let clusterState = [];
   let onDeletePerson = null;
@@ -84,14 +132,20 @@
     svg.classList.add("korea-map");
     svg.querySelectorAll("path[data-code]").forEach((path) => {
       path.classList.add("sido-land");
+      if (!path.getAttribute("fill")) {
+        path.setAttribute("fill", "#f7e2b8");
+      }
       if (path.getAttribute("data-code") === options.host.sidoCode) {
         path.classList.add("is-home");
+        path.setAttribute("fill", "#ffe08a");
       }
     });
     wrap.replaceChildren(canvas);
+    landCache = new Map();
 
     const hostPoint = pinPoint(svg, options.host.sidoCode, options.host.sigunguCode);
     clusterState = buildClusters(svg, options.people || [], options.extras || []);
+    separateClusters(svg, clusterState, hostPoint);
     const layer = document.createElement("div");
     layer.className = "cluster-layer";
     addSparkles(layer);
@@ -111,15 +165,95 @@
     return (box.width || box.height) ? box : null;
   }
 
-  function sidoCenter(svg, code) {
+  function sidoPath(svg, code) {
+    return svg.querySelector(`path[data-code="${code}"]`);
+  }
+
+  function pointInLand(svg, code, x, y) {
+    const path = sidoPath(svg, code);
+    if (!path || typeof path.isPointInFill !== "function") {
+      return true;
+    }
+    const point = svg.createSVGPoint();
+    point.x = x;
+    point.y = y;
+    try {
+      return path.isPointInFill(point);
+    } catch (error) {
+      return true;
+    }
+  }
+
+  function landSamples(svg, code) {
+    if (landCache.has(code)) {
+      return landCache.get(code);
+    }
+    const box = sidoBox(svg, code);
+    const samples = [];
+    if (box) {
+      const step = Math.max(7, Math.min(box.width, box.height) / 14);
+      for (let x = box.x + step / 2; x < box.x + box.width; x += step) {
+        for (let y = box.y + step / 2; y < box.y + box.height; y += step) {
+          if (pointInLand(svg, code, x, y)) {
+            samples.push([x, y]);
+          }
+        }
+      }
+    }
+    landCache.set(code, samples);
+    return samples;
+  }
+
+  function landCenter(svg, code) {
     if (CENTER_FIX[code]) {
       return CENTER_FIX[code].slice();
+    }
+    const samples = landSamples(svg, code);
+    if (samples.length) {
+      return [
+        samples.reduce((sum, point) => sum + point[0], 0) / samples.length,
+        samples.reduce((sum, point) => sum + point[1], 0) / samples.length
+      ];
     }
     const box = sidoBox(svg, code);
     if (box) {
       return [box.x + box.width / 2, box.y + box.height / 2];
     }
     return [400, 380];
+  }
+
+  function landSpan(svg, code) {
+    const samples = landSamples(svg, code);
+    if (samples.length > 1) {
+      const xs = samples.map((point) => point[0]);
+      const ys = samples.map((point) => point[1]);
+      return [
+        Math.max(24, Math.max(...xs) - Math.min(...xs)),
+        Math.max(24, Math.max(...ys) - Math.min(...ys))
+      ];
+    }
+    const box = sidoBox(svg, code);
+    return [box ? box.width : 24, box ? box.height : 24];
+  }
+
+  function clampToLand(svg, code, x, y) {
+    if (pointInLand(svg, code, x, y)) {
+      return [x, y];
+    }
+    const samples = landSamples(svg, code);
+    if (!samples.length) {
+      return landCenter(svg, code);
+    }
+    let best = samples[0];
+    let bestDist = Infinity;
+    samples.forEach((point) => {
+      const dist = (point[0] - x) ** 2 + (point[1] - y) ** 2;
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = point;
+      }
+    });
+    return best.slice();
   }
 
   function hashOffset(code) {
@@ -131,20 +265,88 @@
     }
     const nx = ((hash >>> 0) % 1000) / 1000 - 0.5;
     const ny = ((hash >>> 11) % 1000) / 1000 - 0.5;
-    return [nx * 0.7, ny * 0.7];
+    return [nx * 0.55, ny * 0.55];
   }
 
   function pinPoint(svg, sidoCode, sigunguCode) {
     const known = SIGUNGU_XY[Number(sigunguCode)];
     if (known && (Math.abs(known[0]) > 1.5 || Math.abs(known[1]) > 1.5)) {
-      return known.slice();
+      return clampToLand(svg, sidoCode, known[0], known[1]);
     }
-    const center = sidoCenter(svg, sidoCode);
-    const box = sidoBox(svg, sidoCode);
+    const center = landCenter(svg, sidoCode);
+    const [spanW, spanH] = landSpan(svg, sidoCode);
     const [nx, ny] = known || hashOffset(sigunguCode || sidoCode);
-    const w = box ? box.width : 24;
-    const h = box ? box.height : 24;
-    return [center[0] + nx * w * 0.42, center[1] + ny * h * 0.42];
+    return clampToLand(
+      svg,
+      sidoCode,
+      center[0] + nx * spanW * 0.36,
+      center[1] + ny * spanH * 0.36
+    );
+  }
+
+  function shortPinLabel(full, sidoCode) {
+    let text = String(full || "").trim();
+    const sido = SIDO_NAME[sidoCode] || "";
+    if (sido && text.startsWith(sido)) {
+      text = text.slice(sido.length).replace(/^[\s/]+/, "");
+    }
+    text = text.replace(/(\S+)\s+(\S+)구$/g, "$1 $2").replace(/(\S+)\s+(\S+)군$/g, "$1 $2");
+    const trimmed = text.replace(/[구군시]$/g, "").trim();
+    if (trimmed.length >= 2) {
+      text = trimmed;
+    }
+    return text || sido || "지역";
+  }
+
+  function separateClusters(svg, clusters, hostPoint) {
+    const min = 28;
+    for (let pass = 0; pass < 3; pass += 1) {
+      for (let i = 0; i < clusters.length; i += 1) {
+        for (let j = i + 1; j < clusters.length; j += 1) {
+          const dx = clusters[j].x - clusters[i].x;
+          const dy = clusters[j].y - clusters[i].y;
+          const dist = Math.hypot(dx, dy) || 0.01;
+          if (dist >= min) {
+            continue;
+          }
+          const push = (min - dist) / 2;
+          const ux = dx / dist;
+          const uy = dy / dist;
+          clusters[i].x -= ux * push;
+          clusters[i].y -= uy * push;
+          clusters[j].x += ux * push;
+          clusters[j].y += uy * push;
+        }
+      }
+    }
+    clusters.forEach((cluster) => {
+      const sido = cluster.people[0]?.sidoCode;
+      if (!sido) {
+        return;
+      }
+      const clamped = clampToLand(svg, sido, cluster.x, cluster.y);
+      cluster.x = clamped[0];
+      cluster.y = clamped[1];
+    });
+    if (hostPoint && clusters.length) {
+      clusters.forEach((cluster) => {
+        const dx = cluster.x - hostPoint[0];
+        const dy = cluster.y - hostPoint[1];
+        const dist = Math.hypot(dx, dy) || 0.01;
+        if (dist >= 22) {
+          return;
+        }
+        const push = (22 - dist);
+        cluster.x += (dx / dist) * push;
+        cluster.y += (dy / dist) * push;
+        const sido = cluster.people[0]?.sidoCode;
+        if (sido) {
+          const clamped = clampToLand(svg, sido, cluster.x, cluster.y);
+          cluster.x = clamped[0];
+          cluster.y = clamped[1];
+        }
+      });
+    }
   }
 
   function rankScore(person) {
@@ -179,6 +381,7 @@
       return {
         id: key,
         name: best.sido || SIDO_NAME[best.sidoCode] || key,
+        shortName: shortPinLabel(best.sido, best.sidoCode),
         x: point[0],
         y: point[1],
         count: grouped.length,
@@ -202,7 +405,7 @@
     button.innerHTML = `
       <span class="cluster-glow"></span>
       <span class="cluster-dot"></span>
-      <span class="cluster-badge">${escapeHtml(cluster.name)} · ${cluster.count}명</span>
+      <span class="cluster-badge">${escapeHtml(cluster.shortName)} · ${cluster.count}</span>
     `;
     button.addEventListener("click", () => openSheet(cluster));
     return button;
@@ -217,7 +420,7 @@
       <span class="host-ring"></span>
       <span class="host-ring is-late"></span>
       <span class="host-dot"></span>
-      <span class="host-badge">${escapeHtml(name)}의 거주지역</span>
+      <span class="host-badge">👑 ${escapeHtml(name)}</span>
     `;
     return host;
   }

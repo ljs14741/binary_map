@@ -797,7 +797,7 @@ textarea {
 }
 
 .host-pin {
-  z-index: 5;
+  z-index: 8;
   pointer-events: none;
   opacity: 0;
   animation: pin-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.08s forwards;
@@ -832,12 +832,12 @@ textarea {
 
 .cluster-badge,
 .host-badge {
-  max-width: 168px;
-  padding: 4px 8px;
+  max-width: 108px;
+  padding: 3px 7px;
   border-radius: 999px;
   background: rgba(255, 248, 234, 0.94);
   color: #4a3426;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
   line-height: 1.2;
   letter-spacing: -0.03em;
@@ -848,6 +848,7 @@ textarea {
 }
 
 .host-badge {
+  max-width: 92px;
   color: #9a7408;
   background: #fff6cf;
 }
