@@ -35,6 +35,9 @@
     <h1 class="map-room-title">
       <span id="room-host-name" th:text="${mapView.hostName()}">수현</span>님의<br>짝꿍지도
     </h1>
+    <p class="map-host-sign" id="host-sign"
+       th:hidden="${mapView.hostAnimal() == null}"
+       th:text="${mapView.hostSignText()}">🐰 토끼 · 쌍둥이</p>
     <p class="map-lead" id="room-lead" th:text="${mapView.leadText()}">서울 강남구 · 0명 참여 · 부랄친구 0명</p>
   </section>
 
@@ -86,8 +89,8 @@
   </section>
 
   <section class="map-card" id="join-card" th:hidden="${mapView.host()}">
-    <p class="map-card-kicker">바로 참여</p>
-    <h2>닉네임과 생일만 적으면 핀이 찍혀요</h2>
+    <p class="map-card-kicker" id="join-kicker">바로 참여</p>
+    <h2 id="join-title">닉네임과 생일만 적으면 핀이 찍혀요</h2>
     <form id="join-form" class="map-form">
       <label>
         내 이름 (닉네임)

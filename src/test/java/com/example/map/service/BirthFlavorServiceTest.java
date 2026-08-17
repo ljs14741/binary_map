@@ -51,14 +51,54 @@ class BirthFlavorServiceTest {
     }
 
     @Test
-    void flavorLineUsesAnimalAndStarTogether() {
-        assertThat(service.flavorLine(AnimalFit.SAME, StarFit.SAME)).isEqualTo("같은 띠에 같은 별자리");
-        assertThat(service.flavorLine(AnimalFit.SAMHAP, StarFit.HARMONY)).isEqualTo("띠도 별자리도 통함");
-        assertThat(service.flavorLine(AnimalFit.SAMHAP, StarFit.CLASH)).isEqualTo("띠는 맞는데 별자리는 불꽃");
-        assertThat(service.flavorLine(AnimalFit.CLASH, StarFit.HARMONY)).isEqualTo("별자리는 통하는데 띠는 상충");
-        assertThat(service.flavorLine(AnimalFit.CLASH, StarFit.CLASH)).isEqualTo("띠도 별자리도 충돌");
-        assertThat(service.flavorLine(AnimalFit.NEUTRAL, StarFit.NEUTRAL)).isEqualTo("띠·별자리는 무난");
-        assertThat(service.flavorLine(null, StarFit.HARMONY)).isNull();
+    void explainsMatchInPlainKorean() {
+        var tiger = service.profile(LocalDate.of(1998, 6, 15));
+        var rabbit = service.profile(LocalDate.of(1999, 10, 23));
+        assertThat(service.animalExplain(tiger, rabbit)).contains("띠예요");
+        assertThat(service.starExplain(tiger, rabbit)).contains("별자리예요");
+        assertThat(service.animalExplain(tiger, tiger)).isEqualTo("둘 다 호랑이띠라 잘 맞아요");
+    }
+
+    @Test
+    void punchLineStaysStableForSamePair() {
+        var host = service.profile(LocalDate.of(1998, 6, 15));
+        var guest = service.profile(LocalDate.of(1999, 10, 23));
+        LocalDate hostBirth = LocalDate.of(1998, 6, 15);
+        LocalDate guestBirth = LocalDate.of(1999, 10, 23);
+        String first = service.rankComment(host, guest, "민지", hostBirth, guestBirth);
+        String again = service.rankComment(host, guest, "민지", hostBirth, guestBirth);
+        assertThat(first).isEqualTo(again);
+        FlavorCopy.Bucket bucket = service.chemistryBucket(host, guest);
+        assertThat(bucket).isNotNull();
+        assertThat(FlavorCopy.lines(bucket)).contains(first);
+    }
+
+    @Test
+    void punchLinesVaryAcrossNamesInSameBucket() {
+        var host = service.profile(LocalDate.of(1998, 6, 15));
+        LocalDate hostBirth = LocalDate.of(1998, 6, 15);
+        LocalDate guestBirth = LocalDate.of(1999, 10, 23);
+        var guest = service.profile(guestBirth);
+        String[] names = {
+                "민지", "하은", "예린", "서준", "도윤", "나연",
+                "지아", "시우", "현우", "지민", "수아", "태민"
+        };
+        var lines = java.util.Arrays.stream(names)
+                .map(name -> service.rankComment(host, guest, name, hostBirth, guestBirth))
+                .collect(java.util.stream.Collectors.toSet());
+        assertThat(lines).hasSizeGreaterThan(5);
+    }
+
+    @Test
+    void sameBirthSameSignGoesToGoodBucket() {
+        var twin = service.profile(LocalDate.of(1998, 6, 15));
+        assertThat(service.chemistryBucket(twin, twin)).isEqualTo(FlavorCopy.Bucket.GOOD);
+        assertThat(FlavorCopy.GOOD).contains(
+                "같이 술 마시면 아침까지 안 취하고 달리는 무적 조합 🍻");
+        assertThat(FlavorCopy.OK).contains(
+                "낮에 아메리카노 한 잔 때리면서 수다 떨기 딱 좋은 관계 ☕");
+        assertThat(FlavorCopy.BAD).contains(
+                "둘만 남겨지면 3초 만에 정적 흐르는 위험한 정막존 ⚡");
     }
 
     @Test

@@ -20,4 +20,13 @@ public enum AnimalFit {
     public boolean harmony() {
         return this == SAME || this == SAMHAP || this == YUKHAP;
     }
+
+    public String simpleLabel() {
+        return switch (this) {
+            case SAME -> "같은 띠";
+            case SAMHAP, YUKHAP -> "잘 맞음";
+            case NEUTRAL -> "보통";
+            case CLASH -> "안 맞음";
+        };
+    }
 }

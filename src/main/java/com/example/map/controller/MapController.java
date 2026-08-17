@@ -127,7 +127,7 @@ public class MapController {
                 guest.animalEmoji(),
                 guest.starSign(),
                 birth.toString(),
-                birthFlavorService.flavorLine(host, guest)
+                birthFlavorService.rankComment(host, guest, name, SAMPLE_HOST_BIRTH, birth)
         );
     }
 

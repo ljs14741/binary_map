@@ -1,7 +1,7 @@
 package com.example.map.entity;
 
 public enum StarFit {
-    SAME("같은 자리"),
+    SAME("같은 별자리"),
     HARMONY("잘 맞음"),
     NEUTRAL("보통"),
     CLASH("안 맞음");

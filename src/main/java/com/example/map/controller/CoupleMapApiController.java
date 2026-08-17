@@ -6,6 +6,7 @@ import com.example.map.dto.CreatedMapResponse;
 import com.example.map.dto.JoinMapRequest;
 import com.example.map.dto.JoinMapResponse;
 import com.example.map.dto.MapView;
+import com.example.map.dto.UpdateGuestRequest;
 import com.example.map.dto.UpdateMapRequest;
 import com.example.map.service.CoupleMapService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -65,6 +66,17 @@ public class CoupleMapApiController {
     @PostMapping("/{id}/join")
     public JoinMapResponse join(@PathVariable String id, @RequestBody JoinMapRequest body) {
         return coupleMapService.join(id, body.guestName(), body.sigunguCode(), body.birthDate());
+    }
+
+    @PatchMapping("/{id}/me")
+    public JoinMapResponse updateGuest(@PathVariable String id, @RequestBody UpdateGuestRequest body) {
+        return coupleMapService.updateGuest(
+                id,
+                body.previousName(),
+                body.guestName(),
+                body.sigunguCode(),
+                body.birthDate()
+        );
     }
 
     @PatchMapping("/{id}")

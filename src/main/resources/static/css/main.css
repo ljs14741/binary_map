@@ -858,18 +858,26 @@ select {
 }
 
 .map-chem-line {
-  margin: 0 0 6px;
+  margin: 0 0 10px;
   color: #c45c2d;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
   letter-spacing: -0.03em;
 }
 
 .map-stars {
+  margin: 0 0 4px;
+  color: #2a1f1a;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.map-chem-star {
   margin: 0;
-  color: #8a7468;
-  font-size: 12px;
-  font-weight: 700;
+  color: #c45c2d;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
 }
 
 .map-rank-birth {
@@ -1185,11 +1193,23 @@ body.is-sheet-open {
 }
 
 .map-room-title {
-  margin: 0 0 10px;
+  margin: 0 0 8px;
   font-size: clamp(32px, 9vw, 42px);
   font-weight: 800;
   line-height: 1.2;
   letter-spacing: -0.05em;
+}
+
+.map-host-sign {
+  margin: 0 0 8px;
+  color: #2a1f1a;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.map-host-sign[hidden] {
+  display: none;
 }
 
 .map-form-tight {

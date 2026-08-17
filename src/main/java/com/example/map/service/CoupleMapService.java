@@ -105,51 +105,49 @@ public class CoupleMapService {
             throw new IllegalArgumentException("이 지도는 친구가 가득 찼어요.");
         }
 
-        var forward = nameCompatibilityService.calculate(map.getHostName(), name);
-        var reverse = nameCompatibilityService.calculate(name, map.getHostName());
-        RelationLabel label = forward.label();
         LocalDateTime now = LocalDateTime.now();
-
         CoupleMapPerson person = new CoupleMapPerson();
         person.setMap(map);
         person.setPersonName(name);
         person.setSigunguCode(sigungu.code());
         person.setBirthDate(birth);
-        person.setScore(forward.score());
-        person.setReverseScore(reverse.score());
-        person.setLabel(label.displayName());
         person.setCreatedAt(now);
         person.setUpdatedAt(now);
+        applyScores(map, person);
         coupleMapPersonRepository.save(person);
+        return toJoinResponse(map, person);
+    }
 
-        var hostProfile = birthFlavorService.profile(map.getHostBirthDate());
-        var guestProfile = birthFlavorService.profile(birth);
-        AnimalFit fit = hostProfile == null || guestProfile == null
-                ? null
-                : birthFlavorService.fit(hostProfile.animal(), guestProfile.animal());
-        return new JoinMapResponse(
-                map.getHostName(),
-                name,
-                forward.letters(),
-                forward.stages(),
-                forward.score(),
-                label.titledName(),
-                label.mapColor(),
-                reverse.letters(),
-                reverse.stages(),
-                reverse.score(),
-                reverse.label().titledName(),
-                reverse.label().mapColor(),
-                toView(map, false),
-                birthFlavorService.flavorLine(hostProfile, guestProfile),
-                fit == null ? null : fit.displayName(),
-                hostProfile == null ? null : hostProfile.animalName(),
-                hostProfile == null ? null : hostProfile.animalEmoji(),
-                guestProfile.animalName(),
-                guestProfile.animalEmoji(),
-                hostProfile == null ? null : hostProfile.starSign(),
-                guestProfile.starSign()
-        );
+    @Transactional
+    public JoinMapResponse updateGuest(
+            String mapId,
+            String previousName,
+            String guestName,
+            String sigunguCode,
+            LocalDate birthDate
+    ) {
+        CoupleMap map = getMap(mapId);
+        String oldName = requireName(previousName);
+        CoupleMapPerson person = coupleMapPersonRepository.findByMap_IdAndPersonName(mapId, oldName)
+                .orElseThrow(() -> new IllegalArgumentException("이 지도에서 내 기록을 찾을 수 없어요. 다시 들어와 주세요."));
+        String name = requireName(guestName);
+        Sigungu sigungu = regionCatalog.fromCode(sigunguCode);
+        LocalDate birth = birthFlavorService.requireBirthDate(birthDate);
+        if (name.equals(map.getHostName())) {
+            throw new IllegalArgumentException("지도 닉네임과 같은 이름은 쓸 수 없어요. 다른 닉네임을 적어 주세요.");
+        }
+        boolean nameChanged = !name.equals(person.getPersonName());
+        if (nameChanged && coupleMapPersonRepository.findByMap_IdAndPersonName(mapId, name).isPresent()) {
+            throw new IllegalArgumentException("이미 그 닉네임으로 들어온 친구가 있어요. 다른 닉네임을 써 주세요.");
+        }
+        person.setPersonName(name);
+        person.setSigunguCode(sigungu.code());
+        person.setBirthDate(birth);
+        person.setUpdatedAt(LocalDateTime.now());
+        if (nameChanged) {
+            applyScores(map, person);
+        }
+        return toJoinResponse(map, person);
     }
 
     @Transactional
@@ -235,13 +233,63 @@ public class CoupleMapService {
         List<CoupleMapPerson> people = coupleMapPersonRepository.findByMap_IdOrderByScoreDescCreatedAtAsc(map.getId());
         LocalDateTime now = LocalDateTime.now();
         for (CoupleMapPerson person : people) {
-            var forward = nameCompatibilityService.calculate(map.getHostName(), person.getPersonName());
-            var reverse = nameCompatibilityService.calculate(person.getPersonName(), map.getHostName());
-            person.setScore(forward.score());
-            person.setReverseScore(reverse.score());
-            person.setLabel(forward.label().displayName());
+            applyScores(map, person);
             person.setUpdatedAt(now);
         }
+    }
+
+    private void applyScores(CoupleMap map, CoupleMapPerson person) {
+        var forward = nameCompatibilityService.calculate(map.getHostName(), person.getPersonName());
+        var reverse = nameCompatibilityService.calculate(person.getPersonName(), map.getHostName());
+        person.setScore(forward.score());
+        person.setReverseScore(reverse.score());
+        person.setLabel(forward.label().displayName());
+    }
+
+    private JoinMapResponse toJoinResponse(CoupleMap map, CoupleMapPerson person) {
+        var forward = nameCompatibilityService.calculate(map.getHostName(), person.getPersonName());
+        var reverse = nameCompatibilityService.calculate(person.getPersonName(), map.getHostName());
+        RelationLabel label = forward.label();
+        var hostProfile = birthFlavorService.profile(map.getHostBirthDate());
+        var guestProfile = birthFlavorService.profile(person.getBirthDate());
+        AnimalFit fit = hostProfile == null || guestProfile == null
+                ? null
+                : birthFlavorService.fit(hostProfile.animal(), guestProfile.animal());
+        var starFit = hostProfile == null || guestProfile == null
+                ? null
+                : birthFlavorService.starFit(hostProfile.starSign(), guestProfile.starSign());
+        return new JoinMapResponse(
+                map.getHostName(),
+                person.getPersonName(),
+                forward.letters(),
+                forward.stages(),
+                forward.score(),
+                label.titledName(),
+                label.mapColor(),
+                reverse.letters(),
+                reverse.stages(),
+                reverse.score(),
+                reverse.label().titledName(),
+                reverse.label().mapColor(),
+                toView(map, false),
+                birthFlavorService.rankComment(
+                        hostProfile,
+                        guestProfile,
+                        person.getPersonName(),
+                        map.getHostBirthDate(),
+                        person.getBirthDate()
+                ),
+                fit == null ? null : fit.simpleLabel(),
+                starFit == null ? null : starFit.displayName(),
+                birthFlavorService.animalExplain(hostProfile, guestProfile),
+                birthFlavorService.starExplain(hostProfile, guestProfile),
+                hostProfile == null ? null : hostProfile.animalName(),
+                hostProfile == null ? null : hostProfile.animalEmoji(),
+                guestProfile == null ? null : guestProfile.animalName(),
+                guestProfile == null ? null : guestProfile.animalEmoji(),
+                hostProfile == null ? null : hostProfile.starSign(),
+                guestProfile == null ? null : guestProfile.starSign()
+        );
     }
 
     private CoupleMap requireHost(String mapId, String hostToken, String userId) {
@@ -269,7 +317,7 @@ public class CoupleMapService {
         Sigungu sigungu = regionCatalog.fromCode(map.getHostSigunguCode());
         var hostProfile = birthFlavorService.profile(map.getHostBirthDate());
         List<MapPersonView> people = rows.stream()
-                .map(person -> toPerson(person, hostProfile))
+                .map(person -> toPerson(person, map, hostProfile))
                 .sorted(this::compareRank)
                 .toList();
         return new MapView(
@@ -287,7 +335,8 @@ public class CoupleMapService {
                 people,
                 map.getHostBirthDate() == null ? null : map.getHostBirthDate().toString(),
                 hostProfile == null ? null : hostProfile.animalName(),
-                hostProfile == null ? null : hostProfile.animalEmoji()
+                hostProfile == null ? null : hostProfile.animalEmoji(),
+                hostProfile == null ? null : hostProfile.starSign()
         );
     }
 
@@ -311,7 +360,11 @@ public class CoupleMapService {
         );
     }
 
-    private MapPersonView toPerson(CoupleMapPerson person, BirthFlavorService.BirthProfile hostProfile) {
+    private MapPersonView toPerson(
+            CoupleMapPerson person,
+            CoupleMap map,
+            BirthFlavorService.BirthProfile hostProfile
+    ) {
         RelationLabel label = RelationLabel.fromScore(person.getScore());
         RelationLabel reverse = RelationLabel.fromScore(person.getReverseScore());
         Sigungu sigungu = regionCatalog.fromCode(person.getSigunguCode());
@@ -332,7 +385,13 @@ public class CoupleMapService {
                 profile == null ? null : profile.animalEmoji(),
                 profile == null ? null : profile.starSign(),
                 person.getBirthDate() == null ? null : person.getBirthDate().toString(),
-                birthFlavorService.flavorLine(hostProfile, profile),
+                birthFlavorService.rankComment(
+                        hostProfile,
+                        profile,
+                        person.getPersonName(),
+                        map.getHostBirthDate(),
+                        person.getBirthDate()
+                ),
                 person.getCreatedAt()
         );
     }

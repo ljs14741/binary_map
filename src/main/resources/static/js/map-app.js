@@ -64,6 +64,10 @@
   }
 
   function setJoined(id, name) {
+    if (!name) {
+      localStorage.removeItem("coupleJoin_" + id);
+      return;
+    }
     localStorage.setItem("coupleJoin_" + id, name);
   }
 
@@ -229,21 +233,21 @@
     if (!data || !(data.guestAnimal || data.guestStarSign || data.chemistryLine)) {
       return "";
     }
-    const animals = data.hostAnimal && data.guestAnimal
-      ? `${data.hostAnimalEmoji || ""} ${data.hostAnimal} × ${data.guestAnimalEmoji || ""} ${data.guestAnimal}${data.animalFitLabel ? ` · ${data.animalFitLabel}` : ""}`
+    const animalPair = data.hostAnimal && data.guestAnimal
+      ? `띠 ${data.hostAnimalEmoji || ""} ${data.hostAnimal} × ${data.guestAnimalEmoji || ""} ${data.guestAnimal}${data.animalFitLabel ? ` · ${data.animalFitLabel}` : ""}`
       : data.guestAnimal
-        ? `${data.guestAnimalEmoji || ""} ${data.guestAnimal}`
+        ? `띠 ${data.guestAnimalEmoji || ""} ${data.guestAnimal}`
         : "";
-    const stars = data.hostStarSign && data.guestStarSign
-      ? `별자리 ${data.hostStarSign} × ${data.guestStarSign}`
+    const starPair = data.hostStarSign && data.guestStarSign
+      ? `별자리 ${data.hostStarSign} × ${data.guestStarSign}${data.starFitLabel ? ` · ${data.starFitLabel}` : ""}`
       : data.guestStarSign
         ? `별자리 ${data.guestStarSign}`
         : "";
     return `
       <div class="map-chem">
-        ${animals ? `<p class="map-chem-animals">${escapeHtml(animals.trim())}</p>` : ""}
+        ${animalPair ? `<p class="map-chem-animals">${escapeHtml(animalPair.trim())}</p>` : ""}
+        ${starPair ? `<p class="map-stars">${escapeHtml(starPair)}</p>` : ""}
         ${data.chemistryLine ? `<p class="map-chem-line">${escapeHtml(data.chemistryLine)}</p>` : ""}
-        ${stars ? `<p class="map-stars">${escapeHtml(stars)}</p>` : ""}
       </div>`;
   }
 
@@ -626,7 +630,8 @@
     const chemAnimals = card.querySelector(".map-chem-animals")?.textContent || "";
     const chemLine = card.querySelector(".map-chem-line")?.textContent || "";
     const stars = card.querySelector(".map-stars")?.textContent || "";
-    const extra = (chemAnimals || chemLine || stars) ? 92 * scale : 0;
+    const starLine = card.querySelector(".map-chem-star")?.textContent || "";
+    const extra = (chemAnimals || chemLine || stars || starLine) ? 120 * scale : 0;
     const height = (dual.length ? 220 : 140) * scale + extra;
     const canvas = document.createElement("canvas");
     canvas.width = width;
@@ -661,23 +666,29 @@
       ctx.fillText(fitText(ctx, label, boxW - 16 * scale), x + boxW / 2, y + 88 * scale);
     });
     let extraY = (dual.length ? 188 : 108) * scale;
-    if (chemAnimals || chemLine || stars) {
+    if (chemAnimals || chemLine || stars || starLine) {
       ctx.fillStyle = "#2a1f1a";
       ctx.font = `800 ${13 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
       if (chemAnimals) {
         ctx.fillText(fitText(ctx, chemAnimals, width - 48 * scale), width / 2, extraY);
-        extraY += 22 * scale;
+        extraY += 20 * scale;
       }
       if (chemLine) {
         ctx.fillStyle = "#c45c2d";
-        ctx.font = `800 ${14 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+        ctx.font = `800 ${13 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
         ctx.fillText(fitText(ctx, chemLine, width - 48 * scale), width / 2, extraY);
-        extraY += 22 * scale;
+        extraY += 20 * scale;
       }
       if (stars) {
-        ctx.fillStyle = "#8a7468";
-        ctx.font = `700 ${11 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+        ctx.fillStyle = "#2a1f1a";
+        ctx.font = `800 ${13 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
         ctx.fillText(fitText(ctx, stars, width - 48 * scale), width / 2, extraY);
+        extraY += 20 * scale;
+      }
+      if (starLine) {
+        ctx.fillStyle = "#c45c2d";
+        ctx.font = `800 ${13 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+        ctx.fillText(fitText(ctx, starLine, width - 48 * scale), width / 2, extraY);
       }
     }
     ctx.fillStyle = "#8a6d52";

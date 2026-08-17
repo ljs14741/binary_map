@@ -20,8 +20,20 @@ public record MapView(
         List<MapPersonView> people,
         String hostBirthDate,
         String hostAnimal,
-        String hostAnimalEmoji
+        String hostAnimalEmoji,
+        String hostStarSign
 ) {
+    public String hostSignText() {
+        if (hostAnimal == null || hostAnimal.isBlank()) {
+            return "";
+        }
+        String animal = (hostAnimalEmoji == null ? "" : hostAnimalEmoji + " ") + hostAnimal;
+        if (hostStarSign == null || hostStarSign.isBlank()) {
+            return animal.trim();
+        }
+        return animal.trim() + " · " + hostStarSign;
+    }
+
     public String leadText() {
         int bural = 0;
         if (counts != null) {

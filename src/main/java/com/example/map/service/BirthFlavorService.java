@@ -145,49 +145,107 @@ public class BirthFlavorService {
         return StarFit.NEUTRAL;
     }
 
-    public String flavorLine(BirthProfile host, BirthProfile guest) {
+    public String flavorLine(
+            BirthProfile host,
+            BirthProfile guest,
+            String guestName,
+            LocalDate hostBirth,
+            LocalDate guestBirth
+    ) {
+        return rankComment(host, guest, guestName, hostBirth, guestBirth);
+    }
+
+    FlavorCopy.Bucket chemistryBucket(BirthProfile host, BirthProfile guest) {
         if (host == null || guest == null) {
             return null;
         }
-        return flavorLine(fit(host.animal(), guest.animal()), starFit(host.starSign(), guest.starSign()));
-    }
-
-    public String flavorLine(AnimalFit animal, StarFit star) {
+        AnimalFit animal = fit(host.animal(), guest.animal());
+        StarFit star = starFit(host.starSign(), guest.starSign());
         if (animal == null || star == null) {
             return null;
         }
-        if (animal == AnimalFit.SAME && star == StarFit.SAME) {
-            return "같은 띠에 같은 별자리";
+        int total = animalScore(animal) + starScore(star);
+        if (total >= 3) {
+            return FlavorCopy.Bucket.GOOD;
         }
-        boolean animalGood = animal.harmony();
-        boolean starGood = star.harmony();
-        boolean animalBad = animal == AnimalFit.CLASH;
-        boolean starBad = star == StarFit.CLASH;
-        if (animalGood && starGood) {
-            return "띠도 별자리도 통함";
+        if (total == 2) {
+            return FlavorCopy.Bucket.OK;
         }
-        if (animalGood && starBad) {
-            return "띠는 맞는데 별자리는 불꽃";
+        return FlavorCopy.Bucket.BAD;
+    }
+
+    public String rankComment(
+            BirthProfile host,
+            BirthProfile guest,
+            String guestName,
+            LocalDate hostBirth,
+            LocalDate guestBirth
+    ) {
+        FlavorCopy.Bucket bucket = chemistryBucket(host, guest);
+        if (bucket == null) {
+            return null;
         }
-        if (animalGood) {
-            return "띠는 잘 맞음, 별자리는 무난";
+        String seed = String.join("|",
+                nullToEmpty(guestName),
+                hostBirth == null ? "" : hostBirth.toString(),
+                guestBirth == null ? "" : guestBirth.toString());
+        return FlavorCopy.pick(bucket, seed);
+    }
+
+    public String animalExplain(BirthProfile host, BirthProfile guest) {
+        if (host == null || guest == null) {
+            return null;
         }
-        if (animalBad && starGood) {
-            return "별자리는 통하는데 띠는 상충";
+        AnimalFit animal = fit(host.animal(), guest.animal());
+        if (animal == null) {
+            return null;
         }
-        if (animalBad && starBad) {
-            return "띠도 별자리도 충돌";
+        String left = host.animalName();
+        String right = guest.animalName();
+        return switch (animal) {
+            case SAME -> "둘 다 " + left + "띠라 잘 맞아요";
+            case SAMHAP, YUKHAP -> left + "랑 " + right + "는 잘 맞는 띠예요";
+            case NEUTRAL -> left + "랑 " + right + "는 그냥 그런 띠예요";
+            case CLASH -> left + "랑 " + right + "는 잘 안 맞는 띠예요";
+        };
+    }
+
+    public String starExplain(BirthProfile host, BirthProfile guest) {
+        if (host == null || guest == null) {
+            return null;
         }
-        if (animalBad) {
-            return "띠는 상충, 별자리는 무난";
+        StarFit star = starFit(host.starSign(), guest.starSign());
+        if (star == null) {
+            return null;
         }
-        if (starGood) {
-            return "별자리는 통함, 띠는 무난";
-        }
-        if (starBad) {
-            return "별자리는 안 맞음";
-        }
-        return "띠·별자리는 무난";
+        String left = host.starSign();
+        String right = guest.starSign();
+        return switch (star) {
+            case SAME -> "둘 다 " + left + "자리라 잘 맞아요";
+            case HARMONY -> left + "랑 " + right + "는 잘 맞는 별자리예요";
+            case NEUTRAL -> left + "랑 " + right + "는 그냥 그런 별자리예요";
+            case CLASH -> left + "랑 " + right + "는 잘 안 맞는 별자리예요";
+        };
+    }
+
+    private int animalScore(AnimalFit animal) {
+        return switch (animal) {
+            case SAME, SAMHAP, YUKHAP -> 2;
+            case NEUTRAL -> 1;
+            case CLASH -> 0;
+        };
+    }
+
+    private int starScore(StarFit star) {
+        return switch (star) {
+            case SAME, HARMONY -> 2;
+            case NEUTRAL -> 1;
+            case CLASH -> 0;
+        };
+    }
+
+    private String nullToEmpty(String value) {
+        return value == null ? "" : value;
     }
 
     private int indexOfSign(String sign) {

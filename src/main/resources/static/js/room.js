@@ -20,8 +20,8 @@
       }
     }
     MapBoard.bindUi();
-    render(view);
     bind();
+    render(view);
   }
 
   async function render(next) {
@@ -30,6 +30,13 @@
     const hostTitle = document.getElementById("room-host-name");
     if (hostTitle) {
       hostTitle.textContent = view.hostName;
+    }
+    const hostSign = document.getElementById("host-sign");
+    if (hostSign) {
+      const sign = [view.hostAnimalEmoji, view.hostAnimal].filter(Boolean).join(" ");
+      const text = view.hostStarSign ? `${sign} · ${view.hostStarSign}`.trim() : sign.trim();
+      hostSign.hidden = !text;
+      hostSign.textContent = text;
     }
     document.getElementById("room-lead").textContent = leadText(view);
     document.getElementById("stage-title").textContent = `${view.hostName}님의 짝꿍지도`;
@@ -43,8 +50,7 @@
     renderRank(people);
     document.getElementById("host-tools").hidden = !view.host;
     document.getElementById("guest-create").hidden = !!view.host;
-    const joined = MapApp.joinedName(view.id);
-    document.getElementById("join-card").hidden = !!(view.host || joined);
+    fillJoinCard(people);
     if (view.host) {
       document.getElementById("edit-name").value = view.hostName;
       MapApp.bindBirthInput(document.getElementById("edit-birth"));
@@ -81,6 +87,41 @@
       people,
       onDeletePerson: view.host ? deletePerson : null
     });
+  }
+
+  function fillJoinCard(people) {
+    const card = document.getElementById("join-card");
+    if (!card) {
+      return;
+    }
+    if (view.host) {
+      card.hidden = true;
+      return;
+    }
+    let joined = MapApp.joinedName(view.id);
+    const mine = joined ? (people || []).find((person) => person.name === joined) : null;
+    if (joined && !mine) {
+      MapApp.setJoined(view.id, "");
+      joined = "";
+    }
+    card.hidden = false;
+    const editing = !!mine;
+    document.getElementById("join-kicker").textContent = editing ? "내 기록" : "바로 참여";
+    document.getElementById("join-title").textContent = editing
+      ? "잘못 적었으면 여기서 바꿔요"
+      : "닉네임과 생일만 적으면 핀이 찍혀요";
+    document.getElementById("join-submit").textContent = editing
+      ? "내 정보 수정"
+      : "궁합 확인하고 들어가기";
+    if (editing) {
+      document.getElementById("join-name").value = mine.name;
+      document.getElementById("join-birth").value = (mine.birthDate || "").slice(0, 10);
+      MapApp.bindRegionSelects(
+        document.getElementById("join-sido"),
+        document.getElementById("join-sigungu"),
+        mine.sigunguCode
+      );
+    }
   }
 
   function leadText(view) {
@@ -140,28 +181,44 @@
     event.preventDefault();
     const error = document.getElementById("join-error");
     const button = document.getElementById("join-submit");
+    const previousName = MapApp.joinedName(view.id);
+    const editing = !!(previousName && (view.people || []).some((person) => person.name === previousName));
     error.hidden = true;
     button.disabled = true;
-    button.textContent = "이름궁합 보는 중...";
+    button.textContent = editing ? "수정하는 중..." : "이름궁합 보는 중...";
     try {
-      const data = await MapApp.api(`/api/maps/${view.id}/join`, {
-        method: "POST",
-        body: {
-          guestName: document.getElementById("join-name").value,
-          sigunguCode: document.getElementById("join-sigungu").value,
-          birthDate: document.getElementById("join-birth").value
-        }
-      });
-      MapApp.setJoined(view.id, data.guestName);
-      document.getElementById("join-card").hidden = true;
-      await playReveal(data);
-      await render(data.map);
+      if (editing) {
+        const data = await MapApp.api(`/api/maps/${view.id}/me`, {
+          method: "PATCH",
+          body: {
+            previousName,
+            guestName: document.getElementById("join-name").value,
+            sigunguCode: document.getElementById("join-sigungu").value,
+            birthDate: document.getElementById("join-birth").value
+          }
+        });
+        MapApp.setJoined(view.id, data.guestName);
+        await render(data.map);
+        MapApp.showToast("내 정보를 바꿨어요.");
+      } else {
+        const data = await MapApp.api(`/api/maps/${view.id}/join`, {
+          method: "POST",
+          body: {
+            guestName: document.getElementById("join-name").value,
+            sigunguCode: document.getElementById("join-sigungu").value,
+            birthDate: document.getElementById("join-birth").value
+          }
+        });
+        MapApp.setJoined(view.id, data.guestName);
+        await playReveal(data);
+        await render(data.map);
+      }
     } catch (err) {
       error.hidden = false;
       error.textContent = err.message;
     } finally {
       button.disabled = false;
-      button.textContent = "궁합 확인하고 들어가기";
+      button.textContent = editing ? "내 정보 수정" : "궁합 확인하고 들어가기";
     }
   }
 
