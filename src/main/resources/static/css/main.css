@@ -199,7 +199,8 @@ textarea {
   gap: 12px;
 }
 
-.map-form label {
+.map-form label,
+.map-field {
   display: grid;
   gap: 6px;
   min-width: 0;
@@ -227,14 +228,79 @@ textarea {
   box-sizing: border-box;
 }
 
-.map-form input[type="date"] {
+.map-form select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'><path fill='%23ff7a59' d='M5.2 7.4L10 12.2l4.8-4.8 1.4 1.4L10 15 3.8 8.8z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+  padding-right: 44px;
+}
+
+.map-date-shell {
+  display: block;
+  position: relative;
   min-width: 0;
   max-width: 100%;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.map-form input[type="date"] {
+  position: relative;
+  display: block;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  padding-right: 44px;
   letter-spacing: 0;
+  font-weight: 600;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'><path fill='%23ff7a59' d='M5.2 7.4L10 12.2l4.8-4.8 1.4 1.4L10 15 3.8 8.8z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
 }
 
 .map-form input[type="date"]::-webkit-date-and-time-value {
   text-align: left;
+  min-width: 0;
+  margin: 0;
+}
+
+.map-form input[type="date"]::-webkit-datetime-edit,
+.map-form input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+  min-width: 0;
+  max-width: 100%;
+  padding: 0;
+}
+
+.map-form input[type="date"]::-webkit-datetime-edit-text,
+.map-form input[type="date"]::-webkit-datetime-edit-year-field,
+.map-form input[type="date"]::-webkit-datetime-edit-month-field,
+.map-form input[type="date"]::-webkit-datetime-edit-day-field {
+  padding: 0 1px;
+  letter-spacing: 0;
+}
+
+.map-form input[type="date"]::-webkit-inner-spin-button,
+.map-form input[type="date"]::-webkit-clear-button {
+  display: none;
+}
+
+.map-form input[type="date"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: transparent;
+  cursor: pointer;
+  opacity: 0;
 }
 
 .map-form textarea {
@@ -244,6 +310,7 @@ textarea {
 }
 
 .map-form input:focus,
+.map-form select:focus,
 .map-form textarea:focus,
 .map-select.is-open .map-select-btn,
 .map-select-btn:focus-visible {
@@ -267,6 +334,7 @@ textarea {
   clip: rect(0, 0, 0, 0);
   border: 0;
   pointer-events: none;
+  background-image: none;
 }
 
 .map-select-btn {

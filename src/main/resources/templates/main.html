@@ -116,25 +116,27 @@
         내 이름 (닉네임)
         <input id="create-name" type="text" minlength="2" maxlength="8" placeholder="수현" autocomplete="off" required>
       </label>
-      <label>
+      <label class="map-field">
         생년월일
-        <input id="create-birth" type="date" min="1920-01-01" required>
+        <span class="map-date-shell">
+          <input id="create-birth" type="date" min="1920-01-01" required>
+        </span>
       </label>
       <p class="map-field-hint">띠랑 별자리 보려고 받아요. 목록에는 생일도 보여요.</p>
       <div class="map-region-row">
-        <label>
-          시도
+        <div class="map-field">
+          <span>시도</span>
           <select id="create-sido" required>
             <option value="" disabled selected>도를 골라 주세요</option>
             <option th:each="sido : ${sidos}" th:value="${sido.code()}" th:text="${sido.label()}">서울</option>
           </select>
-        </label>
-        <label>
-          시군구
+        </div>
+        <div class="map-field">
+          <span>시군구</span>
           <select id="create-sigungu" required>
             <option value="" disabled selected>시군구를 골라 주세요</option>
           </select>
-        </label>
+        </div>
       </div>
       <p id="create-error" class="map-error" hidden></p>
       <button type="submit" id="create-submit">내 짝꿍지도 만들기</button>

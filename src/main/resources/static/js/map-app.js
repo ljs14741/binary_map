@@ -122,8 +122,13 @@
     btn.classList.toggle("is-placeholder", !select.value);
   }
 
+  function useNativeSelect() {
+    return window.matchMedia("(pointer: coarse)").matches
+      || window.matchMedia("(hover: none)").matches;
+  }
+
   function enhanceSelect(select) {
-    if (!select || select.closest(".map-select")) {
+    if (!select || select.closest(".map-select") || useNativeSelect()) {
       return;
     }
     const wrap = document.createElement("div");
@@ -158,6 +163,8 @@
       wrap.classList.toggle("is-open", open);
     });
     menu.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
       const item = event.target.closest("li");
       if (!item || item.classList.contains("is-disabled")) {
         return;
@@ -166,6 +173,7 @@
       select.dispatchEvent(new Event("change", { bubbles: true }));
       refreshCustomSelect(select);
       wrap.classList.remove("is-open");
+      btn.focus();
     });
     refreshCustomSelect(select);
   }

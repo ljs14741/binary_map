@@ -62,25 +62,27 @@
         내 이름 (닉네임)
         <input id="edit-name" type="text" minlength="2" maxlength="8" placeholder="수현" required>
       </label>
-      <label>
+      <label class="map-field">
         생년월일
-        <input id="edit-birth" type="date" min="1920-01-01" required>
+        <span class="map-date-shell">
+          <input id="edit-birth" type="date" min="1920-01-01" required>
+        </span>
       </label>
       <p class="map-field-hint">띠랑 별자리 보려고 받아요. 목록에는 생일도 보여요.</p>
       <p id="birth-nudge" class="map-warn" hidden>생일을 적어야 친구랑 띠 케미가 나와요.</p>
       <div class="map-region-row">
-        <label>
-          시도
+        <div class="map-field">
+          <span>시도</span>
           <select id="edit-sido" required>
             <option th:each="sido : ${sidos}" th:value="${sido.code()}" th:text="${sido.label()}">서울</option>
           </select>
-        </label>
-        <label>
-          시군구
+        </div>
+        <div class="map-field">
+          <span>시군구</span>
           <select id="edit-sigungu" required>
             <option value="">시군구를 골라 주세요</option>
           </select>
-        </label>
+        </div>
       </div>
       <p id="edit-error" class="map-error" hidden></p>
       <button type="submit" class="map-cta-secondary" id="edit-submit">내 정보 수정</button>
@@ -96,25 +98,27 @@
         내 이름 (닉네임)
         <input id="join-name" type="text" minlength="2" maxlength="8" placeholder="민지" autocomplete="off" required>
       </label>
-      <label>
+      <label class="map-field">
         생년월일
-        <input id="join-birth" type="date" min="1920-01-01" required>
+        <span class="map-date-shell">
+          <input id="join-birth" type="date" min="1920-01-01" required>
+        </span>
       </label>
       <p class="map-field-hint">띠랑 별자리 보려고 받아요. 목록에는 생일도 보여요.</p>
       <div class="map-region-row">
-        <label>
-          시도
+        <div class="map-field">
+          <span>시도</span>
           <select id="join-sido" required>
             <option value="" disabled selected>도를 골라 주세요</option>
             <option th:each="sido : ${sidos}" th:value="${sido.code()}" th:text="${sido.label()}">서울</option>
           </select>
-        </label>
-        <label>
-          시군구
+        </div>
+        <div class="map-field">
+          <span>시군구</span>
           <select id="join-sigungu" required>
             <option value="" disabled selected>시군구를 골라 주세요</option>
           </select>
-        </label>
+        </div>
       </div>
       <p id="join-error" class="map-error" hidden></p>
       <button type="submit" id="join-submit">궁합 확인하고 들어가기</button>
