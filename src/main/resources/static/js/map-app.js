@@ -820,6 +820,7 @@
     const count = (document.getElementById("stage-count") || stage.querySelector(".map-stage-head span"))?.textContent || "";
     const caption = (document.getElementById("stage-caption") || stage.querySelector(".map-stage-caption"))?.textContent || "";
     const wrap = stage.querySelector(".korea-wrap");
+    const svg = wrap ? wrap.querySelector("svg") : null;
     const mapBox = wrap ? wrap.getBoundingClientRect() : { width: 320, height: 300 };
     const mapW = Math.ceil(mapBox.width * scale);
     const mapH = Math.ceil(Math.max(240, mapBox.height) * scale);
@@ -847,80 +848,37 @@
     ctx.textAlign = "left";
     let y = pad + 40 * scale;
     roundRect(ctx, pad - 4, y, width - pad * 2 + 8, mapH + 16 * scale, 20 * scale);
-    const sky = ctx.createLinearGradient(0, y, 0, y + mapH);
-    sky.addColorStop(0, "#c9eaf6");
-    sky.addColorStop(0.45, "#b7dcec");
-    sky.addColorStop(1, "#d7f0e4");
-    ctx.fillStyle = sky;
+    ctx.fillStyle = "#9ecfde";
     ctx.fill();
-    if (wrap) {
-      const wrapBox = wrap.getBoundingClientRect();
-      const sx = wrapBox.width ? mapW / wrapBox.width : scale;
-      const sy = wrapBox.height ? mapH / wrapBox.height : scale;
-      const ox = pad;
-      const oy = y + 8 * scale;
-      [...wrap.querySelectorAll(".sido-tile")].forEach((tile) => {
-        const box = tile.getBoundingClientRect();
-        const tx = ox + (box.left - wrapBox.left) * sx;
-        const ty = oy + (box.top - wrapBox.top) * sy;
-        const tw = Math.max(8, box.width * sx);
-        const th = Math.max(8, box.height * sy);
-        const home = tile.classList.contains("is-home");
-        const filled = tile.classList.contains("is-filled");
-        roundRect(ctx, tx, ty, tw, th, Math.min(16 * scale, th / 2.4));
-        if (home) {
-          ctx.fillStyle = "#ffd56a";
-        } else if (filled) {
-          ctx.fillStyle = "#fff8f1";
-        } else {
-          ctx.fillStyle = "rgba(247, 226, 184, 0.55)";
-        }
+    if (svg) {
+      const mapCanvas = await rasterizeSvg(svg, mapW, mapH);
+      ctx.drawImage(mapCanvas, pad, y + 8 * scale, mapW, mapH);
+      [...wrap.querySelectorAll(".cluster-pin, .host-pin")].forEach((pin) => {
+        const px = pad + (parseFloat(pin.style.left) / 100) * mapW;
+        const py = y + 8 * scale + (parseFloat(pin.style.top) / 100) * mapH;
+        const host = pin.classList.contains("host-pin");
+        const color = host ? "#f5c542" : cssColorToRgb(getComputedStyle(pin).getPropertyValue("--pin") || "#ff2d95");
+        ctx.beginPath();
+        ctx.fillStyle = color;
+        ctx.arc(px, py, (host ? 11 : 9) * scale, 0, Math.PI * 2);
         ctx.fill();
-        if (home) {
-          ctx.strokeStyle = "#f0c04a";
-          ctx.lineWidth = 2 * scale;
-          ctx.stroke();
-        } else if (filled) {
-          ctx.strokeStyle = cssColorToRgb(getComputedStyle(tile).getPropertyValue("--pin") || "#ff7a59");
-          ctx.lineWidth = 1.5 * scale;
-          ctx.stroke();
-        }
-        const name = tile.querySelector(".sido-tile-name")?.textContent || "";
-        const count = tile.querySelector(".sido-tile-count")?.textContent || "";
-        const emoji = tile.querySelector(".sido-tile-emoji")?.textContent || "";
-        ctx.textAlign = "center";
-        ctx.fillStyle = filled || home ? "#2a1f1a" : "#b08978";
-        ctx.font = `800 ${Math.max(10, Math.min(12, tw / 5)) * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
-        ctx.fillText(fitText(ctx, `${emoji ? `${emoji} ` : ""}${name}`, tw - 8 * scale), tx + tw / 2, ty + th * (count ? 0.22 : 0.34));
-        if (count) {
-          ctx.fillStyle = home ? "#9a7408" : cssColorToRgb(getComputedStyle(tile).getPropertyValue("--pin") || "#f05a3a");
-          ctx.font = `800 ${14 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
-          ctx.fillText(count, tx + tw / 2, ty + th * 0.52);
-        }
-        ctx.textAlign = "left";
-      });
-      const drill = wrap.querySelector(".korea-drill");
-      if (drill) {
-        const chips = [...drill.querySelectorAll(".gungu-chip")];
-        chips.forEach((chip) => {
-          const box = chip.getBoundingClientRect();
-          const tx = ox + (box.left - wrapBox.left) * sx;
-          const ty = oy + (box.top - wrapBox.top) * sy;
-          const tw = Math.max(8, box.width * sx);
-          const th = Math.max(8, box.height * sy);
-          roundRect(ctx, tx, ty, tw, th, th / 2);
-          ctx.fillStyle = "#fff";
-          ctx.fill();
-          ctx.strokeStyle = cssColorToRgb(getComputedStyle(chip).getPropertyValue("--pin") || "#ff7a59");
-          ctx.lineWidth = 1.4 * scale;
-          ctx.stroke();
-          ctx.fillStyle = "#2a1f1a";
-          ctx.textAlign = "center";
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 3 * scale;
+        ctx.stroke();
+        const badge = pin.querySelector(".cluster-badge, .host-badge");
+        if (badge) {
           ctx.font = `800 ${10 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
-          ctx.fillText(fitText(ctx, chip.textContent.replace(/\s+/g, " ").trim(), tw - 8 * scale), tx + tw / 2, ty + th * 0.28);
+          const label = fitText(ctx, badge.textContent.trim(), 140 * scale);
+          const tw = ctx.measureText(label).width;
+          roundRect(ctx, px - tw / 2 - 8 * scale, py + 12 * scale, tw + 16 * scale, 18 * scale, 9 * scale);
+          ctx.fillStyle = host ? "#fff6cf" : "rgba(255,248,234,0.94)";
+          ctx.fill();
+          ctx.fillStyle = host ? "#9a7408" : "#4a3426";
+          ctx.textAlign = "center";
+          ctx.fillText(label, px, py + 15 * scale);
           ctx.textAlign = "left";
-        });
-      }
+        }
+      });
     }
     y += mapH + 28 * scale;
     ctx.fillStyle = "#5c4a40";

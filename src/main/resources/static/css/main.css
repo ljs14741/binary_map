@@ -660,238 +660,196 @@ textarea {
 
 .korea-wrap {
   position: relative;
-  min-height: 0;
-  padding: 16px 12px 18px;
+  min-height: 320px;
+  padding: 12px 6px 28px;
   overflow: hidden;
-  border-radius: 24px;
+  border-radius: 20px;
   background:
-    radial-gradient(circle at 14% 6%, rgba(255, 214, 232, 0.62), transparent 34%),
-    radial-gradient(circle at 86% 10%, rgba(255, 236, 179, 0.58), transparent 30%),
-    radial-gradient(circle at 78% 88%, rgba(186, 230, 214, 0.42), transparent 38%),
-    linear-gradient(165deg, #c9eaf6 0%, #b7dcec 42%, #d7f0e4 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+    radial-gradient(circle at 18% 12%, rgba(255, 236, 179, 0.55), transparent 28%),
+    radial-gradient(circle at 78% 16%, rgba(255, 255, 255, 0.4), transparent 24%),
+    linear-gradient(180deg, #b9dce8 0%, #9ecfde 40%, #c5e6d8 100%);
 }
 
 .korea-canvas {
   position: relative;
 }
 
-.korea-tiles {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  grid-template-areas:
-    ".        gangwon  gangwon  .         ."
-    "incheon  seoul    gyeonggi gyeonggi  ."
-    "chungnam sejong   chungbuk gyeongbuk gyeongbuk"
-    "jeonbuk  daejeon  .        daegu     ulsan"
-    "gwangju  .        .        gyeongnam busan"
-    "jeonnam  jeonnam  .        .         ."
-    "jeju     .        .        .         .";
-  gap: 7px;
+.korea-map {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+  filter: drop-shadow(0 8px 0 rgba(120, 160, 170, 0.18));
+  transition: 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.sido-tile,
-.gungu-chip,
-.korea-drill-close {
-  appearance: none;
-  -webkit-appearance: none;
-}
-
-.sido-tile {
-  display: grid;
-  align-content: center;
-  justify-items: center;
-  gap: 1px;
-  min-height: 56px;
-  min-width: 0;
-  padding: 8px 4px 7px;
-  border: 1.5px solid rgba(255, 255, 255, 0.72);
-  border-radius: 18px;
-  background: linear-gradient(180deg, rgba(255, 252, 247, 0.5), rgba(247, 226, 184, 0.38));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88);
-  color: #b08978;
-  font: inherit;
-  letter-spacing: -0.04em;
-  cursor: default;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
-}
-
-.sido-tile:disabled {
-  cursor: default;
+.korea-canvas.is-ready .korea-map {
   opacity: 1;
+  transform: none;
 }
 
-.sido-tile-seoul,
-.sido-tile-gyeonggi {
-  min-height: 68px;
+.korea-map .sido-land {
+  fill: #f7e2b8;
+  stroke: rgba(196, 148, 82, 0.18);
+  stroke-width: 0.65;
 }
 
-.sido-tile-jeju {
-  min-height: 48px;
+.korea-map .sido-land.is-home {
+  fill: #ffe08a;
+  stroke: #e2b84a;
+  stroke-width: 1.1;
 }
 
-.sido-tile.is-filled {
-  cursor: pointer;
-  color: #2a1f1a;
-  background: linear-gradient(180deg, #fffefb, color-mix(in srgb, var(--pin, #ff7a59) 18%, #fff6ea));
-  border-color: color-mix(in srgb, var(--pin, #ff7a59) 42%, #fff);
-  box-shadow:
-    0 8px 16px color-mix(in srgb, var(--pin, #ff7a59) 20%, transparent),
-    inset 0 1px 0 #fff;
-}
-
-.sido-tile.is-home {
-  color: #7a5a12;
-  background: linear-gradient(180deg, #fff8d6, #ffd56a 78%, #f5c542);
-  border-color: #f0c04a;
-  box-shadow:
-    0 10px 22px rgba(245, 197, 66, 0.38),
-    inset 0 1px 0 #fff6cf;
-}
-
-.sido-tile.is-open,
-.sido-tile.is-filled:not(:disabled):active {
-  transform: translateY(1px) scale(0.98);
-}
-
-.sido-tile.is-dim {
-  opacity: 0.28;
-  pointer-events: none;
-}
-
-.sido-tile.is-hot {
-  transform: scale(1.04);
-  z-index: 1;
-}
-
-.sido-tile-emoji {
-  font-size: 14px;
-  line-height: 1;
-}
-
-.sido-tile-name {
-  font-size: 12px;
-  font-weight: 800;
-  line-height: 1.2;
-}
-
-.sido-tile-count {
-  color: var(--pin, #f05a3a);
-  font-size: 15px;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-
-.sido-tile.is-home .sido-tile-count {
-  color: #9a7408;
-}
-
-.sido-tile-mark {
-  margin-top: 1px;
-  color: #9a7408;
-  font-size: 9px;
-  font-weight: 800;
-  font-style: normal;
-  letter-spacing: 0.02em;
-}
-
-.korea-drill {
-  position: relative;
-  z-index: 1;
-  margin-top: 12px;
-  padding: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  border-radius: 20px;
-  background: rgba(255, 253, 249, 0.88);
-  box-shadow: 0 14px 28px rgba(80, 40, 20, 0.1);
-}
-
-.korea-drill-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.korea-drill-head strong {
-  color: #2a1f1a;
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-}
-
-.korea-drill-close {
-  padding: 6px 10px;
-  border: 0;
-  border-radius: 999px;
-  background: #fff4ea;
-  color: #8a7468;
-  font-size: 12px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.korea-drill-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.gungu-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 38px;
-  padding: 6px 10px 6px 8px;
-  border: 1.5px solid color-mix(in srgb, var(--pin, #ff7a59) 35%, #fff);
-  border-radius: 999px;
-  background: linear-gradient(180deg, #fff, color-mix(in srgb, var(--pin, #ff7a59) 12%, #fff8f1));
-  color: #2a1f1a;
-  font: inherit;
-  cursor: pointer;
-  box-shadow: 0 6px 14px color-mix(in srgb, var(--pin, #ff7a59) 14%, transparent);
-}
-
-.gungu-chip span {
-  font-size: 14px;
-  line-height: 1;
-}
-
-.gungu-chip strong {
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-}
-
-.gungu-chip b {
-  color: var(--pin, #f05a3a);
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
-}
-
-.gungu-chip.is-home {
-  background: linear-gradient(180deg, #fff8d6, #ffe58a);
-  border-color: #f5c542;
-}
-
-.gungu-chip.is-dim {
-  opacity: 0.28;
+.cluster-layer {
+  position: absolute;
+  inset: 0;
   pointer-events: none;
 }
 
 .map-spark {
   position: absolute;
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.95);
-  opacity: 0.18;
-  pointer-events: none;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.9);
+  opacity: 0.15;
   animation: map-twinkle 2.8s ease-in-out infinite;
   animation-delay: var(--delay, 0s);
+}
+
+.cluster-pin,
+.host-pin {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  transform: translate(-50%, -88%);
+  pointer-events: auto;
+}
+
+.cluster-pin {
+  z-index: 2;
+  font: inherit;
+  cursor: pointer;
+  opacity: 0;
+  transform: translate(-50%, -70%) scale(0.6);
+  animation: pin-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: var(--delay, 0.2s);
+}
+
+.korea-canvas.is-ready .cluster-pin:not(.is-dim) .cluster-dot {
+  animation: pin-bob 2.8s ease-in-out infinite;
+  animation-delay: var(--delay, 0.2s);
+}
+
+.cluster-pin.is-dim {
+  opacity: 0.16;
+  pointer-events: none;
+  animation: none;
+  transform: translate(-50%, -88%) scale(0.92);
+}
+
+.cluster-pin.is-hot {
+  z-index: 4;
+  opacity: 1;
+  transform: translate(-50%, -88%) scale(1.08);
+}
+
+.cluster-pin.is-hot .cluster-glow {
+  opacity: 0.8;
+  animation: glow-pulse 1.15s ease-in-out infinite;
+}
+
+.cluster-glow {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  margin-left: -14px;
+  border-radius: 50%;
+  background: var(--pin, #ff2d95);
+  filter: blur(8px);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.cluster-dot,
+.host-dot {
+  position: relative;
+  z-index: 1;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+}
+
+.cluster-dot {
+  background: var(--pin, #ff2d95);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--pin) 70%, transparent);
+}
+
+.host-pin {
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0;
+  animation: pin-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.08s forwards;
+}
+
+.host-ring {
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  margin-left: -14px;
+  border: 2px solid rgba(245, 197, 66, 0.55);
+  border-radius: 50%;
+  animation: host-ring 2.4s ease-out infinite;
+}
+
+.host-ring.is-late {
+  animation-delay: 1.2s;
+}
+
+.host-dot {
+  width: 20px;
+  height: 20px;
+  background: radial-gradient(circle at 35% 30%, #fffdf3 0%, #ffe58a 42%, #f5c542 100%);
+  border-color: #fff3b0;
+  box-shadow:
+    0 0 0 4px rgba(245, 197, 66, 0.22),
+    0 0 18px rgba(245, 197, 66, 0.7);
+  animation: host-pulse 2.2s ease-in-out infinite;
+}
+
+.cluster-badge,
+.host-badge {
+  max-width: 168px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255, 248, 234, 0.94);
+  color: #4a3426;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 4px 10px rgba(80, 50, 20, 0.1);
+}
+
+.host-badge {
+  color: #9a7408;
+  background: #fff6cf;
 }
 
 .map-stats {
@@ -1812,8 +1770,6 @@ body.is-sheet-open {
 
 @media (prefers-reduced-motion: reduce) {
   .korea-map,
-  .sido-tile,
-  .gungu-chip,
   .cluster-pin,
   .host-pin,
   .host-dot,

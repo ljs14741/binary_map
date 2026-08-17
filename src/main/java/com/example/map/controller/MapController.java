@@ -92,7 +92,6 @@ public class MapController {
     private List<SampleFriend> sampleFriends() {
         List<SampleFriend> friends = List.of(
                 friend("민지", "서울 강남구", "11", "11680", 97, 97, RelationLabel.BURAL_MATE, RelationLabel.BURAL_MATE, LocalDate.of(1999, 10, 23)),
-                friend("채원", "서울 마포구", "11", "11440", 93, 86, RelationLabel.BURAL_MATE, RelationLabel.TRUE_MATE, LocalDate.of(2001, 3, 8)),
                 friend("하은", "제주 제주시", "50", "50110", 88, 91, RelationLabel.BURAL_MATE, RelationLabel.BURAL_MATE, LocalDate.of(2000, 8, 5)),
                 friend("예린", "광주 북구", "29", "29170", 91, 72, RelationLabel.BURAL_MATE, RelationLabel.TRUE_MATE, LocalDate.of(1998, 7, 1)),
                 friend("서준", "부산 해운대구", "26", "26350", 82, 70, RelationLabel.TRUE_MATE, RelationLabel.TRUE_MATE, LocalDate.of(1996, 1, 10)),
