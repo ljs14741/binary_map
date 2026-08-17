@@ -1,5 +1,6 @@
 package com.example.map.service;
 
+import com.example.map.dto.AnimalCount;
 import com.example.map.dto.ClaimMapItem;
 import com.example.map.dto.CreatedMapResponse;
 import com.example.map.dto.JoinMapResponse;
@@ -7,10 +8,12 @@ import com.example.map.dto.MapPersonView;
 import com.example.map.dto.MapSummary;
 import com.example.map.dto.MapView;
 import com.example.map.dto.SampleLabelCount;
+import com.example.map.entity.AnimalFit;
 import com.example.map.entity.CoupleMap;
 import com.example.map.entity.CoupleMapPerson;
 import com.example.map.entity.RelationLabel;
 import com.example.map.entity.Sigungu;
+import com.example.map.entity.ZodiacAnimal;
 import com.example.map.repository.CoupleMapPersonRepository;
 import com.example.map.repository.CoupleMapRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +22,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -36,10 +42,11 @@ public class CoupleMapService {
     private final CoupleMapRepository coupleMapRepository;
     private final CoupleMapPersonRepository coupleMapPersonRepository;
     private final NameCompatibilityService nameCompatibilityService;
+    private final BirthFlavorService birthFlavorService;
     private final RegionCatalog regionCatalog;
 
     @Transactional
-    public CreatedMapResponse create(String hostName, String hostSigunguCode, String userId) {
+    public CreatedMapResponse create(String hostName, String hostSigunguCode, LocalDate hostBirthDate, String userId) {
         if (userId == null || userId.isBlank()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "카카오 로그인 후 지도를 만들 수 있어요.");
         }
@@ -49,12 +56,14 @@ public class CoupleMapService {
         }
         String name = requireName(hostName);
         Sigungu sigungu = regionCatalog.fromCode(hostSigunguCode);
+        LocalDate birth = birthFlavorService.requireBirthDate(hostBirthDate);
         LocalDateTime now = LocalDateTime.now();
 
         CoupleMap map = new CoupleMap();
         map.setId(UUID.randomUUID().toString());
         map.setHostName(name);
         map.setHostSigunguCode(sigungu.code());
+        map.setHostBirthDate(birth);
         map.setHostToken(UUID.randomUUID().toString());
         map.setUserId(userId);
         map.setCreatedAt(now);
@@ -81,10 +90,11 @@ public class CoupleMapService {
     }
 
     @Transactional
-    public JoinMapResponse join(String mapId, String guestName, String sigunguCode) {
+    public JoinMapResponse join(String mapId, String guestName, String sigunguCode, LocalDate birthDate) {
         CoupleMap map = getMap(mapId);
         String name = requireName(guestName);
         Sigungu sigungu = regionCatalog.fromCode(sigunguCode);
+        LocalDate birth = birthFlavorService.requireBirthDate(birthDate);
         if (name.equals(map.getHostName())) {
             throw new IllegalArgumentException("지도 닉네임과 같은 이름은 쓸 수 없어요. 다른 닉네임을 적어 주세요.");
         }
@@ -104,6 +114,7 @@ public class CoupleMapService {
         person.setMap(map);
         person.setPersonName(name);
         person.setSigunguCode(sigungu.code());
+        person.setBirthDate(birth);
         person.setScore(forward.score());
         person.setReverseScore(reverse.score());
         person.setLabel(label.displayName());
@@ -111,6 +122,12 @@ public class CoupleMapService {
         person.setUpdatedAt(now);
         coupleMapPersonRepository.save(person);
 
+        var hostProfile = birthFlavorService.profile(map.getHostBirthDate());
+        var guestProfile = birthFlavorService.profile(birth);
+        AnimalFit fit = hostProfile == null || guestProfile == null
+                ? null
+                : birthFlavorService.fit(hostProfile.animal(), guestProfile.animal());
+        RelationLabel shown = forward.score() >= reverse.score() ? label : reverse.label();
         return new JoinMapResponse(
                 map.getHostName(),
                 name,
@@ -124,21 +141,38 @@ public class CoupleMapService {
                 reverse.score(),
                 reverse.label().titledName(),
                 reverse.label().mapColor(),
-                toView(map, false)
+                toView(map, false),
+                birthFlavorService.chemistryLine(shown, fit),
+                fit == null ? null : fit.displayName(),
+                hostProfile == null ? null : hostProfile.animalName(),
+                hostProfile == null ? null : hostProfile.animalEmoji(),
+                guestProfile.animalName(),
+                guestProfile.animalEmoji(),
+                hostProfile == null ? null : hostProfile.starSign(),
+                guestProfile.starSign()
         );
     }
 
     @Transactional
-    public MapView updateHost(String mapId, String hostToken, String userId, String hostName, String hostSigunguCode) {
+    public MapView updateHost(
+            String mapId,
+            String hostToken,
+            String userId,
+            String hostName,
+            String hostSigunguCode,
+            LocalDate hostBirthDate
+    ) {
         CoupleMap map = requireHost(mapId, hostToken, userId);
         String name = requireName(hostName);
         Sigungu sigungu = regionCatalog.fromCode(hostSigunguCode);
+        LocalDate birth = birthFlavorService.requireBirthDate(hostBirthDate);
         boolean nameChanged = !name.equals(map.getHostName());
         if (nameChanged && coupleMapPersonRepository.findByMap_IdAndPersonName(mapId, name).isPresent()) {
             throw new IllegalArgumentException("이미 그 이름으로 들어온 친구가 있어요. 다른 이름을 써 주세요.");
         }
         map.setHostName(name);
         map.setHostSigunguCode(sigungu.code());
+        map.setHostBirthDate(birth);
         map.setUpdatedAt(LocalDateTime.now());
         if (nameChanged) {
             recalculate(map);
@@ -238,6 +272,7 @@ public class CoupleMapService {
                 .sorted(this::compareRank)
                 .toList();
         Sigungu sigungu = regionCatalog.fromCode(map.getHostSigunguCode());
+        var hostProfile = birthFlavorService.profile(map.getHostBirthDate());
         return new MapView(
                 map.getId(),
                 map.getHostName(),
@@ -249,7 +284,11 @@ public class CoupleMapService {
                 map.getUserId() != null && !map.getUserId().isBlank(),
                 people.size(),
                 countsOf(people),
-                people
+                animalCountsOf(hostProfile, rows),
+                people,
+                host && map.getHostBirthDate() != null ? map.getHostBirthDate().toString() : null,
+                hostProfile == null ? null : hostProfile.animalName(),
+                hostProfile == null ? null : hostProfile.animalEmoji()
         );
     }
 
@@ -277,6 +316,7 @@ public class CoupleMapService {
         RelationLabel label = RelationLabel.fromScore(person.getScore());
         RelationLabel reverse = RelationLabel.fromScore(person.getReverseScore());
         Sigungu sigungu = regionCatalog.fromCode(person.getSigunguCode());
+        var profile = birthFlavorService.profile(person.getBirthDate());
         return new MapPersonView(
                 person.getId(),
                 person.getPersonName(),
@@ -289,6 +329,8 @@ public class CoupleMapService {
                 person.getReverseScore(),
                 reverse.displayName(),
                 reverse.mapColor(),
+                profile == null ? null : profile.animalName(),
+                profile == null ? null : profile.animalEmoji(),
                 person.getCreatedAt()
         );
     }
@@ -322,6 +364,33 @@ public class CoupleMapService {
             ));
         }
         return counts;
+    }
+
+    private List<AnimalCount> animalCountsOf(
+            BirthFlavorService.BirthProfile hostProfile,
+            List<CoupleMapPerson> rows
+    ) {
+        EnumMap<ZodiacAnimal, Integer> grouped = new EnumMap<>(ZodiacAnimal.class);
+        if (hostProfile != null) {
+            grouped.merge(hostProfile.animal(), 1, Integer::sum);
+        }
+        for (CoupleMapPerson person : rows) {
+            var profile = birthFlavorService.profile(person.getBirthDate());
+            if (profile != null) {
+                grouped.merge(profile.animal(), 1, Integer::sum);
+            }
+        }
+        return grouped.entrySet().stream()
+                .sorted(Comparator
+                        .<Map.Entry<ZodiacAnimal, Integer>>comparingInt(Map.Entry::getValue)
+                        .reversed()
+                        .thenComparingInt(entry -> entry.getKey().ordinal()))
+                .map(entry -> new AnimalCount(
+                        entry.getKey().displayName(),
+                        entry.getKey().emoji(),
+                        entry.getValue()
+                ))
+                .toList();
     }
 
     private String requireName(String value) {

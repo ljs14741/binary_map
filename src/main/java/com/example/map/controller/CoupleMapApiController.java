@@ -44,6 +44,7 @@ public class CoupleMapApiController {
         CreatedMapResponse created = coupleMapService.create(
                 body.hostName(),
                 body.hostSigunguCode(),
+                body.hostBirthDate(),
                 KakaoAuth.userId(authentication)
         );
         HostTokenSupport.write(request, response, created.id(), created.hostToken());
@@ -63,7 +64,7 @@ public class CoupleMapApiController {
 
     @PostMapping("/{id}/join")
     public JoinMapResponse join(@PathVariable String id, @RequestBody JoinMapRequest body) {
-        return coupleMapService.join(id, body.guestName(), body.sigunguCode());
+        return coupleMapService.join(id, body.guestName(), body.sigunguCode(), body.birthDate());
     }
 
     @PatchMapping("/{id}")
@@ -78,7 +79,8 @@ public class CoupleMapApiController {
                 HostTokenSupport.read(request, id),
                 KakaoAuth.userId(authentication),
                 body.hostName(),
-                body.hostSigunguCode()
+                body.hostSigunguCode(),
+                body.hostBirthDate()
         );
     }
 

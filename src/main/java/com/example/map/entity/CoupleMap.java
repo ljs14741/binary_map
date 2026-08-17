@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -26,6 +27,9 @@ public class CoupleMap {
 
     @Column(name = "host_sigungu_code", nullable = false, length = 5)
     private String hostSigunguCode;
+
+    @Column(name = "host_birth_date")
+    private LocalDate hostBirthDate;
 
     @Column(name = "host_token", nullable = false, length = 36)
     private String hostToken;

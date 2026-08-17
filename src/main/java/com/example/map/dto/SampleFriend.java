@@ -10,6 +10,8 @@ public record SampleFriend(
         String color,
         int reverseScore,
         String reverseLabel,
-        String reverseColor
+        String reverseColor,
+        String animal,
+        String animalEmoji
 ) {
 }

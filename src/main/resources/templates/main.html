@@ -114,6 +114,11 @@
         내 이름 (닉네임)
         <input id="create-name" type="text" minlength="2" maxlength="8" placeholder="수현" autocomplete="off" required>
       </label>
+      <label>
+        생년월일
+        <input id="create-birth" type="date" min="1920-01-01" required>
+      </label>
+      <p class="map-field-hint">띠 보려고 생일만 받아요. 지도에는 날짜 대신 토끼만 보여요.</p>
       <div class="map-region-row">
         <label>
           시도
@@ -162,6 +167,7 @@
           <span th:text="${count.label()}">부랄짝꿍</span>
         </button>
       </div>
+      <div class="map-animals" id="map-animals" hidden></div>
     </div>
 
     <ol class="map-rank" id="map-rank"></ol>

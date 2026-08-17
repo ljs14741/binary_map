@@ -69,6 +69,24 @@
     });
   }
 
+  function sampleAnimalCounts(friends) {
+    const grouped = new Map();
+    grouped.set("호랑이", { animal: "호랑이", emoji: "🐯", count: 1 });
+    (friends || []).forEach((person) => {
+      if (!person.animal) {
+        return;
+      }
+      const current = grouped.get(person.animal) || {
+        animal: person.animal,
+        emoji: person.animalEmoji || "",
+        count: 0
+      };
+      current.count += 1;
+      grouped.set(person.animal, current);
+    });
+    return [...grouped.values()].sort((a, b) => b.count - a.count || String(a.animal).localeCompare(b.animal, "ko"));
+  }
+
   async function paintSample() {
     const friends = MapApp.sortPeople(sampleFriends);
     await MapBoard.paint({
@@ -80,6 +98,7 @@
     if (list) {
       list.innerHTML = friends.map((person, index) => MapApp.rankRowHtml(person, index, "수현")).join("");
     }
+    MapApp.renderAnimals(sampleAnimalCounts(friends));
   }
 
   function openCreate() {
@@ -104,6 +123,7 @@
       document.getElementById("create-sido"),
       document.getElementById("create-sigungu")
     );
+    MapApp.bindBirthInput(document.getElementById("create-birth"));
     const createForm = document.getElementById("create-form");
     if (!createForm) {
       return;
@@ -120,7 +140,8 @@
           method: "POST",
           body: {
             hostName: document.getElementById("create-name").value,
-            hostSigunguCode: document.getElementById("create-sigungu").value
+            hostSigunguCode: document.getElementById("create-sigungu").value,
+            hostBirthDate: document.getElementById("create-birth").value
           }
         });
         MapApp.saveMap({

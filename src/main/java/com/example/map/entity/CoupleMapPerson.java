@@ -13,6 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -36,6 +37,9 @@ public class CoupleMapPerson {
 
     @Column(name = "sigungu_code", nullable = false, length = 5)
     private String sigunguCode;
+
+    @Column(name = "birth_date")
+    private LocalDate birthDate;
 
     @Column(name = "score", nullable = false)
     private Integer score;

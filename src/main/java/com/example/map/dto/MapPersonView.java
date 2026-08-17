@@ -1,7 +1,10 @@
 package com.example.map.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.time.LocalDateTime;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record MapPersonView(
         Long id,
         String name,
@@ -14,6 +17,8 @@ public record MapPersonView(
         int reverseScore,
         String reverseLabel,
         String reverseColor,
+        String animal,
+        String animalEmoji,
         LocalDateTime createdAt
 ) {
 }

@@ -1,7 +1,10 @@
 package com.example.map.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.List;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record MapView(
         String id,
         String hostName,
@@ -13,7 +16,11 @@ public record MapView(
         boolean claimed,
         int total,
         List<SampleLabelCount> counts,
-        List<MapPersonView> people
+        List<AnimalCount> animalCounts,
+        List<MapPersonView> people,
+        String hostBirthDate,
+        String hostAnimal,
+        String hostAnimalEmoji
 ) {
     public String leadText() {
         int bural = 0;

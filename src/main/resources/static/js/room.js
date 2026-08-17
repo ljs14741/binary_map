@@ -39,6 +39,7 @@
       : "카톡으로 보내면 친구가 사는 곳에 핀이 찍혀요";
     const people = MapApp.sortPeople(view.people);
     renderStats(view.counts);
+    MapApp.renderAnimals(view.animalCounts);
     renderRank(people);
     document.getElementById("host-tools").hidden = !view.host;
     document.getElementById("guest-create").hidden = !!view.host;
@@ -46,6 +47,12 @@
     document.getElementById("join-card").hidden = !!(view.host || joined);
     if (view.host) {
       document.getElementById("edit-name").value = view.hostName;
+      MapApp.bindBirthInput(document.getElementById("edit-birth"));
+      document.getElementById("edit-birth").value = view.hostBirthDate || "";
+      const nudge = document.getElementById("birth-nudge");
+      if (nudge) {
+        nudge.hidden = !!view.hostBirthDate;
+      }
       MapApp.bindRegionSelects(
         document.getElementById("edit-sido"),
         document.getElementById("edit-sigungu"),
@@ -60,12 +67,12 @@
         status.textContent = me.nickname
           ? `카카오 계정에 저장됨 · ${me.nickname}`
           : "카카오 계정에 저장됨";
-        keep.textContent = "카톡으로 보내면 친구는 닉네임과 사는 곳만 적어요.";
+        keep.textContent = "카톡으로 보내면 친구는 닉네임, 사는 곳, 생일만 적어요. 지도에는 띠만 보여요.";
       } else {
         loginBox.hidden = false;
         status.hidden = true;
         document.getElementById("host-login").href = MapApp.loginUrl(`/m/${view.id}`);
-        keep.textContent = "카톡으로 보내면 친구는 닉네임과 사는 곳만 적어요.";
+        keep.textContent = "카톡으로 보내면 친구는 닉네임, 사는 곳, 생일만 적어요. 지도에는 띠만 보여요.";
       }
     }
     await MapBoard.paint({
@@ -102,10 +109,11 @@
       document.getElementById("join-sido"),
       document.getElementById("join-sigungu")
     );
+    MapApp.bindBirthInput(document.getElementById("join-birth"));
     document.getElementById("room-share").addEventListener("click", () => {
       MapApp.shareKakao({
         title: `${view.hostName}님의 짝꿍지도`,
-        description: "이름만 적으면 궁합이 나오고, 사는 곳에 핀이 찍혀요.",
+        description: "닉네임과 생일을 적으면 궁합이 나오고, 사는 곳에 핀이 찍혀요.",
         button: "나도 들어가기",
         url: view.shareUrl
       });
@@ -133,7 +141,8 @@
         method: "POST",
         body: {
           guestName: document.getElementById("join-name").value,
-          sigunguCode: document.getElementById("join-sigungu").value
+          sigunguCode: document.getElementById("join-sigungu").value,
+          birthDate: document.getElementById("join-birth").value
         }
       });
       MapApp.setJoined(view.id, data.guestName);
@@ -158,6 +167,7 @@
       <div class="map-share-card" id="share-card">
         <p class="map-result-status" id="reveal-status">이름궁합 계산 중</p>
         <div id="reveal-dual"></div>
+        <div id="reveal-chem"></div>
       </div>
       ${MapApp.dualFolds(data)}
       <button type="button" class="map-save" id="save-result">이미지 저장</button>
@@ -165,6 +175,10 @@
     box.scrollIntoView({ behavior: "smooth", block: "center" });
     await MapApp.animateFolds(box);
     document.getElementById("reveal-dual").innerHTML = MapApp.dualScores(data);
+    const chem = document.getElementById("reveal-chem");
+    if (chem) {
+      chem.outerHTML = MapApp.chemistryHtml(data);
+    }
     document.getElementById("reveal-status").textContent = `${data.hostName}랑 ${data.guestName}`;
     box.classList.add("is-done");
     document.getElementById("save-result").addEventListener("click", () => {
@@ -187,7 +201,8 @@
         token,
         body: {
           hostName: document.getElementById("edit-name").value,
-          hostSigunguCode: document.getElementById("edit-sigungu").value
+          hostSigunguCode: document.getElementById("edit-sigungu").value,
+          hostBirthDate: document.getElementById("edit-birth").value
         }
       });
       if (token) {

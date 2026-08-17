@@ -819,6 +819,76 @@ select {
   line-height: 1.25;
 }
 
+.map-animals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.map-animal {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #fff7ee;
+  color: #5c4a40;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.map-field-hint {
+  margin: -4px 0 10px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.map-chem {
+  margin: 12px 4px 4px;
+  text-align: center;
+}
+
+.map-chem-animals {
+  margin: 0 0 4px;
+  color: #2a1f1a;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.map-chem-line {
+  margin: 0 0 6px;
+  color: #c45c2d;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.map-stars {
+  margin: 0;
+  color: #8a7468;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.map-rank-animal {
+  color: #5c4a40;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.map-result.is-done .map-chem {
+  opacity: 1;
+  transform: none;
+}
+
+.map-result .map-chem {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: 0.35s ease;
+}
+
 .map-rank li.is-hidden,
 .map-rank li[hidden] {
   display: none;

@@ -1,7 +1,10 @@
 package com.example.map.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.List;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record JoinMapResponse(
         String hostName,
         String guestName,
@@ -15,6 +18,14 @@ public record JoinMapResponse(
         int reverseScore,
         String reverseLabel,
         String reverseColor,
-        MapView map
+        MapView map,
+        String chemistryLine,
+        String animalFitLabel,
+        String hostAnimal,
+        String hostAnimalEmoji,
+        String guestAnimal,
+        String guestAnimalEmoji,
+        String hostStarSign,
+        String guestStarSign
 ) {
 }

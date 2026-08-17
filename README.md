@@ -1,6 +1,6 @@
 # 짝꿍지도 (binary_map)
 
-이름 획수 궁합으로 친구와의 점수를 보고, 친구가 사는 도가 내 한국 지도에 칠해지는 소셜 웹 서비스.
+이름 획수 궁합으로 친구와의 점수를 보고, 친구가 사는 곳에 핀이 찍히는 소셜 웹 서비스. 생년월일로 띠를 보여 주고, 별자리는 결과 카드 하단에만 적는다.
 
 | 구분 | 값 |
 |------|------|
@@ -27,6 +27,6 @@ http://localhost:8080
 - `http://localhost:8080/login/oauth2/code/kakao`
 - `https://map.binaryworld.kr/login/oauth2/code/kakao`
 
-시군구를 반영하려면 [SCHEMA.md](SCHEMA.md)의 `DROP` 후 `CREATE`를 다시 실행한다.
+시군구·생년월일을 반영하려면 [SCHEMA.md](SCHEMA.md)를 본다. 이미 테이블이 있으면 `ALTER`만 실행하면 된다.
 
 상세 설계는 [DESIGN.md](DESIGN.md)를 본다.

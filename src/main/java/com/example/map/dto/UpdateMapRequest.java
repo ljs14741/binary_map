@@ -1,4 +1,6 @@
 package com.example.map.dto;
 
-public record UpdateMapRequest(String hostName, String hostSigunguCode) {
+import java.time.LocalDate;
+
+public record UpdateMapRequest(String hostName, String hostSigunguCode, LocalDate hostBirthDate) {
 }

@@ -214,6 +214,51 @@
     fill();
   }
 
+  function bindBirthInput(el) {
+    if (!el) {
+      return;
+    }
+    const today = new Date();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    el.max = `${today.getFullYear()}-${month}-${day}`;
+    el.min = el.min || "1920-01-01";
+  }
+
+  function chemistryHtml(data) {
+    if (!data || !(data.guestAnimal || data.guestStarSign || data.chemistryLine)) {
+      return "";
+    }
+    const animals = data.hostAnimal && data.guestAnimal
+      ? `${data.hostAnimalEmoji || ""} ${data.hostAnimal} × ${data.guestAnimalEmoji || ""} ${data.guestAnimal}${data.animalFitLabel ? ` · ${data.animalFitLabel}` : ""}`
+      : data.guestAnimal
+        ? `${data.guestAnimalEmoji || ""} ${data.guestAnimal}`
+        : "";
+    const stars = data.hostStarSign && data.guestStarSign
+      ? `별자리 ${data.hostStarSign} × ${data.guestStarSign}`
+      : data.guestStarSign
+        ? `별자리 ${data.guestStarSign}`
+        : "";
+    return `
+      <div class="map-chem">
+        ${animals ? `<p class="map-chem-animals">${escapeHtml(animals.trim())}</p>` : ""}
+        ${data.chemistryLine ? `<p class="map-chem-line">${escapeHtml(data.chemistryLine)}</p>` : ""}
+        ${stars ? `<p class="map-stars">${escapeHtml(stars)}</p>` : ""}
+      </div>`;
+  }
+
+  function renderAnimals(counts) {
+    const box = document.getElementById("map-animals");
+    if (!box) {
+      return;
+    }
+    const items = (counts || []).filter((item) => item && item.count > 0);
+    box.hidden = items.length === 0;
+    box.innerHTML = items.map((item) => `
+      <span class="map-animal">${escapeHtml((item.emoji || "") + " " + (item.animal || "")).trim()} ${item.count}</span>
+    `).join("");
+  }
+
   function dualScores(data) {
     const hostCard = {
       color: data.color,
@@ -430,10 +475,12 @@
     const mapW = Math.ceil(mapBox.width * scale);
     const mapH = Math.ceil(Math.max(240, mapBox.height) * scale);
     const stats = [...stage.querySelectorAll(".map-stat")];
+    const animals = [...stage.querySelectorAll(".map-animal")];
     const rankItems = [...document.querySelectorAll("#map-rank li")].slice(0, 3);
     const statH = stats.length ? 78 * scale : 0;
+    const animalH = animals.length ? 36 * scale : 0;
     const rankH = rankItems.length ? 20 * scale + rankItems.length * 58 * scale : 0;
-    const height = pad + 56 * scale + mapH + 36 * scale + statH + rankH + 48 * scale + pad;
+    const height = pad + 56 * scale + mapH + 36 * scale + statH + animalH + rankH + 48 * scale + pad;
     const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = Math.ceil(height);
@@ -514,6 +561,14 @@
       });
       y += (stats.length > 3 ? 78 : 42) * scale;
     }
+    if (animals.length) {
+      ctx.fillStyle = "#5c4a40";
+      ctx.font = `700 ${11 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.fillText(fitText(ctx, animals.map((item) => item.textContent.trim()).join(" · "), width - pad * 2), width / 2, y);
+      ctx.textAlign = "left";
+      y += 28 * scale;
+    }
     rankItems.forEach((item, index) => {
       const ry = y + index * 56 * scale;
       roundRect(ctx, pad, ry, width - pad * 2, 50 * scale, 14 * scale);
@@ -565,7 +620,11 @@
     const width = Math.ceil((card.getBoundingClientRect().width || 360) * scale);
     const dual = [...card.querySelectorAll(".map-dual-card")];
     const status = card.querySelector(".map-result-status")?.textContent || "이름궁합";
-    const height = (dual.length ? 220 : 140) * scale;
+    const chemAnimals = card.querySelector(".map-chem-animals")?.textContent || "";
+    const chemLine = card.querySelector(".map-chem-line")?.textContent || "";
+    const stars = card.querySelector(".map-stars")?.textContent || "";
+    const extra = (chemAnimals || chemLine || stars) ? 92 * scale : 0;
+    const height = (dual.length ? 220 : 140) * scale + extra;
     const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
@@ -598,6 +657,26 @@
       ctx.font = `800 ${12 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
       ctx.fillText(fitText(ctx, label, boxW - 16 * scale), x + boxW / 2, y + 88 * scale);
     });
+    let extraY = (dual.length ? 188 : 108) * scale;
+    if (chemAnimals || chemLine || stars) {
+      ctx.fillStyle = "#2a1f1a";
+      ctx.font = `800 ${13 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+      if (chemAnimals) {
+        ctx.fillText(fitText(ctx, chemAnimals, width - 48 * scale), width / 2, extraY);
+        extraY += 22 * scale;
+      }
+      if (chemLine) {
+        ctx.fillStyle = "#c45c2d";
+        ctx.font = `800 ${14 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+        ctx.fillText(fitText(ctx, chemLine, width - 48 * scale), width / 2, extraY);
+        extraY += 22 * scale;
+      }
+      if (stars) {
+        ctx.fillStyle = "#8a7468";
+        ctx.font = `700 ${11 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+        ctx.fillText(fitText(ctx, stars, width - 48 * scale), width / 2, extraY);
+      }
+    }
     ctx.fillStyle = "#8a6d52";
     ctx.font = `800 ${11 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
     ctx.fillText("짝꿍지도 · map.binaryworld.kr", width / 2, height - 28 * scale);
@@ -770,9 +849,13 @@
   function personMetaHtml(person) {
     const rank = rankMeta(person);
     const heart = heartOf(rank.label);
+    const animal = person.animal
+      ? `<span class="map-rank-animal">${escapeHtml((person.animalEmoji || "") + " " + person.animal).trim()}</span>`
+      : "";
     return `
       <p class="map-rank-meta">
         <span class="map-rank-place">${escapeHtml(person.sido || "")}</span>
+        ${animal}
         <span class="map-rank-tag" style="--tag:${rank.color}">${heart} ${escapeHtml(rank.label)}</span>
       </p>`;
   }
@@ -816,6 +899,9 @@
     setJoined,
     loginUrl,
     bindRegionSelects,
+    bindBirthInput,
+    chemistryHtml,
+    renderAnimals,
     dualScores,
     dualFolds,
     animateFolds,

@@ -1,4 +1,6 @@
 package com.example.map.dto;
 
-public record JoinMapRequest(String guestName, String sigunguCode) {
+import java.time.LocalDate;
+
+public record JoinMapRequest(String guestName, String sigunguCode, LocalDate birthDate) {
 }
