@@ -8,6 +8,7 @@
 
   MapBoard.bindUi();
   paintSample();
+  paintSampleFold();
   bindCreate();
   renderMyMaps().then(() => {
     if (window.location.hash === "#create-map") {
@@ -67,6 +68,25 @@
         text: `${data.hostName}랑 ${data.guestName} 이름궁합`
       });
     });
+  }
+
+  async function paintSampleFold() {
+    const node = document.getElementById("sample-fold-json");
+    const box = document.getElementById("compat-sample");
+    if (!node || !box || !MapApp.foldPane) {
+      return;
+    }
+    let data = {};
+    try {
+      data = JSON.parse(node.textContent || "{}");
+    } catch (error) {
+      return;
+    }
+    if (!data.letters || !data.stages) {
+      return;
+    }
+    box.innerHTML = MapApp.foldPane(data.letters, data.stages, data.caption);
+    await MapApp.animateFolds(box);
   }
 
   function sampleAnimalCounts(friends) {

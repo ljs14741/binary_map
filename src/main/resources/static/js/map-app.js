@@ -875,15 +875,15 @@
   }
 
   function personMetaHtml(person) {
-    const animal = person.animal
-      ? `<span class="map-rank-animal">${escapeHtml((person.animalEmoji || "") + " " + person.animal).trim()}</span>`
-      : "";
     const birth = formatBirth(person.birthDate);
+    const animal = person.animal
+      ? `${person.animalEmoji || ""} ${person.animal}`.trim()
+      : "";
+    const birthAnimal = [birth, animal].filter(Boolean).join(" · ");
     return `
       <p class="map-rank-meta">
         <span class="map-rank-place">${escapeHtml(person.sido || "")}</span>
-        ${birth ? `<span class="map-rank-birth">${escapeHtml(birth)}</span>` : ""}
-        ${animal}
+        ${birthAnimal ? `<span class="map-rank-birth">${escapeHtml(birthAnimal)}</span>` : ""}
       </p>`;
   }
 
@@ -902,8 +902,8 @@
             <strong>${escapeHtml(person.name)}</strong>
             <span class="map-rank-tag" style="--tag:${rank.color}">${heart} ${escapeHtml(rank.label)}</span>
           </p>
-          ${comment}
           ${personMetaHtml(person)}
+          ${comment}
         </div>
         ${personScoresHtml(person, hostName)}
       </li>`;
@@ -922,8 +922,8 @@
             <strong>${escapeHtml(person.name)}</strong>
             <span class="map-rank-tag" style="--tag:${rank.color}">${heart} ${escapeHtml(rank.label)}</span>
           </p>
-          ${comment}
           ${personMetaHtml(person)}
+          ${comment}
         </div>
         ${personScoresHtml(person, hostName)}
         ${canDelete && person.id ? `<button type="button" class="map-sheet-remove" data-id="${person.id}">지우기</button>` : ""}
@@ -947,6 +947,7 @@
     chemistryHtml,
     renderAnimals,
     dualScores,
+    foldPane,
     dualFolds,
     animateFolds,
     shareKakao,

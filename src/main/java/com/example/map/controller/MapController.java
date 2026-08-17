@@ -6,6 +6,7 @@ import com.example.map.entity.RelationLabel;
 import com.example.map.entity.Sido;
 import com.example.map.service.BirthFlavorService;
 import com.example.map.service.CoupleMapService;
+import com.example.map.service.NameCompatibilityService;
 import com.example.map.service.RegionCatalog;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,15 +33,24 @@ public class MapController {
     private final ObjectMapper objectMapper;
     private final CoupleMapService coupleMapService;
     private final BirthFlavorService birthFlavorService;
+    private final NameCompatibilityService nameCompatibilityService;
     private final RegionCatalog regionCatalog;
 
     @GetMapping("/")
     public String home(Model model) throws JsonProcessingException {
         List<SampleFriend> friends = sampleFriends();
+        var host = birthFlavorService.profile(SAMPLE_HOST_BIRTH);
+        var sampleFold = nameCompatibilityService.calculate("수현", "민지");
         model.addAttribute("sampleFriends", friends);
         model.addAttribute("sampleFriendsJson", objectMapper.writeValueAsString(friends));
         model.addAttribute("sampleCounts", sampleCounts(friends));
         model.addAttribute("sampleTotal", friends.size());
+        model.addAttribute("sampleHostSign", host.animalEmoji() + " " + host.animalName() + " · " + host.starSign());
+        model.addAttribute("sampleFoldJson", objectMapper.writeValueAsString(Map.of(
+                "letters", sampleFold.letters(),
+                "stages", sampleFold.stages(),
+                "caption", "수현 → 민지"
+        )));
         addRegionAttrs(model);
         return "main";
     }
