@@ -84,12 +84,14 @@ class BirthFlavorServiceTest {
         var guest = service.profile(guestBirth);
         String[] names = {
                 "민지", "하은", "예린", "서준", "도윤", "나연",
-                "지아", "시우", "현우", "지민", "수아", "태민"
+                "지아", "시우", "현우", "지민", "수아", "태민",
+                "가은", "준호", "수빈", "하준", "서연", "지호",
+                "유진", "민준", "채원", "건우", "소율", "시현"
         };
         var lines = java.util.Arrays.stream(names)
                 .map(name -> service.rankComment(host, guest, name, hostBirth, guestBirth))
                 .collect(java.util.stream.Collectors.toSet());
-        assertThat(lines).hasSizeGreaterThan(5);
+        assertThat(lines).hasSizeGreaterThan(8);
     }
 
     @Test
