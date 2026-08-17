@@ -858,26 +858,19 @@
         const py = y + 8 * scale + (parseFloat(pin.style.top) / 100) * mapH;
         const host = pin.classList.contains("host-pin");
         const color = host ? "#f5c542" : cssColorToRgb(getComputedStyle(pin).getPropertyValue("--pin") || "#ff2d95");
-        ctx.beginPath();
-        ctx.fillStyle = color;
-        ctx.arc(px, py, (host ? 11 : 9) * scale, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = "#fff";
-        ctx.lineWidth = 3 * scale;
-        ctx.stroke();
-        const badge = pin.querySelector(".cluster-badge, .host-badge");
-        if (badge) {
-          ctx.font = `800 ${10 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
-          const label = fitText(ctx, badge.textContent.trim(), 140 * scale);
-          const tw = ctx.measureText(label).width;
-          roundRect(ctx, px - tw / 2 - 8 * scale, py + 12 * scale, tw + 16 * scale, 18 * scale, 9 * scale);
-          ctx.fillStyle = host ? "#fff6cf" : "rgba(255,248,234,0.94)";
+        const dots = host ? [[0, 0]] : [...pin.querySelectorAll(".cluster-dot")].map((dot) => {
+          const style = getComputedStyle(dot);
+          return [parseFloat(style.getPropertyValue("--ox")) || 0, parseFloat(style.getPropertyValue("--oy")) || 0];
+        });
+        (dots.length ? dots : [[0, 0]]).forEach(([ox, oy]) => {
+          ctx.beginPath();
+          ctx.fillStyle = color;
+          ctx.arc(px + ox * scale, py + oy * scale, (host ? 8 : 5) * scale, 0, Math.PI * 2);
           ctx.fill();
-          ctx.fillStyle = host ? "#9a7408" : "#4a3426";
-          ctx.textAlign = "center";
-          ctx.fillText(label, px, py + 15 * scale);
-          ctx.textAlign = "left";
-        }
+          ctx.strokeStyle = "#fff";
+          ctx.lineWidth = 2 * scale;
+          ctx.stroke();
+        });
       });
     }
     y += mapH + 28 * scale;

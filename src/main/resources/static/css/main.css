@@ -694,6 +694,11 @@ textarea {
   fill: #f7e2b8;
   stroke: rgba(196, 148, 82, 0.18);
   stroke-width: 0.65;
+  transition: fill 0.6s ease, stroke 0.6s ease;
+}
+
+.korea-map .sido-land.is-filled {
+  stroke-width: 0.9;
 }
 
 .korea-map .sido-land.is-home {
@@ -723,23 +728,22 @@ textarea {
 .cluster-pin,
 .host-pin {
   position: absolute;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
+  display: grid;
+  place-items: center;
   padding: 0;
   border: 0;
   background: transparent;
-  transform: translate(-50%, -88%);
+  transform: translate(-50%, -50%);
   pointer-events: auto;
 }
 
 .cluster-pin {
   z-index: 2;
+  width: 36px;
+  height: 36px;
   font: inherit;
   cursor: pointer;
   opacity: 0;
-  transform: translate(-50%, -70%) scale(0.6);
   animation: pin-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   animation-delay: var(--delay, 0.2s);
 }
@@ -753,13 +757,12 @@ textarea {
   opacity: 0.16;
   pointer-events: none;
   animation: none;
-  transform: translate(-50%, -88%) scale(0.92);
 }
 
 .cluster-pin.is-hot {
   z-index: 4;
   opacity: 1;
-  transform: translate(-50%, -88%) scale(1.08);
+  transform: translate(-50%, -50%) scale(1.12);
 }
 
 .cluster-pin.is-hot .cluster-glow {
@@ -769,15 +772,15 @@ textarea {
 
 .cluster-glow {
   position: absolute;
-  top: 0;
   left: 50%;
-  width: 28px;
-  height: 28px;
-  margin-left: -14px;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
   border-radius: 50%;
   background: var(--pin, #ff2d95);
-  filter: blur(8px);
-  opacity: 0.45;
+  filter: blur(7px);
+  opacity: 0.4;
   pointer-events: none;
 }
 
@@ -785,19 +788,25 @@ textarea {
 .host-dot {
   position: relative;
   z-index: 1;
-  width: 16px;
-  height: 16px;
+  width: 11px;
+  height: 11px;
   border: 2px solid #fff;
   border-radius: 50%;
 }
 
 .cluster-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
   background: var(--pin, #ff2d95);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--pin) 70%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--pin) 70%, transparent);
+  transform: translate(calc(-50% + var(--ox, 0px)), calc(-50% + var(--oy, 0px)));
 }
 
 .host-pin {
   z-index: 8;
+  width: 28px;
+  height: 28px;
   pointer-events: none;
   opacity: 0;
   animation: pin-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.08s forwards;
@@ -805,11 +814,11 @@ textarea {
 
 .host-ring {
   position: absolute;
-  top: -4px;
   left: 50%;
-  width: 28px;
-  height: 28px;
-  margin-left: -14px;
+  top: 50%;
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
   border: 2px solid rgba(245, 197, 66, 0.55);
   border-radius: 50%;
   animation: host-ring 2.4s ease-out infinite;
@@ -820,8 +829,8 @@ textarea {
 }
 
 .host-dot {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   background: radial-gradient(circle at 35% 30%, #fffdf3 0%, #ffe58a 42%, #f5c542 100%);
   border-color: #fff3b0;
   box-shadow:
@@ -830,27 +839,42 @@ textarea {
   animation: host-pulse 2.2s ease-in-out infinite;
 }
 
-.cluster-badge,
-.host-badge {
-  max-width: 108px;
-  padding: 3px 7px;
-  border-radius: 999px;
-  background: rgba(255, 248, 234, 0.94);
-  color: #4a3426;
-  font-size: 10px;
-  font-weight: 800;
-  line-height: 1.2;
-  letter-spacing: -0.03em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  box-shadow: 0 4px 10px rgba(80, 50, 20, 0.1);
+.chi-spark {
+  position: absolute;
+  z-index: 6;
+  left: var(--from-x);
+  top: var(--from-y);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0%, #ffe08a 38%, var(--pin, #ff7a59) 100%);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--pin, #ffd36a) 70%, #fff);
+  pointer-events: none;
+  opacity: 0;
+  animation: chi-flow 2.1s cubic-bezier(0.22, 0.61, 0.36, 1) var(--delay, 0s) infinite;
 }
 
-.host-badge {
-  max-width: 92px;
-  color: #9a7408;
-  background: #fff6cf;
+.korea-canvas.is-filtered .chi-spark {
+  display: none;
+}
+
+@keyframes chi-flow {
+  0% {
+    opacity: 0;
+    left: var(--from-x);
+    top: var(--from-y);
+    transform: translate(-50%, -50%) scale(0.4);
+  }
+  12% {
+    opacity: 0.95;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    left: var(--to-x);
+    top: var(--to-y);
+    transform: translate(-50%, -50%) scale(0.2);
+  }
 }
 
 .map-stats {
@@ -1743,12 +1767,17 @@ body.is-sheet-open {
 @keyframes pin-in {
   to {
     opacity: 1;
-    transform: translate(-50%, -88%) scale(1);
+    transform: translate(-50%, -50%) scale(1);
   }
 }
 
 @keyframes pin-bob {
-  50% { transform: translateY(-2px); }
+  0%, 100% {
+    transform: translate(calc(-50% + var(--ox, 0px)), calc(-50% + var(--oy, 0px)));
+  }
+  50% {
+    transform: translate(calc(-50% + var(--ox, 0px)), calc(-50% + var(--oy, 0px) - 2px));
+  }
 }
 
 @keyframes host-pulse {
@@ -1776,11 +1805,17 @@ body.is-sheet-open {
   .host-dot,
   .host-ring,
   .cluster-glow,
+  .cluster-dot,
+  .chi-spark,
   .map-spark,
   .map-sheet-panel,
   .map-sheet-backdrop {
     animation: none !important;
     transition: none !important;
+  }
+
+  .chi-spark {
+    display: none !important;
   }
 
   .korea-canvas.is-ready .korea-map {
@@ -1791,6 +1826,6 @@ body.is-sheet-open {
   .cluster-pin,
   .host-pin {
     opacity: 1;
-    transform: translate(-50%, -88%) scale(1);
+    transform: translate(-50%, -50%) scale(1);
   }
 }

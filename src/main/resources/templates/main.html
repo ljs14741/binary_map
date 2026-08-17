@@ -152,7 +152,7 @@
   <section id="sample-map" class="map-sample">
     <p class="map-card-kicker">미리보기</p>
     <h2>친구가 들어오면<br>이렇게 보여요</h2>
-    <p class="map-sample-lead">같은 시라도 구가 다르면 핀이 갈라져요. 핀을 누르면 누가 있는지 나와요.</p>
+    <p class="map-sample-lead">같은 동네는 점이 모여요. 점을 누르면 누가 있는지 나와요.</p>
 
     <div class="map-stage">
       <div class="map-stage-head">
@@ -163,7 +163,7 @@
         <span th:text="|${sampleTotal}명 참여|">12명 참여</span>
       </div>
       <div class="korea-wrap" id="korea-wrap" aria-label="대한민국 시도 예시 지도"></div>
-      <p class="map-stage-caption">금색이 거주지역 · 같은 시라도 구가 다르면 핀이 갈라져요</p>
+      <p class="map-stage-caption">금색이 내 지역 · 점은 친구 · 정기가 내 쪽으로 모여요</p>
       <div class="map-stats" id="map-stats">
         <button type="button" class="map-stat" th:each="count : ${sampleCounts}"
                 th:style="|--stat:${count.color()}|"

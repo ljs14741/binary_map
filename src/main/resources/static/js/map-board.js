@@ -28,7 +28,7 @@
     27290: [-0.32, 0.28], 27710: [-0.48, 0.48], 27720: [0.12, -0.72],
     28110: [0.18, 0.12], 28140: [0.32, 0.02], 28177: [0.12, 0.22],
     28185: [0.18, 0.42], 28200: [0.38, 0.22], 28237: [0.08, -0.08],
-    28245: [0.05, -0.28], 28260: [-0.08, 0.08], 28710: [-0.55, -0.55],
+    28245: [0.34, -0.12], 28260: [-0.08, 0.08], 28710: [-0.55, -0.55],
     28720: [-0.35, 0.55],
     29110: [0.28, 0.02], 29140: [-0.12, 0.08], 29155: [0.08, 0.32],
     29170: [0.05, -0.32], 29200: [-0.38, 0.08],
@@ -132,25 +132,22 @@
     svg.classList.add("korea-map");
     svg.querySelectorAll("path[data-code]").forEach((path) => {
       path.classList.add("sido-land");
-      if (!path.getAttribute("fill")) {
-        path.setAttribute("fill", "#f7e2b8");
-      }
-      if (path.getAttribute("data-code") === options.host.sidoCode) {
-        path.classList.add("is-home");
-        path.setAttribute("fill", "#ffe08a");
-      }
+      path.setAttribute("fill", "#f7e2b8");
     });
     wrap.replaceChildren(canvas);
     landCache = new Map();
 
+    const people = options.people || [];
     const hostPoint = pinPoint(svg, options.host.sidoCode, options.host.sigunguCode);
-    clusterState = buildClusters(svg, options.people || [], options.extras || []);
+    clusterState = buildClusters(svg, people, options.extras || []);
     separateClusters(svg, clusterState, hostPoint);
+    colorSidos(svg, options.host.sidoCode, clusterState);
     const layer = document.createElement("div");
     layer.className = "cluster-layer";
     addSparkles(layer);
     clusterState.forEach((cluster, index) => layer.appendChild(createClusterPin(cluster, index)));
     layer.appendChild(createHostPin(hostPoint, options.host.name));
+    addChiFlow(layer, clusterState, hostPoint);
     canvas.appendChild(layer);
     requestAnimationFrame(() => canvas.classList.add("is-ready"));
     applyFilter();
@@ -299,7 +296,7 @@
   }
 
   function separateClusters(svg, clusters, hostPoint) {
-    const min = 28;
+    const min = 20;
     for (let pass = 0; pass < 3; pass += 1) {
       for (let i = 0; i < clusters.length; i += 1) {
         for (let j = i + 1; j < clusters.length; j += 1) {
@@ -333,10 +330,10 @@
         const dx = cluster.x - hostPoint[0];
         const dy = cluster.y - hostPoint[1];
         const dist = Math.hypot(dx, dy) || 0.01;
-        if (dist >= 22) {
+        if (dist >= 16) {
           return;
         }
-        const push = (22 - dist);
+        const push = (16 - dist);
         cluster.x += (dx / dist) * push;
         cluster.y += (dy / dist) * push;
         const sido = cluster.people[0]?.sidoCode;
@@ -393,6 +390,49 @@
     }).filter((cluster) => cluster.count > 0);
   }
 
+  function mixHex(from, to, t) {
+    const hex = (value) => [
+      parseInt(value.slice(1, 3), 16),
+      parseInt(value.slice(3, 5), 16),
+      parseInt(value.slice(5, 7), 16)
+    ];
+    const a = hex(from);
+    const b = hex(to);
+    const n = Math.max(0, Math.min(1, t));
+    return `#${[0, 1, 2].map((i) => Math.round(a[i] + (b[i] - a[i]) * n).toString(16).padStart(2, "0")).join("")}`;
+  }
+
+  function colorSidos(svg, hostSido, clusters) {
+    const counts = {};
+    clusters.forEach((cluster) => {
+      const code = cluster.people[0]?.sidoCode;
+      if (!code) {
+        return;
+      }
+      counts[code] = (counts[code] || 0) + cluster.count;
+    });
+    const max = Math.max(1, ...Object.values(counts), 1);
+    svg.querySelectorAll("path[data-code]").forEach((path) => {
+      const code = path.getAttribute("data-code");
+      const count = counts[code] || 0;
+      path.classList.toggle("is-home", code === hostSido);
+      path.classList.toggle("is-filled", count > 0 && code !== hostSido);
+      if (code === hostSido) {
+        path.setAttribute("fill", "#ffe08a");
+        path.setAttribute("stroke", "#e2b84a");
+        return;
+      }
+      if (count > 0) {
+        const t = 0.28 + 0.5 * (count / max);
+        path.setAttribute("fill", mixHex("#f7e2b8", "#ff9b73", t));
+        path.setAttribute("stroke", mixHex("#e2c08a", "#f07a4a", t));
+        return;
+      }
+      path.setAttribute("fill", "#f7e2b8");
+      path.setAttribute("stroke", "rgba(196, 148, 82, 0.18)");
+    });
+  }
+
   function createClusterPin(cluster, index) {
     const button = document.createElement("button");
     button.type = "button";
@@ -401,28 +441,72 @@
     button.style.left = `${(cluster.x / VIEW.w) * 100}%`;
     button.style.top = `${(cluster.y / VIEW.h) * 100}%`;
     button.style.setProperty("--pin", cluster.color);
-    button.style.setProperty("--delay", `${0.18 + index * 0.1}s`);
-    button.innerHTML = `
-      <span class="cluster-glow"></span>
-      <span class="cluster-dot"></span>
-      <span class="cluster-badge">${escapeHtml(cluster.shortName)} · ${cluster.count}</span>
-    `;
+    button.style.setProperty("--delay", `${0.12 + index * 0.08}s`);
+    button.setAttribute("aria-label", `${cluster.name} ${cluster.count}명`);
+    const shown = Math.min(cluster.count, 6);
+    const dots = Array.from({ length: shown }, (_, i) => {
+      const extra = shown === 1 ? "" : ` style="--ox:${grapeOffset(i, shown)[0]}px; --oy:${grapeOffset(i, shown)[1]}px"`;
+      return `<span class="cluster-dot"${extra}></span>`;
+    }).join("");
+    button.innerHTML = `<span class="cluster-glow"></span>${dots}`;
     button.addEventListener("click", () => openSheet(cluster));
     return button;
+  }
+
+  function grapeOffset(index, count) {
+    if (count <= 1) {
+      return [0, 0];
+    }
+    const angle = (Math.PI * 2 * index) / count - Math.PI / 2;
+    const radius = 4 + Math.min(count, 5) * 1.1;
+    return [Math.cos(angle) * radius, Math.sin(angle) * radius];
   }
 
   function createHostPin(point, name) {
     const host = document.createElement("div");
     host.className = "host-pin";
     host.style.left = `${(point[0] / VIEW.w) * 100}%`;
-    host.style.top = `${((point[1] - 14) / VIEW.h) * 100}%`;
+    host.style.top = `${(point[1] / VIEW.h) * 100}%`;
+    host.setAttribute("aria-label", `${name}의 거주지역`);
     host.innerHTML = `
       <span class="host-ring"></span>
       <span class="host-ring is-late"></span>
       <span class="host-dot"></span>
-      <span class="host-badge">👑 ${escapeHtml(name)}</span>
     `;
     return host;
+  }
+
+  function addChiFlow(layer, clusters, hostPoint) {
+    if (!hostPoint || !clusters.length || prefersReducedMotion()) {
+      return;
+    }
+    const toX = (hostPoint[0] / VIEW.w) * 100;
+    const toY = (hostPoint[1] / VIEW.h) * 100;
+    let sparkIndex = 0;
+    clusters.forEach((cluster, index) => {
+      const fromX = (cluster.x / VIEW.w) * 100;
+      const fromY = (cluster.y / VIEW.h) * 100;
+      if (Math.hypot(toX - fromX, toY - fromY) < 4) {
+        return;
+      }
+      const sparks = Math.min(3, Math.max(1, cluster.count));
+      for (let i = 0; i < sparks && sparkIndex < 12; i += 1) {
+        const spark = document.createElement("span");
+        spark.className = "chi-spark";
+        spark.style.setProperty("--from-x", `${fromX}%`);
+        spark.style.setProperty("--from-y", `${fromY}%`);
+        spark.style.setProperty("--to-x", `${toX}%`);
+        spark.style.setProperty("--to-y", `${toY}%`);
+        spark.style.setProperty("--delay", `${0.35 + index * 0.12 + i * 0.35}s`);
+        spark.style.setProperty("--pin", cluster.color);
+        layer.appendChild(spark);
+        sparkIndex += 1;
+      }
+    });
+  }
+
+  function prefersReducedMotion() {
+    return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }
 
   function addSparkles(layer) {
@@ -472,6 +556,9 @@
   function applyFilter() {
     document.querySelectorAll("#map-stats .map-stat").forEach((button) => {
       button.classList.toggle("is-on", !!activeFilter && button.dataset.filter === activeFilter);
+    });
+    document.querySelectorAll(".korea-canvas").forEach((canvas) => {
+      canvas.classList.toggle("is-filtered", !!activeFilter);
     });
     document.querySelectorAll(".cluster-pin").forEach((pin) => {
       const labels = (pin.dataset.labels || "").split(",").filter(Boolean);

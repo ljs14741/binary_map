@@ -53,8 +53,8 @@
     }
     document.getElementById("stage-count").textContent = `${view.total}명 참여`;
     document.getElementById("stage-caption").textContent = view.total
-      ? "금색이 거주지역 · 같은 시라도 구가 다르면 핀이 갈라져요"
-      : "카톡으로 보내면 친구가 사는 곳에 핀이 찍혀요";
+      ? "금색이 내 지역 · 점은 친구 · 정기가 내 쪽으로 모여요"
+      : "링크를 보내면 친구가 사는 곳에 점이 찍혀요";
     const people = MapApp.sortPeople(view.people);
     renderStats(view.counts);
     MapApp.renderAnimals(view.animalCounts);
