@@ -1227,19 +1227,10 @@
     return String(value).slice(0, 10).replace(/-/g, ".");
   }
 
-  function formatBirthShort(value) {
-    const full = formatBirth(value);
-    if (!full || full.length < 8) {
-      return full;
-    }
-    return full.slice(2);
-  }
-
   function personMetaHtml(person) {
-    const birth = formatBirthShort(person.birthDate);
     const animal = withEmoji(person.animalEmoji, person.animal);
     const star = withEmoji(person.starEmoji, person.starSign);
-    const bits = [person.sido, birth, animal, star].filter(Boolean);
+    const bits = [person.sido, animal, star].filter(Boolean);
     if (!bits.length) {
       return "";
     }

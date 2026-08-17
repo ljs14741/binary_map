@@ -84,12 +84,12 @@
         status.textContent = me.nickname
           ? `카카오 계정에 저장됨 · ${me.nickname}`
           : "카카오 계정에 저장됨";
-        keep.textContent = "카톡으로 보내면 친구는 닉네임, 사는 곳, 생일을 적어요. 목록에 생일과 띠가 보여요.";
+        keep.textContent = "카톡으로 보내면 친구는 닉네임, 사는 곳, 생일을 적어요. 목록에는 띠랑 별자리만 보여요.";
       } else {
         loginBox.hidden = false;
         status.hidden = true;
         document.getElementById("host-login").href = MapApp.loginUrl(`/m/${view.id}`);
-        keep.textContent = "카톡으로 보내면 친구는 닉네임, 사는 곳, 생일을 적어요. 목록에 생일과 띠가 보여요.";
+        keep.textContent = "카톡으로 보내면 친구는 닉네임, 사는 곳, 생일을 적어요. 목록에는 띠랑 별자리만 보여요.";
       }
     }
     await MapBoard.paint({
