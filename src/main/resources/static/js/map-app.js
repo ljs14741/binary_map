@@ -871,6 +871,19 @@
           ctx.lineWidth = 2 * scale;
           ctx.stroke();
         });
+        const nameEl = pin.querySelector(".pin-name");
+        if (nameEl) {
+          ctx.font = `800 ${10 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+          const label = fitText(ctx, nameEl.textContent.trim(), 52 * scale);
+          const tw = ctx.measureText(label).width;
+          roundRect(ctx, px - tw / 2 - 6 * scale, py + 10 * scale, tw + 12 * scale, 16 * scale, 8 * scale);
+          ctx.fillStyle = host ? "#fff6cf" : (nameEl.classList.contains("is-count") ? color : "rgba(255,248,234,0.94)");
+          ctx.fill();
+          ctx.fillStyle = host ? "#9a7408" : (nameEl.classList.contains("is-count") ? "#fff" : "#4a3426");
+          ctx.textAlign = "center";
+          ctx.fillText(label, px, py + 13 * scale);
+          ctx.textAlign = "left";
+        }
       });
     }
     y += mapH + 28 * scale;

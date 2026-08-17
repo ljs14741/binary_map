@@ -53,7 +53,7 @@
     }
     document.getElementById("stage-count").textContent = `${view.total}명 참여`;
     document.getElementById("stage-caption").textContent = view.total
-      ? "금색이 내 지역 · 점은 친구 · 정기가 내 쪽으로 모여요"
+      ? "금색이 나 · 이름은 친구 · 정기가 모이면 내가 커져요"
       : "링크를 보내면 친구가 사는 곳에 점이 찍혀요";
     const people = MapApp.sortPeople(view.people);
     renderStats(view.counts);

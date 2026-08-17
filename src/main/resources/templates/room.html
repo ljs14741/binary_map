@@ -135,7 +135,7 @@
         <span id="stage-count" th:text="|${mapView.total()}명 참여|">0명 참여</span>
       </div>
       <div class="korea-wrap" id="korea-wrap" aria-label="대한민국 시도 지도"></div>
-      <p class="map-stage-caption" id="stage-caption">금색이 내 지역 · 점은 친구 · 정기가 내 쪽으로 모여요</p>
+      <p class="map-stage-caption" id="stage-caption">금색이 나 · 이름은 친구 · 정기가 모이면 내가 커져요</p>
       <div class="map-stats" id="map-stats">
         <button type="button" class="map-stat" th:each="count : ${mapView.counts()}"
                 th:style="|--stat:${count.color()}|"
