@@ -31,7 +31,7 @@
 
 <main class="map-page">
   <section class="map-hero">
-    <p class="map-kicker">짝꿍지도</p>
+    <p class="map-kicker"><a href="/">짝꿍지도</a></p>
     <h1 class="map-room-title">
       <span id="room-host-name" th:text="${mapView.hostName()}">수현</span>님의<br>짝꿍지도
     </h1>
@@ -126,7 +126,12 @@
   <section class="map-sample">
     <div class="map-stage" id="map-stage">
       <div class="map-stage-head">
-        <strong id="stage-title" th:text="|${mapView.hostName()}님의 짝꿍지도|">수현님의 짝꿍지도</strong>
+        <div class="map-stage-host">
+          <strong id="stage-title" th:text="|${mapView.hostName()}님의 짝꿍지도|">수현님의 짝꿍지도</strong>
+          <p class="map-stage-host-sign" id="stage-host-sign"
+             th:hidden="${mapView.hostAnimal() == null}"
+             th:text="${mapView.hostSignText()}">🐰 토끼 · 쌍둥이</p>
+        </div>
         <span id="stage-count" th:text="|${mapView.total()}명 참여|">0명 참여</span>
       </div>
       <div class="korea-wrap" id="korea-wrap" aria-label="대한민국 시도 지도"></div>

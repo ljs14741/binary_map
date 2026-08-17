@@ -67,6 +67,11 @@ textarea {
   box-shadow: 0 6px 16px rgba(255, 122, 89, 0.12);
 }
 
+.map-kicker a {
+  color: inherit;
+  text-decoration: none;
+}
+
 .map-title {
   display: flex;
   align-items: center;
@@ -198,6 +203,7 @@ textarea {
 .map-form label {
   display: grid;
   gap: 6px;
+  min-width: 0;
   color: var(--muted);
   font-size: 13px;
   font-weight: 600;
@@ -208,6 +214,8 @@ textarea {
 .map-form textarea,
 .map-select-btn {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   padding: 13px 14px;
   border: 1.5px solid #f0ddd0;
   border-radius: 16px;
@@ -217,6 +225,17 @@ textarea {
   font-weight: 700;
   letter-spacing: -0.03em;
   outline: none;
+  box-sizing: border-box;
+}
+
+.map-form input[type="date"] {
+  min-width: 0;
+  max-width: 100%;
+  letter-spacing: 0;
+}
+
+.map-form input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
 }
 
 .map-form textarea {
@@ -235,6 +254,8 @@ textarea {
 
 .map-select {
   position: relative;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .map-select select {
@@ -255,8 +276,10 @@ textarea {
   justify-content: space-between;
   gap: 10px;
   margin: 0;
+  min-width: 0;
   min-height: 50px;
   padding-right: 44px;
+  overflow: hidden;
   text-align: left;
   cursor: pointer;
   appearance: none;
@@ -578,6 +601,10 @@ textarea {
   font-size: 13px;
   font-weight: 800;
   letter-spacing: -0.03em;
+}
+
+.map-stage-host-sign[hidden] {
+  display: none;
 }
 
 .map-stage-head span {
@@ -906,6 +933,13 @@ textarea {
   font-size: 12px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.map-rank-sign {
+  color: #5c4a40;
+  font-size: 12px;
+  font-weight: 700;
   white-space: nowrap;
 }
 
@@ -1240,8 +1274,9 @@ body.is-sheet-open {
 
 .map-region-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  min-width: 0;
 }
 
 .map-dual {
@@ -1363,8 +1398,7 @@ body.is-sheet-open {
 }
 
 @media (max-width: 360px) {
-  .map-dual,
-  .map-region-row {
+  .map-dual {
     grid-template-columns: 1fr;
   }
 }

@@ -40,6 +40,13 @@
     }
     document.getElementById("room-lead").textContent = leadText(view);
     document.getElementById("stage-title").textContent = `${view.hostName}님의 짝꿍지도`;
+    const stageHostSign = document.getElementById("stage-host-sign");
+    if (stageHostSign) {
+      const sign = [view.hostAnimalEmoji, view.hostAnimal].filter(Boolean).join(" ");
+      const text = view.hostStarSign ? `${sign} · ${view.hostStarSign}`.trim() : sign.trim();
+      stageHostSign.hidden = !text;
+      stageHostSign.textContent = text;
+    }
     document.getElementById("stage-count").textContent = `${view.total}명 참여`;
     document.getElementById("stage-caption").textContent = view.total
       ? "금색이 거주지역 · 같은 시라도 구가 다르면 핀이 갈라져요"

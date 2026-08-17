@@ -879,11 +879,12 @@
     const animal = person.animal
       ? `${person.animalEmoji || ""} ${person.animal}`.trim()
       : "";
-    const birthAnimal = [birth, animal].filter(Boolean).join(" · ");
+    const sign = [animal, person.starSign].filter(Boolean).join(" · ");
     return `
       <p class="map-rank-meta">
-        <span class="map-rank-place">${escapeHtml(person.sido || "")}</span>
-        ${birthAnimal ? `<span class="map-rank-birth">${escapeHtml(birthAnimal)}</span>` : ""}
+        ${person.sido ? `<span class="map-rank-place">${escapeHtml(person.sido)}</span>` : ""}
+        ${birth ? `<span class="map-rank-birth">${escapeHtml(birth)}</span>` : ""}
+        ${sign ? `<span class="map-rank-sign">${escapeHtml(sign)}</span>` : ""}
       </p>`;
   }
 
