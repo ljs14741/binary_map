@@ -229,25 +229,45 @@
     el.min = el.min || "1920-01-01";
   }
 
+  function chemRowText(row) {
+    if (!row) {
+      return "";
+    }
+    const key = row.querySelector(".map-chem-key")?.textContent?.trim() || "";
+    const pair = row.querySelector(".map-chem-pair")?.textContent?.trim() || "";
+    const fit = row.querySelector(".map-chem-fit")?.textContent?.trim() || "";
+    return [key, pair, fit].filter(Boolean).join("  ");
+  }
+
   function chemistryHtml(data) {
     if (!data || !(data.guestAnimal || data.guestStarSign || data.chemistryLine)) {
       return "";
     }
     const animalPair = data.hostAnimal && data.guestAnimal
-      ? `띠 ${data.hostAnimalEmoji || ""} ${data.hostAnimal} × ${data.guestAnimalEmoji || ""} ${data.guestAnimal}${data.animalFitLabel ? ` · ${data.animalFitLabel}` : ""}`
+      ? `${data.hostAnimalEmoji || ""} ${data.hostAnimal} × ${data.guestAnimalEmoji || ""} ${data.guestAnimal}`.replace(/\s+/g, " ").trim()
       : data.guestAnimal
-        ? `띠 ${data.guestAnimalEmoji || ""} ${data.guestAnimal}`
+        ? `${data.guestAnimalEmoji || ""} ${data.guestAnimal}`.trim()
         : "";
     const starPair = data.hostStarSign && data.guestStarSign
-      ? `별자리 ${data.hostStarSign} × ${data.guestStarSign}${data.starFitLabel ? ` · ${data.starFitLabel}` : ""}`
-      : data.guestStarSign
-        ? `별자리 ${data.guestStarSign}`
-        : "";
+      ? `${data.hostStarSign} × ${data.guestStarSign}`
+      : data.guestStarSign || "";
     return `
       <div class="map-chem">
-        ${animalPair ? `<p class="map-chem-animals">${escapeHtml(animalPair.trim())}</p>` : ""}
-        ${starPair ? `<p class="map-stars">${escapeHtml(starPair)}</p>` : ""}
+        ${chemRow("띠", animalPair, data.animalFitLabel, "map-chem-animals")}
+        ${chemRow("별자리", starPair, data.starFitLabel, "map-stars")}
         ${data.chemistryLine ? `<p class="map-chem-line">${escapeHtml(data.chemistryLine)}</p>` : ""}
+      </div>`;
+  }
+
+  function chemRow(kind, pair, fit, extraClass) {
+    if (!pair) {
+      return "";
+    }
+    return `
+      <div class="map-chem-row ${extraClass || ""}">
+        <span class="map-chem-key">${escapeHtml(kind)}</span>
+        <span class="map-chem-pair">${escapeHtml(pair)}</span>
+        ${fit ? `<span class="map-chem-fit">${escapeHtml(fit)}</span>` : ""}
       </div>`;
   }
 
@@ -670,19 +690,19 @@
       ctx.fillStyle = "#2a1f1a";
       ctx.font = `800 ${13 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
       if (chemAnimals) {
-        ctx.fillText(fitText(ctx, chemAnimals, width - 48 * scale), width / 2, extraY);
-        extraY += 20 * scale;
+        ctx.fillText(fitText(ctx, chemRowText(card.querySelector(".map-chem-animals")), width - 48 * scale), width / 2, extraY);
+        extraY += 22 * scale;
+      }
+      if (stars) {
+        ctx.fillStyle = "#2a1f1a";
+        ctx.font = `800 ${13 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+        ctx.fillText(fitText(ctx, chemRowText(card.querySelector(".map-stars")), width - 48 * scale), width / 2, extraY);
+        extraY += 22 * scale;
       }
       if (chemLine) {
         ctx.fillStyle = "#c45c2d";
         ctx.font = `800 ${13 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
         ctx.fillText(fitText(ctx, chemLine, width - 48 * scale), width / 2, extraY);
-        extraY += 20 * scale;
-      }
-      if (stars) {
-        ctx.fillStyle = "#2a1f1a";
-        ctx.font = `800 ${13 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
-        ctx.fillText(fitText(ctx, stars, width - 48 * scale), width / 2, extraY);
         extraY += 20 * scale;
       }
       if (starLine) {
@@ -874,59 +894,63 @@
     return String(value).slice(0, 10).replace(/-/g, ".");
   }
 
+  function formatBirthShort(value) {
+    const full = formatBirth(value);
+    if (!full || full.length < 8) {
+      return full;
+    }
+    return full.slice(2);
+  }
+
   function personMetaHtml(person) {
-    const birth = formatBirth(person.birthDate);
+    const birth = formatBirthShort(person.birthDate);
     const animal = person.animal
       ? `${person.animalEmoji || ""} ${person.animal}`.trim()
       : "";
-    const sign = [animal, person.starSign].filter(Boolean).join(" · ");
+    const bits = [person.sido, birth, animal, person.starSign].filter(Boolean);
+    if (!bits.length) {
+      return "";
+    }
+    return `<p class="map-rank-meta">${escapeHtml(bits.join(" · "))}</p>`;
+  }
+
+  function rankBodyHtml(person, hostName) {
+    const rank = rankMeta(person);
+    const heart = heartOf(rank.label);
+    const comment = person.comment
+      ? `<p class="map-rank-line">${escapeHtml(person.comment)}</p>`
+      : "";
     return `
-      <p class="map-rank-meta">
-        ${person.sido ? `<span class="map-rank-place">${escapeHtml(person.sido)}</span>` : ""}
-        ${birth ? `<span class="map-rank-birth">${escapeHtml(birth)}</span>` : ""}
-        ${sign ? `<span class="map-rank-sign">${escapeHtml(sign)}</span>` : ""}
-      </p>`;
+      <div class="map-rank-main">
+        <div class="map-rank-top">
+          <div class="map-rank-info">
+            <p class="map-rank-name">
+              <strong>${escapeHtml(person.name)}</strong>
+              <span class="map-rank-tag" style="--tag:${rank.color}">${heart} ${escapeHtml(rank.label)}</span>
+            </p>
+            ${personMetaHtml(person)}
+          </div>
+          ${personScoresHtml(person, hostName)}
+        </div>
+        ${comment}
+      </div>`;
   }
 
   function rankRowHtml(person, index, hostName) {
     const rank = rankMeta(person);
     const place = index < 3 ? ` is-rank-${index + 1}` : "";
-    const heart = heartOf(rank.label);
-    const comment = person.comment
-      ? `<p class="map-rank-line">${escapeHtml(person.comment)}</p>`
-      : "";
     return `
       <li class="${place.trim()}" data-label="${escapeHtml(rank.label)}">
         <em>${index + 1}</em>
-        <div>
-          <p class="map-rank-name">
-            <strong>${escapeHtml(person.name)}</strong>
-            <span class="map-rank-tag" style="--tag:${rank.color}">${heart} ${escapeHtml(rank.label)}</span>
-          </p>
-          ${personMetaHtml(person)}
-          ${comment}
-        </div>
-        ${personScoresHtml(person, hostName)}
+        ${rankBodyHtml(person, hostName)}
       </li>`;
   }
 
   function sheetRowHtml(person, hostName, canDelete) {
     const rank = rankMeta(person);
-    const heart = heartOf(rank.label);
-    const comment = person.comment
-      ? `<p class="map-rank-line">${escapeHtml(person.comment)}</p>`
-      : "";
     return `
       <li data-label="${escapeHtml(rank.label)}">
-        <div>
-          <p class="map-rank-name">
-            <strong>${escapeHtml(person.name)}</strong>
-            <span class="map-rank-tag" style="--tag:${rank.color}">${heart} ${escapeHtml(rank.label)}</span>
-          </p>
-          ${personMetaHtml(person)}
-          ${comment}
-        </div>
-        ${personScoresHtml(person, hostName)}
+        ${rankBodyHtml(person, hostName)}
         ${canDelete && person.id ? `<button type="button" class="map-sheet-remove" data-id="${person.id}">지우기</button>` : ""}
       </li>`;
   }
