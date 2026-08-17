@@ -584,14 +584,17 @@
       ctx.fillText(String(index + 1), pad + 22 * scale, ry + 18 * scale);
       ctx.textAlign = "left";
       const name = item.querySelector("strong")?.textContent || "";
-      const place = item.querySelector(".map-rank-place")?.textContent || "";
       const tag = item.querySelector(".map-rank-tag")?.textContent || "";
+      const line = item.querySelector(".map-rank-line")?.textContent || "";
       ctx.fillStyle = "#2a1f1a";
       ctx.font = `800 ${14 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
-      ctx.fillText(fitText(ctx, name, 140 * scale), pad + 42 * scale, ry + 8 * scale);
+      ctx.fillText(fitText(ctx, name, 88 * scale), pad + 42 * scale, ry + 8 * scale);
+      ctx.fillStyle = "#c45c2d";
+      ctx.font = `800 ${10 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+      ctx.fillText(fitText(ctx, tag, 90 * scale), pad + 132 * scale, ry + 10 * scale);
       ctx.fillStyle = "#5c4a40";
       ctx.font = `700 ${10 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
-      ctx.fillText(fitText(ctx, `${place} ${tag}`.trim(), 180 * scale), pad + 42 * scale, ry + 28 * scale);
+      ctx.fillText(fitText(ctx, line, 180 * scale), pad + 42 * scale, ry + 28 * scale);
       const scores = [...item.querySelectorAll(".map-score-cell b")];
       ctx.textAlign = "right";
       ctx.fillStyle = scores[0] ? cssColorToRgb(scores[0].style.color || "#ff2d95") : "#2a1f1a";
@@ -846,28 +849,49 @@
       </div>`;
   }
 
+  function formatBirth(value) {
+    if (!value) {
+      return "";
+    }
+    if (Array.isArray(value)) {
+      const [year, month, day] = value;
+      if (!year || !month || !day) {
+        return "";
+      }
+      return `${year}.${String(month).padStart(2, "0")}.${String(day).padStart(2, "0")}`;
+    }
+    return String(value).slice(0, 10).replace(/-/g, ".");
+  }
+
   function personMetaHtml(person) {
-    const rank = rankMeta(person);
-    const heart = heartOf(rank.label);
     const animal = person.animal
       ? `<span class="map-rank-animal">${escapeHtml((person.animalEmoji || "") + " " + person.animal).trim()}</span>`
       : "";
+    const birth = formatBirth(person.birthDate);
     return `
       <p class="map-rank-meta">
         <span class="map-rank-place">${escapeHtml(person.sido || "")}</span>
+        ${birth ? `<span class="map-rank-birth">${escapeHtml(birth)}</span>` : ""}
         ${animal}
-        <span class="map-rank-tag" style="--tag:${rank.color}">${heart} ${escapeHtml(rank.label)}</span>
       </p>`;
   }
 
   function rankRowHtml(person, index, hostName) {
     const rank = rankMeta(person);
     const place = index < 3 ? ` is-rank-${index + 1}` : "";
+    const heart = heartOf(rank.label);
+    const comment = person.comment
+      ? `<p class="map-rank-line">${escapeHtml(person.comment)}</p>`
+      : "";
     return `
       <li class="${place.trim()}" data-label="${escapeHtml(rank.label)}">
         <em>${index + 1}</em>
         <div>
-          <strong>${escapeHtml(person.name)}</strong>
+          <p class="map-rank-name">
+            <strong>${escapeHtml(person.name)}</strong>
+            <span class="map-rank-tag" style="--tag:${rank.color}">${heart} ${escapeHtml(rank.label)}</span>
+          </p>
+          ${comment}
           ${personMetaHtml(person)}
         </div>
         ${personScoresHtml(person, hostName)}
@@ -876,10 +900,18 @@
 
   function sheetRowHtml(person, hostName, canDelete) {
     const rank = rankMeta(person);
+    const heart = heartOf(rank.label);
+    const comment = person.comment
+      ? `<p class="map-rank-line">${escapeHtml(person.comment)}</p>`
+      : "";
     return `
       <li data-label="${escapeHtml(rank.label)}">
         <div>
-          <strong>${escapeHtml(person.name)}</strong>
+          <p class="map-rank-name">
+            <strong>${escapeHtml(person.name)}</strong>
+            <span class="map-rank-tag" style="--tag:${rank.color}">${heart} ${escapeHtml(rank.label)}</span>
+          </p>
+          ${comment}
           ${personMetaHtml(person)}
         </div>
         ${personScoresHtml(person, hostName)}
@@ -900,6 +932,7 @@
     loginUrl,
     bindRegionSelects,
     bindBirthInput,
+    formatBirth,
     chemistryHtml,
     renderAnimals,
     dualScores,

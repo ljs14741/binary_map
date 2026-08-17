@@ -1,7 +1,7 @@
 package com.example.map.service;
 
 import com.example.map.entity.AnimalFit;
-import com.example.map.entity.RelationLabel;
+import com.example.map.entity.StarFit;
 import com.example.map.entity.ZodiacAnimal;
 import org.junit.jupiter.api.Test;
 
@@ -41,15 +41,24 @@ class BirthFlavorServiceTest {
     }
 
     @Test
-    void chemistryKeepsNameScoreSeparate() {
-        assertThat(service.chemistryLine(RelationLabel.BURAL_MATE, AnimalFit.SAMHAP))
-                .isEqualTo("이름도 띠도 최강");
-        assertThat(service.chemistryLine(RelationLabel.BURAL_MATE, AnimalFit.CLASH))
-                .isEqualTo("이름은 맞는데 띠는 티격태격");
-        assertThat(service.chemistryLine(RelationLabel.DANGER_MATE, AnimalFit.SAMHAP))
-                .isEqualTo("띠는 잘 맞아서 기회는 있음");
-        assertThat(service.chemistryLine(RelationLabel.DANGER_MATE, AnimalFit.CLASH))
-                .isEqualTo("접지 마");
+    void starFitUsesElementPairs() {
+        assertThat(service.starFit("전갈", "전갈")).isEqualTo(StarFit.SAME);
+        assertThat(service.starFit("전갈", "물고기")).isEqualTo(StarFit.HARMONY);
+        assertThat(service.starFit("전갈", "사자")).isEqualTo(StarFit.CLASH);
+        assertThat(service.starFit("쌍둥이", "사자")).isEqualTo(StarFit.HARMONY);
+        assertThat(service.starFit("쌍둥이", "황소")).isEqualTo(StarFit.CLASH);
+        assertThat(service.starFit("양", "황소")).isEqualTo(StarFit.NEUTRAL);
+    }
+
+    @Test
+    void flavorLineUsesAnimalAndStarTogether() {
+        assertThat(service.flavorLine(AnimalFit.SAME, StarFit.SAME)).isEqualTo("같은 띠에 같은 별자리");
+        assertThat(service.flavorLine(AnimalFit.SAMHAP, StarFit.HARMONY)).isEqualTo("띠도 별자리도 통함");
+        assertThat(service.flavorLine(AnimalFit.SAMHAP, StarFit.CLASH)).isEqualTo("띠는 맞는데 별자리는 불꽃");
+        assertThat(service.flavorLine(AnimalFit.CLASH, StarFit.HARMONY)).isEqualTo("별자리는 통하는데 띠는 상충");
+        assertThat(service.flavorLine(AnimalFit.CLASH, StarFit.CLASH)).isEqualTo("띠도 별자리도 충돌");
+        assertThat(service.flavorLine(AnimalFit.NEUTRAL, StarFit.NEUTRAL)).isEqualTo("띠·별자리는 무난");
+        assertThat(service.flavorLine(null, StarFit.HARMONY)).isNull();
     }
 
     @Test

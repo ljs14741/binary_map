@@ -19,6 +19,9 @@ public record MapPersonView(
         String reverseColor,
         String animal,
         String animalEmoji,
+        String starSign,
+        String birthDate,
+        String comment,
         LocalDateTime createdAt
 ) {
 }

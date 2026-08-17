@@ -127,7 +127,6 @@ public class CoupleMapService {
         AnimalFit fit = hostProfile == null || guestProfile == null
                 ? null
                 : birthFlavorService.fit(hostProfile.animal(), guestProfile.animal());
-        RelationLabel shown = forward.score() >= reverse.score() ? label : reverse.label();
         return new JoinMapResponse(
                 map.getHostName(),
                 name,
@@ -142,7 +141,7 @@ public class CoupleMapService {
                 reverse.label().titledName(),
                 reverse.label().mapColor(),
                 toView(map, false),
-                birthFlavorService.chemistryLine(shown, fit),
+                birthFlavorService.flavorLine(hostProfile, guestProfile),
                 fit == null ? null : fit.displayName(),
                 hostProfile == null ? null : hostProfile.animalName(),
                 hostProfile == null ? null : hostProfile.animalEmoji(),
@@ -267,12 +266,12 @@ public class CoupleMapService {
 
     private MapView toView(CoupleMap map, boolean host) {
         List<CoupleMapPerson> rows = coupleMapPersonRepository.findByMap_IdOrderByScoreDescCreatedAtAsc(map.getId());
-        List<MapPersonView> people = rows.stream()
-                .map(this::toPerson)
-                .sorted(this::compareRank)
-                .toList();
         Sigungu sigungu = regionCatalog.fromCode(map.getHostSigunguCode());
         var hostProfile = birthFlavorService.profile(map.getHostBirthDate());
+        List<MapPersonView> people = rows.stream()
+                .map(person -> toPerson(person, hostProfile))
+                .sorted(this::compareRank)
+                .toList();
         return new MapView(
                 map.getId(),
                 map.getHostName(),
@@ -286,7 +285,7 @@ public class CoupleMapService {
                 countsOf(people),
                 animalCountsOf(hostProfile, rows),
                 people,
-                host && map.getHostBirthDate() != null ? map.getHostBirthDate().toString() : null,
+                map.getHostBirthDate() == null ? null : map.getHostBirthDate().toString(),
                 hostProfile == null ? null : hostProfile.animalName(),
                 hostProfile == null ? null : hostProfile.animalEmoji()
         );
@@ -312,7 +311,7 @@ public class CoupleMapService {
         );
     }
 
-    private MapPersonView toPerson(CoupleMapPerson person) {
+    private MapPersonView toPerson(CoupleMapPerson person, BirthFlavorService.BirthProfile hostProfile) {
         RelationLabel label = RelationLabel.fromScore(person.getScore());
         RelationLabel reverse = RelationLabel.fromScore(person.getReverseScore());
         Sigungu sigungu = regionCatalog.fromCode(person.getSigunguCode());
@@ -331,6 +330,9 @@ public class CoupleMapService {
                 reverse.mapColor(),
                 profile == null ? null : profile.animalName(),
                 profile == null ? null : profile.animalEmoji(),
+                profile == null ? null : profile.starSign(),
+                person.getBirthDate() == null ? null : person.getBirthDate().toString(),
+                birthFlavorService.flavorLine(hostProfile, profile),
                 person.getCreatedAt()
         );
     }

@@ -32,6 +32,8 @@ public record MapView(
                 }
             }
         }
-        return hostSido + " · " + total + "명 참여 · 부랄친구 " + bural + "명";
+        return hostSido
+                + (hostBirthDate != null && !hostBirthDate.isBlank() ? " · " + hostBirthDate.replace('-', '.') : "")
+                + " · " + total + "명 참여 · 부랄친구 " + bural + "명";
     }
 }

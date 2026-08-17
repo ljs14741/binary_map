@@ -12,6 +12,9 @@ public record SampleFriend(
         String reverseLabel,
         String reverseColor,
         String animal,
-        String animalEmoji
+        String animalEmoji,
+        String starSign,
+        String birthDate,
+        String comment
 ) {
 }

@@ -4,7 +4,7 @@ import com.example.map.dto.SampleFriend;
 import com.example.map.dto.SampleLabelCount;
 import com.example.map.entity.RelationLabel;
 import com.example.map.entity.Sido;
-import com.example.map.entity.ZodiacAnimal;
+import com.example.map.service.BirthFlavorService;
 import com.example.map.service.CoupleMapService;
 import com.example.map.service.RegionCatalog;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -17,6 +17,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -26,8 +27,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MapController {
 
+    private static final LocalDate SAMPLE_HOST_BIRTH = LocalDate.of(1998, 6, 15);
+
     private final ObjectMapper objectMapper;
     private final CoupleMapService coupleMapService;
+    private final BirthFlavorService birthFlavorService;
     private final RegionCatalog regionCatalog;
 
     @GetMapping("/")
@@ -77,18 +81,18 @@ public class MapController {
 
     private List<SampleFriend> sampleFriends() {
         List<SampleFriend> friends = List.of(
-                friend("민지", "서울 강남구", "11", "11680", 97, 97, RelationLabel.BURAL_MATE, RelationLabel.BURAL_MATE, ZodiacAnimal.RABBIT),
-                friend("하은", "제주 제주시", "50", "50110", 88, 91, RelationLabel.BURAL_MATE, RelationLabel.BURAL_MATE, ZodiacAnimal.DRAGON),
-                friend("예린", "광주 북구", "29", "29170", 91, 72, RelationLabel.BURAL_MATE, RelationLabel.TRUE_MATE, ZodiacAnimal.TIGER),
-                friend("서준", "부산 해운대구", "26", "26350", 82, 70, RelationLabel.TRUE_MATE, RelationLabel.TRUE_MATE, ZodiacAnimal.RAT),
-                friend("도윤", "경기 성남 분당구", "41", "41135", 74, 80, RelationLabel.TRUE_MATE, RelationLabel.TRUE_MATE, ZodiacAnimal.HORSE),
-                friend("나연", "충북 청주 흥덕구", "43", "43113", 78, 55, RelationLabel.TRUE_MATE, RelationLabel.BIZ_MATE, ZodiacAnimal.OX),
-                friend("지아", "인천 연수구", "28", "28185", 61, 58, RelationLabel.BIZ_MATE, RelationLabel.BIZ_MATE, ZodiacAnimal.SNAKE),
-                friend("시우", "대전 유성구", "30", "30200", 58, 42, RelationLabel.BIZ_MATE, RelationLabel.AWKWARD_MATE, ZodiacAnimal.MONKEY),
-                friend("현우", "대구 수성구", "27", "27260", 41, 35, RelationLabel.AWKWARD_MATE, RelationLabel.AWKWARD_MATE, ZodiacAnimal.DOG),
-                friend("지민", "대구 달서구", "27", "27290", 38, 48, RelationLabel.AWKWARD_MATE, RelationLabel.AWKWARD_MATE, ZodiacAnimal.ROOSTER),
-                friend("수아", "강원 춘천시", "42", "42110", 35, 22, RelationLabel.AWKWARD_MATE, RelationLabel.DANGER_MATE, ZodiacAnimal.SHEEP),
-                friend("태민", "울산 남구", "31", "31140", 18, 7, RelationLabel.DANGER_MATE, RelationLabel.DANGER_MATE, ZodiacAnimal.PIG)
+                friend("민지", "서울 강남구", "11", "11680", 97, 97, RelationLabel.BURAL_MATE, RelationLabel.BURAL_MATE, LocalDate.of(1999, 10, 23)),
+                friend("하은", "제주 제주시", "50", "50110", 88, 91, RelationLabel.BURAL_MATE, RelationLabel.BURAL_MATE, LocalDate.of(2000, 8, 5)),
+                friend("예린", "광주 북구", "29", "29170", 91, 72, RelationLabel.BURAL_MATE, RelationLabel.TRUE_MATE, LocalDate.of(1998, 7, 1)),
+                friend("서준", "부산 해운대구", "26", "26350", 82, 70, RelationLabel.TRUE_MATE, RelationLabel.TRUE_MATE, LocalDate.of(1996, 1, 10)),
+                friend("도윤", "경기 성남 분당구", "41", "41135", 74, 80, RelationLabel.TRUE_MATE, RelationLabel.TRUE_MATE, LocalDate.of(1990, 5, 1)),
+                friend("나연", "충북 청주 흥덕구", "43", "43113", 78, 55, RelationLabel.TRUE_MATE, RelationLabel.BIZ_MATE, LocalDate.of(1997, 9, 25)),
+                friend("지아", "인천 연수구", "28", "28185", 61, 58, RelationLabel.BIZ_MATE, RelationLabel.BIZ_MATE, LocalDate.of(1989, 3, 21)),
+                friend("시우", "대전 유성구", "30", "30200", 58, 42, RelationLabel.BIZ_MATE, RelationLabel.AWKWARD_MATE, LocalDate.of(1992, 11, 22)),
+                friend("현우", "대구 수성구", "27", "27260", 41, 35, RelationLabel.AWKWARD_MATE, RelationLabel.AWKWARD_MATE, LocalDate.of(1994, 12, 25)),
+                friend("지민", "대구 달서구", "27", "27290", 38, 48, RelationLabel.AWKWARD_MATE, RelationLabel.AWKWARD_MATE, LocalDate.of(1993, 4, 20)),
+                friend("수아", "강원 춘천시", "42", "42110", 35, 22, RelationLabel.AWKWARD_MATE, RelationLabel.DANGER_MATE, LocalDate.of(1991, 2, 19)),
+                friend("태민", "울산 남구", "31", "31140", 18, 7, RelationLabel.DANGER_MATE, RelationLabel.DANGER_MATE, LocalDate.of(1995, 6, 22))
         );
         return friends.stream()
                 .sorted(this::compareRank)
@@ -104,8 +108,10 @@ public class MapController {
             int reverseScore,
             RelationLabel label,
             RelationLabel reverse,
-            ZodiacAnimal animal
+            LocalDate birth
     ) {
+        var host = birthFlavorService.profile(SAMPLE_HOST_BIRTH);
+        var guest = birthFlavorService.profile(birth);
         return new SampleFriend(
                 name,
                 sido,
@@ -117,8 +123,11 @@ public class MapController {
                 reverseScore,
                 reverse.displayName(),
                 reverse.mapColor(),
-                animal.displayName(),
-                animal.emoji()
+                guest.animalName(),
+                guest.animalEmoji(),
+                guest.starSign(),
+                birth.toString(),
+                birthFlavorService.flavorLine(host, guest)
         );
     }
 
