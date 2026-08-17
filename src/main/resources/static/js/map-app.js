@@ -267,9 +267,13 @@
     return birthIso(digits.slice(0, 4), digits.slice(4, 6), digits.slice(6, 8));
   }
 
-  function formatBirthDots(iso) {
+  function formatBirthDigits(iso) {
     const parsed = parseBirthIso(iso);
-    return parsed ? parsed.replace(/-/g, ".") : "";
+    return parsed ? parsed.replace(/-/g, "") : "";
+  }
+
+  function formatBirthTyping(raw) {
+    return String(raw || "").replace(/\D/g, "").slice(0, 8);
   }
 
   function isValidBirthIso(iso, minYear, maxDate) {
@@ -288,17 +292,6 @@
       return false;
     }
     return true;
-  }
-
-  function formatBirthTyping(raw) {
-    const digits = String(raw || "").replace(/\D/g, "").slice(0, 8);
-    if (digits.length <= 4) {
-      return digits;
-    }
-    if (digits.length <= 6) {
-      return `${digits.slice(0, 4)}.${digits.slice(4)}`;
-    }
-    return `${digits.slice(0, 4)}.${digits.slice(4, 6)}.${digits.slice(6)}`;
   }
 
   function fillBirthDays(ui) {
@@ -355,7 +348,7 @@
       return;
     }
     writeBirthValue(el, iso);
-    ui.typed.value = formatBirthDots(iso);
+    ui.typed.value = formatBirthDigits(iso);
     setBirthValidity(ui, iso);
   }
 
@@ -380,7 +373,7 @@
     ui.day.value = String(Number(iso.slice(8, 10)));
     ui.lock = false;
     writeBirthValue(el, iso);
-    ui.typed.value = formatBirthDots(iso);
+    ui.typed.value = formatBirthDigits(iso);
     setBirthValidity(ui, iso);
     return true;
   }
@@ -398,7 +391,7 @@
       fillBirthDays(ui);
       ui.day.value = String(Number(iso.slice(8, 10)));
       if (document.activeElement !== ui.typed) {
-        ui.typed.value = formatBirthDots(iso);
+        ui.typed.value = formatBirthDigits(iso);
       }
       setBirthValidity(ui, iso);
     } else if (!iso && document.activeElement !== ui.typed) {
@@ -459,7 +452,7 @@
     typed.className = "map-birth-typed";
     typed.inputMode = "numeric";
     typed.autocomplete = "bday";
-    typed.placeholder = "1996.07.10 직접 입력";
+    typed.placeholder = "19960710";
     typed.maxLength = 10;
     typed.setAttribute("enterkeyhint", "done");
     typed.setAttribute("aria-label", "생년월일 직접 입력");
@@ -516,7 +509,7 @@
     });
     typed.addEventListener("blur", () => {
       if (!commitBirthTyped(el, typed.value) && el.value) {
-        typed.value = formatBirthDots(el.value);
+        typed.value = formatBirthDigits(el.value);
         setBirthValidity(el._birth, el.value);
       }
     });
