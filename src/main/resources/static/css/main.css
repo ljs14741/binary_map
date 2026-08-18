@@ -664,14 +664,24 @@ textarea {
   padding: 12px 6px 28px;
   overflow: hidden;
   border-radius: 20px;
+  touch-action: none;
   background:
     radial-gradient(circle at 18% 12%, rgba(255, 236, 179, 0.55), transparent 28%),
     radial-gradient(circle at 78% 16%, rgba(255, 255, 255, 0.4), transparent 24%),
     linear-gradient(180deg, #b9dce8 0%, #9ecfde 40%, #c5e6d8 100%);
 }
 
+.korea-wrap.is-zoomed {
+  cursor: grab;
+}
+
 .korea-canvas {
   position: relative;
+  transform-origin: 0 0;
+}
+
+.korea-canvas.is-zoom-reset {
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .korea-map {

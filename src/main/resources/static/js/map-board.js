@@ -168,6 +168,8 @@
     }
     canvas.appendChild(nameLayer);
     canvas.appendChild(layer);
+    bindMapZoom(wrap);
+    resetZoom(wrap, false);
     requestAnimationFrame(() => canvas.classList.add("is-ready"));
     applyFilter();
   }
@@ -593,6 +595,216 @@
 
   function prefersReducedMotion() {
     return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  function zoomState(wrap) {
+    if (!wrap._mapZoom) {
+      wrap._mapZoom = {
+        scale: 1,
+        x: 0,
+        y: 0,
+        pointers: new Map(),
+        pinch: null,
+        lastTap: 0,
+        suppressClick: false
+      };
+    }
+    return wrap._mapZoom;
+  }
+
+  function mapCanvas(wrap) {
+    return wrap.querySelector(".korea-canvas");
+  }
+
+  function clampZoom(wrap) {
+    const z = zoomState(wrap);
+    z.scale = Math.min(2.5, Math.max(1, z.scale));
+    if (z.scale <= 1) {
+      z.scale = 1;
+      z.x = 0;
+      z.y = 0;
+      return;
+    }
+    const canvas = mapCanvas(wrap);
+    if (!canvas) {
+      return;
+    }
+    const minX = Math.min(0, wrap.clientWidth - canvas.offsetWidth * z.scale);
+    const minY = Math.min(0, wrap.clientHeight - canvas.offsetHeight * z.scale);
+    z.x = Math.min(0, Math.max(minX, z.x));
+    z.y = Math.min(0, Math.max(minY, z.y));
+  }
+
+  function applyZoom(wrap, animate) {
+    const canvas = mapCanvas(wrap);
+    const z = zoomState(wrap);
+    if (!canvas) {
+      return;
+    }
+    if (z.scale <= 1.02) {
+      z.scale = 1;
+      z.x = 0;
+      z.y = 0;
+    }
+    wrap.classList.toggle("is-zoomed", z.scale > 1);
+    if (z.scale === 1) {
+      if (animate && !prefersReducedMotion()) {
+        canvas.classList.add("is-zoom-reset");
+        canvas.style.transform = "translate(0px, 0px) scale(1)";
+        window.setTimeout(() => {
+          canvas.classList.remove("is-zoom-reset");
+          if (zoomState(wrap).scale === 1) {
+            canvas.style.transform = "";
+          }
+        }, 280);
+      } else {
+        canvas.classList.remove("is-zoom-reset");
+        canvas.style.transform = "";
+      }
+      return;
+    }
+    canvas.classList.remove("is-zoom-reset");
+    canvas.style.transform = `translate(${z.x}px, ${z.y}px) scale(${z.scale})`;
+  }
+
+  function resetZoom(wrap, animate) {
+    const z = zoomState(wrap);
+    z.scale = 1;
+    z.x = 0;
+    z.y = 0;
+    z.pinch = null;
+    applyZoom(wrap, animate);
+  }
+
+  function zoomAround(wrap, nextScale, cx, cy) {
+    const z = zoomState(wrap);
+    const prev = z.scale || 1;
+    const next = Math.min(2.5, Math.max(1, nextScale));
+    if (next === 1) {
+      resetZoom(wrap, false);
+      return;
+    }
+    const ratio = next / prev;
+    z.x = cx - (cx - z.x) * ratio;
+    z.y = cy - (cy - z.y) * ratio;
+    z.scale = next;
+    clampZoom(wrap);
+    applyZoom(wrap, false);
+  }
+
+  function wrapPoint(wrap, clientX, clientY) {
+    const rect = wrap.getBoundingClientRect();
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  }
+
+  function pointerDistance(points) {
+    const [a, b] = points;
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  }
+
+  function pointerMid(wrap, points) {
+    const [a, b] = points;
+    return wrapPoint(wrap, (a.x + b.x) / 2, (a.y + b.y) / 2);
+  }
+
+  function bindMapZoom(wrap) {
+    if (!wrap || wrap.dataset.zoomBound) {
+      return;
+    }
+    wrap.dataset.zoomBound = "true";
+    const z = zoomState(wrap);
+
+    wrap.addEventListener("pointerdown", (event) => {
+      z.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (z.pointers.size === 2) {
+        const points = [...z.pointers.values()];
+        const mid = pointerMid(wrap, points);
+        z.pinch = {
+          dist: pointerDistance(points) || 1,
+          scale: z.scale,
+          x: z.x,
+          y: z.y,
+          cx: mid.x,
+          cy: mid.y
+        };
+        z.suppressClick = true;
+        event.preventDefault();
+      } else if (z.scale > 1 && event.pointerType === "touch") {
+        event.preventDefault();
+      }
+      if (
+        event.pointerType === "touch"
+        && z.pointers.size === 1
+        && z.scale > 1
+        && !event.target.closest(".cluster-pin")
+      ) {
+        const now = Date.now();
+        if (now - z.lastTap < 280) {
+          resetZoom(wrap, true);
+          z.lastTap = 0;
+          z.suppressClick = true;
+          event.preventDefault();
+        } else {
+          z.lastTap = now;
+        }
+      }
+    }, { passive: false });
+
+    wrap.addEventListener("pointermove", (event) => {
+      if (!z.pointers.has(event.pointerId)) {
+        return;
+      }
+      const prev = z.pointers.get(event.pointerId);
+      z.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (z.pointers.size === 2 && z.pinch && z.pinch.dist) {
+        event.preventDefault();
+        const points = [...z.pointers.values()];
+        const dist = pointerDistance(points);
+        const mid = pointerMid(wrap, points);
+        zoomAround(wrap, z.pinch.scale * (dist / z.pinch.dist), mid.x, mid.y);
+        z.suppressClick = true;
+        return;
+      }
+      if (z.pointers.size === 1 && z.scale > 1) {
+        event.preventDefault();
+        z.x += event.clientX - prev.x;
+        z.y += event.clientY - prev.y;
+        clampZoom(wrap);
+        applyZoom(wrap, false);
+        if (Math.hypot(event.clientX - prev.x, event.clientY - prev.y) > 2) {
+          z.suppressClick = true;
+        }
+        return;
+      }
+      if (z.pointers.size === 1 && z.scale === 1 && event.pointerType === "touch") {
+        window.scrollBy(0, prev.y - event.clientY);
+      }
+    }, { passive: false });
+
+    const endPointer = (event) => {
+      z.pointers.delete(event.pointerId);
+      if (z.pointers.size < 2) {
+        z.pinch = null;
+      }
+      if (!z.pointers.size && z.scale < 1.08) {
+        resetZoom(wrap, z.scale !== 1);
+      }
+    };
+    wrap.addEventListener("pointerup", endPointer);
+    wrap.addEventListener("pointercancel", endPointer);
+    wrap.addEventListener("pointerleave", (event) => {
+      if (z.pointers.has(event.pointerId) && z.pointers.size < 2) {
+        endPointer(event);
+      }
+    });
+    wrap.addEventListener("click", (event) => {
+      if (!z.suppressClick) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      z.suppressClick = false;
+    }, true);
   }
 
   function addSparkles(layer) {
