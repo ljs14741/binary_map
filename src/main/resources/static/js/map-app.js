@@ -858,16 +858,21 @@
         const px = pad + (parseFloat(nameEl.style.left) / 100) * mapW;
         const py = y + 8 * scale + (parseFloat(nameEl.style.top) / 100) * mapH;
         const host = nameEl.classList.contains("is-host");
-        ctx.font = `800 ${10 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+        const style = getComputedStyle(nameEl);
+        const nx = parseFloat(style.getPropertyValue("--nx")) || 15;
+        const ny = parseFloat(style.getPropertyValue("--ny")) || 0;
+        ctx.font = `800 ${11 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
         const label = fitText(ctx, nameEl.textContent.trim(), 40 * scale);
-        const tw = ctx.measureText(label).width;
-        roundRect(ctx, px - tw / 2 - 6 * scale, py + 10 * scale, tw + 12 * scale, 16 * scale, 8 * scale);
-        ctx.fillStyle = host ? "#fff6cf" : "rgba(255,248,234,0.86)";
-        ctx.fill();
-        ctx.fillStyle = host ? "#9a7408" : "#4a3426";
         ctx.textAlign = "center";
-        ctx.fillText(label, px, py + 13 * scale);
+        ctx.textBaseline = "middle";
+        ctx.lineJoin = "round";
+        ctx.lineWidth = 4 * scale;
+        ctx.strokeStyle = host ? "#fff6cf" : "#fff8ea";
+        ctx.strokeText(label, px + nx * scale, py + ny * scale);
+        ctx.fillStyle = host ? "#9a7408" : "#3d2a20";
+        ctx.fillText(label, px + nx * scale, py + ny * scale);
         ctx.textAlign = "left";
+        ctx.textBaseline = "top";
       });
       [...wrap.querySelectorAll(".cluster-pin, .host-pin")].forEach((pin) => {
         const px = pad + (parseFloat(pin.style.left) / 100) * mapW;

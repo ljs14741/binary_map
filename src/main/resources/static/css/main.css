@@ -821,13 +821,28 @@ textarea {
   border-radius: 50%;
 }
 
+.cluster-pin.is-open {
+  z-index: 6;
+  width: 72px;
+  height: 72px;
+  --fan: 2.15;
+}
+
+.cluster-pin.is-open .cluster-dot {
+  animation: none;
+}
+
 .cluster-dot {
   position: absolute;
   left: 50%;
   top: 50%;
   background: var(--pin, #ff2d95);
   box-shadow: 0 0 10px color-mix(in srgb, var(--pin) 70%, transparent);
-  transform: translate(calc(-50% + var(--ox, 0px)), calc(-50% + var(--oy, 0px)));
+  transform: translate(
+    calc(-50% + var(--ox, 0px) * var(--fan, 1)),
+    calc(-50% + var(--oy, 0px) * var(--fan, 1))
+  );
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .host-pin {
@@ -879,26 +894,47 @@ textarea {
 .pin-name {
   position: absolute;
   z-index: 0;
-  padding: 1px 5px;
-  border-radius: 999px;
-  background: rgba(255, 248, 234, 0.86);
-  color: #4a3426;
-  font-size: 10px;
+  color: #3d2a20;
+  font-size: 11px;
   font-weight: 800;
-  line-height: 1.25;
+  line-height: 1;
   letter-spacing: -0.04em;
   white-space: nowrap;
-  transform: translate(-50%, 11px);
+  -webkit-text-stroke: 0.45px #fff8ea;
+  paint-order: stroke fill;
+  text-shadow:
+    -1.2px -1.2px 0 #fff8ea,
+    1.2px -1.2px 0 #fff8ea,
+    -1.2px 1.2px 0 #fff8ea,
+    1.2px 1.2px 0 #fff8ea,
+    0 0 5px #fff8ea;
+  transform: translate(-50%, -50%) translate(var(--nx, 15px), var(--ny, 0px));
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease;
   pointer-events: none;
+  opacity: 0.9;
 }
 
 .pin-name.is-host {
   color: #9a7408;
-  background: #fff6cf;
+  -webkit-text-stroke-color: #fff6cf;
+  text-shadow:
+    -1.2px -1.2px 0 #fff6cf,
+    1.2px -1.2px 0 #fff6cf,
+    -1.2px 1.2px 0 #fff6cf,
+    1.2px 1.2px 0 #fff6cf,
+    0 0 6px #fff3c0;
+}
+
+.pin-name.is-open {
+  opacity: 1;
+  transform: translate(-50%, -50%) translate(
+    calc(var(--nx, 15px) * 1.7),
+    calc(var(--ny, 0px) * 1.7)
+  );
 }
 
 .pin-name.is-dim {
-  opacity: 0.16;
+  opacity: 0.22;
 }
 
 .chi-spark {
@@ -1835,10 +1871,16 @@ body.is-sheet-open {
 
 @keyframes pin-bob {
   0%, 100% {
-    transform: translate(calc(-50% + var(--ox, 0px)), calc(-50% + var(--oy, 0px)));
+    transform: translate(
+      calc(-50% + var(--ox, 0px) * var(--fan, 1)),
+      calc(-50% + var(--oy, 0px) * var(--fan, 1))
+    );
   }
   50% {
-    transform: translate(calc(-50% + var(--ox, 0px)), calc(-50% + var(--oy, 0px) - 2px));
+    transform: translate(
+      calc(-50% + var(--ox, 0px) * var(--fan, 1)),
+      calc(-50% + var(--oy, 0px) * var(--fan, 1) - 2px)
+    );
   }
 }
 
@@ -1875,6 +1917,7 @@ body.is-sheet-open {
   .cluster-glow,
   .cluster-dot,
   .chi-spark,
+  .pin-name,
   .map-spark,
   .map-sheet-panel,
   .map-sheet-backdrop {

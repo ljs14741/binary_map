@@ -149,14 +149,20 @@
     addSparkles(layer);
     clusterState.forEach((cluster, index) => {
       layer.appendChild(createClusterPin(cluster, index));
-      const caption = clusterCaption(cluster);
-      if (caption) {
-        nameLayer.appendChild(createPinName(cluster.x, cluster.y, caption, "", cluster.labels));
-      }
+      addClusterNames(nameLayer, cluster);
     });
     const hostPin = createHostPin(hostPoint, options.host.name);
     layer.appendChild(hostPin);
-    nameLayer.appendChild(createPinName(hostPoint[0], hostPoint[1], clipNick(options.host.name) || "나", "is-host"));
+    nameLayer.appendChild(createPinName(
+      hostPoint[0],
+      hostPoint[1],
+      clipNick(options.host.name) || "나",
+      "is-host",
+      null,
+      "host",
+      16,
+      0
+    ));
     if (addChiFlow(layer, clusterState, hostPoint)) {
       hostPin.classList.add("is-receiving");
     }
@@ -454,22 +460,52 @@
     return text.slice(-2);
   }
 
-  function clusterCaption(cluster) {
-    if (cluster.count > 1) {
-      return "";
+  function nameOffset(index, count) {
+    if (count <= 1) {
+      return [15, 0];
     }
-    const person = cluster.people.find((item) => item.named && item.name);
-    return clipNick(person?.name || "");
+    if (count === 2) {
+      return index === 0 ? [-18, 0] : [18, 0];
+    }
+    const [ox, oy] = grapeOffset(index, count);
+    return [ox * 2.35, oy * 2.35];
   }
 
-  function createPinName(x, y, text, extraClass, labels) {
+  function addClusterNames(nameLayer, cluster) {
+    const named = cluster.people.filter((item) => item.named && item.name);
+    const layout = cluster.count > 1 ? Math.min(cluster.count, 9) : 1;
+    named.slice(0, 9).forEach((person, index) => {
+      const caption = clipNick(person.name);
+      if (!caption) {
+        return;
+      }
+      const [nx, ny] = nameOffset(index, layout);
+      nameLayer.appendChild(createPinName(
+        cluster.x,
+        cluster.y,
+        caption,
+        "",
+        cluster.labels,
+        cluster.id,
+        nx,
+        ny
+      ));
+    });
+  }
+
+  function createPinName(x, y, text, extraClass, labels, clusterId, nx, ny) {
     const el = document.createElement("span");
     el.className = extraClass ? `pin-name ${extraClass}` : "pin-name";
     el.style.left = `${(x / VIEW.w) * 100}%`;
     el.style.top = `${(y / VIEW.h) * 100}%`;
+    el.style.setProperty("--nx", `${nx || 0}px`);
+    el.style.setProperty("--ny", `${ny || 0}px`);
     el.textContent = text;
     if (labels && labels.length) {
       el.dataset.labels = labels.join(",");
+    }
+    if (clusterId != null && clusterId !== "") {
+      el.dataset.clusterId = String(clusterId);
     }
     return el;
   }
@@ -479,6 +515,7 @@
     button.type = "button";
     button.className = cluster.count > 1 ? "cluster-pin is-many" : "cluster-pin";
     button.dataset.labels = cluster.labels.join(",");
+    button.dataset.clusterId = String(cluster.id);
     button.style.left = `${(cluster.x / VIEW.w) * 100}%`;
     button.style.top = `${(cluster.y / VIEW.h) * 100}%`;
     button.style.setProperty("--pin", cluster.color);
@@ -503,7 +540,7 @@
       return [0, 0];
     }
     if (count === 2) {
-      return index === 0 ? [-6, 1] : [6, -1];
+      return index === 0 ? [-7, 2] : [7, -2];
     }
     const angle = (Math.PI * 2 * index) / count - Math.PI / 2;
     const radius = 6 + Math.min(count, 8) * 1.15;
@@ -626,6 +663,12 @@
   }
 
   function openSheet(cluster) {
+    clearOpenCluster();
+    if (cluster.count > 1) {
+      document.querySelectorAll(`[data-cluster-id="${cluster.id}"]`).forEach((el) => {
+        el.classList.add("is-open");
+      });
+    }
     const sheet = document.getElementById("map-sheet");
     const list = document.getElementById("map-sheet-list");
     const visible = activeFilter
@@ -646,6 +689,7 @@
   }
 
   function closeSheet() {
+    clearOpenCluster();
     const sheet = document.getElementById("map-sheet");
     if (!sheet) {
       return;
@@ -657,6 +701,12 @@
         sheet.hidden = true;
       }
     }, 280);
+  }
+
+  function clearOpenCluster() {
+    document.querySelectorAll(".cluster-pin.is-open, .pin-name.is-open").forEach((el) => {
+      el.classList.remove("is-open");
+    });
   }
 
   function escapeHtml(value) {
