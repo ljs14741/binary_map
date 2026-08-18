@@ -661,7 +661,7 @@ textarea {
 .korea-wrap {
   position: relative;
   min-height: 320px;
-  padding: 12px 6px 28px;
+  padding: 12px 6px 16px;
   overflow: hidden;
   border-radius: 20px;
   touch-action: pan-y;
@@ -704,21 +704,26 @@ textarea {
 
 .korea-map .sido-land {
   fill: #f7e2b8;
-  stroke: rgba(196, 148, 82, 0.18);
-  stroke-width: 0.65;
+  stroke: rgba(196, 148, 82, 0.22);
+  stroke-width: 0.45;
   transition: fill 0.6s ease, stroke 0.6s ease;
 }
 
 .korea-map .sido-land.is-filled {
-  fill: #ff8a5c;
-  stroke: #e25a38;
-  stroke-width: 1.05;
+  stroke-width: 0.55;
 }
 
 .korea-map .sido-land.is-home {
   fill: #ffc44a;
   stroke: #c48910;
-  stroke-width: 1.45;
+  stroke-width: 0.85;
+}
+
+.korea-map .sido-border {
+  fill: none;
+  pointer-events: none;
+  stroke: rgba(132, 86, 42, 0.62);
+  stroke-width: 1.35;
 }
 
 .cluster-layer {
@@ -993,6 +998,7 @@ textarea {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 6px;
+  margin-top: 18px;
 }
 
 .map-stat {

@@ -117,7 +117,7 @@
     onDeletePerson = options.onDeletePerson || null;
     hostName = options.host.name;
     if (!svgCache) {
-      svgCache = await fetch("/img/korea-sido.svg").then((res) => res.text());
+      svgCache = await fetch("/img/korea-map.svg").then((res) => res.text());
     }
     const canvas = document.createElement("div");
     canvas.className = "korea-canvas";
@@ -131,8 +131,7 @@
     svg.setAttribute("role", "img");
     svg.setAttribute("overflow", "visible");
     svg.classList.add("korea-map");
-    svg.querySelectorAll("path[data-code]").forEach((path) => {
-      path.classList.add("sido-land");
+    svg.querySelectorAll("path.sido-land").forEach((path) => {
       path.setAttribute("fill", "#f7e2b8");
       path.style.fill = "";
       path.style.stroke = "";
@@ -144,7 +143,7 @@
     const hostPoint = pinPoint(svg, options.host.sidoCode, options.host.sigunguCode);
     clusterState = buildClusters(svg, people, options.extras || []);
     separateClusters(svg, clusterState, hostPoint);
-    colorSidos(svg, options.host.sidoCode, clusterState);
+    colorRegions(svg, options.host.sigunguCode, clusterState);
     const nameLayer = document.createElement("div");
     nameLayer.className = "pin-name-layer";
     const layer = document.createElement("div");
@@ -178,7 +177,7 @@
   }
 
   function sidoBox(svg, code) {
-    const path = svg.querySelector(`path[data-code="${code}"]`);
+    const path = sidoPath(svg, code);
     if (!path || typeof path.getBBox !== "function") {
       return null;
     }
@@ -187,7 +186,22 @@
   }
 
   function sidoPath(svg, code) {
-    return svg.querySelector(`path[data-code="${code}"]`);
+    const key = String(code || "");
+    if (!key) {
+      return null;
+    }
+    const direct = svg.querySelector(`path.sido-land[data-code="${key}"]`);
+    if (direct) {
+      return direct;
+    }
+    return [...svg.querySelectorAll("path.sido-land[data-alias]")].find((path) =>
+      (path.getAttribute("data-alias") || "").split(",").includes(key)
+    ) || null;
+  }
+
+  function landCodeOf(svg, code) {
+    const path = sidoPath(svg, code);
+    return path ? String(path.getAttribute("data-code") || "") : String(code || "");
   }
 
   function pointInLand(svg, code, x, y) {
@@ -212,7 +226,7 @@
     const box = sidoBox(svg, code);
     const samples = [];
     if (box) {
-      const step = Math.max(7, Math.min(box.width, box.height) / 14);
+      const step = Math.max(2.4, Math.min(box.width, box.height) / 10);
       for (let x = box.x + step / 2; x < box.x + box.width; x += step) {
         for (let y = box.y + step / 2; y < box.y + box.height; y += step) {
           if (pointInLand(svg, code, x, y)) {
@@ -290,6 +304,10 @@
   }
 
   function pinPoint(svg, sidoCode, sigunguCode) {
+    const land = String(sigunguCode || sidoCode || "");
+    if (land && sidoPath(svg, land)) {
+      return landCenter(svg, land);
+    }
     const known = SIGUNGU_XY[Number(sigunguCode)];
     if (known && (Math.abs(known[0]) > 1.5 || Math.abs(known[1]) > 1.5)) {
       return clampToLand(svg, sidoCode, known[0], known[1]);
@@ -341,11 +359,11 @@
       }
     }
     clusters.forEach((cluster) => {
-      const sido = cluster.people[0]?.sidoCode;
-      if (!sido) {
+      const land = clusterLand(cluster);
+      if (!land) {
         return;
       }
-      const clamped = clampToLand(svg, sido, cluster.x, cluster.y);
+      const clamped = clampToLand(svg, land, cluster.x, cluster.y);
       cluster.x = clamped[0];
       cluster.y = clamped[1];
     });
@@ -360,9 +378,9 @@
         const push = (22 - dist);
         cluster.x += (dx / dist) * push;
         cluster.y += (dy / dist) * push;
-        const sido = cluster.people[0]?.sidoCode;
-        if (sido) {
-          const clamped = clampToLand(svg, sido, cluster.x, cluster.y);
+        const land = clusterLand(cluster);
+        if (land) {
+          const clamped = clampToLand(svg, land, cluster.x, cluster.y);
           cluster.x = clamped[0];
           cluster.y = clamped[1];
         }
@@ -426,37 +444,57 @@
     return `#${[0, 1, 2].map((i) => Math.round(a[i] + (b[i] - a[i]) * n).toString(16).padStart(2, "0")).join("")}`;
   }
 
-  function colorSidos(svg, hostSido, clusters) {
-    const counts = {};
+  function clusterLand(cluster) {
+    return String(cluster.people[0]?.sigunguCode || cluster.people[0]?.sidoCode || "");
+  }
+
+  function dominantMateColor(people) {
+    const rank = { "부랄짝꿍": 5, "찐 짝꿍": 4, "비즈니스짝꿍": 3, "어색 짝꿍": 2, "위험 짝꿍": 1 };
+    const tally = new Map();
+    people.forEach((person) => {
+      const meta = MapApp.rankMeta(person);
+      const key = meta.label || "";
+      const current = tally.get(key) || { n: 0, color: meta.color, score: 0, rank: rank[key] || 0 };
+      current.n += 1;
+      current.score = Math.max(current.score, rankScore(person));
+      current.color = meta.color || current.color;
+      tally.set(key, current);
+    });
+    const best = [...tally.values()].sort((a, b) => b.n - a.n || b.rank - a.rank || b.score - a.score)[0];
+    return best?.color || "#ff7048";
+  }
+
+  function colorRegions(svg, hostSigungu, clusters) {
+    const byLand = {};
     clusters.forEach((cluster) => {
-      const code = String(cluster.people[0]?.sidoCode || "");
+      const code = landCodeOf(svg, clusterLand(cluster));
       if (!code) {
         return;
       }
-      counts[code] = (counts[code] || 0) + cluster.count;
+      byLand[code] = (byLand[code] || []).concat(cluster.people);
     });
-    const max = Math.max(1, ...Object.values(counts), 1);
-    const host = String(hostSido || "");
-    svg.querySelectorAll("path[data-code]").forEach((path) => {
+    const host = landCodeOf(svg, hostSigungu);
+    svg.querySelectorAll("path.sido-land").forEach((path) => {
       const code = String(path.getAttribute("data-code") || "");
-      const count = counts[code] || 0;
-      path.classList.toggle("is-home", code === host);
-      path.classList.toggle("is-filled", count > 0 && code !== host);
-      if (code === host) {
+      const people = byLand[code] || [];
+      const home = !!host && code === host;
+      path.classList.toggle("is-home", home);
+      path.classList.toggle("is-filled", people.length > 0 && !home);
+      if (home) {
         path.style.fill = "#ffc44a";
         path.style.stroke = "#c48910";
         return;
       }
-      if (count > 0) {
-        const t = 0.62 + 0.32 * (count / max);
-        path.style.fill = mixHex("#f7e2b8", "#ff7048", t);
-        path.style.stroke = mixHex("#e2c08a", "#e24d2c", t);
+      if (people.length) {
+        const color = dominantMateColor(people);
+        path.style.fill = color;
+        path.style.stroke = mixHex(color, "#3a2416", 0.28);
         return;
       }
       path.style.fill = "";
       path.style.stroke = "";
       path.setAttribute("fill", "#f7e2b8");
-      path.setAttribute("stroke", "rgba(196, 148, 82, 0.18)");
+      path.setAttribute("stroke", "rgba(196, 148, 82, 0.22)");
     });
   }
 
