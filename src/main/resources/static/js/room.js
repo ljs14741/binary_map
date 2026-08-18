@@ -222,6 +222,7 @@
         MapApp.setJoined(view.id, data.guestName);
         await playReveal(data);
         await render(data.map);
+        MapApp.celebrateJoin(data.guestName);
       }
     } catch (err) {
       error.hidden = false;
@@ -249,6 +250,7 @@
     box.scrollIntoView({ behavior: "smooth", block: "center" });
     await MapApp.animateFolds(box);
     document.getElementById("reveal-dual").innerHTML = MapApp.dualScores(data);
+    await MapApp.animateScores(box);
     const chem = document.getElementById("reveal-chem");
     if (chem) {
       chem.outerHTML = MapApp.chemistryHtml(data);

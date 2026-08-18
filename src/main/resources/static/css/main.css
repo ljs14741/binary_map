@@ -674,12 +674,10 @@ textarea {
 .map-expand-btn,
 .map-expand-close {
   display: none;
-  position: absolute;
-  z-index: 12;
   border: 0;
   cursor: pointer;
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -692,13 +690,15 @@ textarea {
   .korea-wrap .host-pin,
   .korea-wrap .pin-name,
   .korea-wrap .map-expand-btn,
-  .korea-wrap .map-expand-close {
+  .map-expand-close {
     cursor: pointer;
   }
 
   .map-expand-btn {
     display: inline-flex;
     align-items: center;
+    position: absolute;
+    z-index: 12;
     top: 10px;
     right: 10px;
     padding: 6px 10px;
@@ -713,25 +713,28 @@ textarea {
   display: none;
 }
 
-.korea-wrap.is-expanded .map-expand-close {
+.map-expand-close.is-open {
   display: inline-flex;
   align-items: center;
-  top: 12px;
-  right: 12px;
-  padding: 6px 12px;
+  position: fixed;
+  z-index: 10060;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  min-height: 40px;
+  padding: 8px 16px;
   border-radius: 999px;
   color: #3a2a22;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 4px 12px rgba(42, 31, 26, 0.16);
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(42, 31, 26, 0.22);
 }
 
 .map-expand-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 70;
+  z-index: 10040;
   border: 0;
   padding: 0;
-  background: rgba(42, 31, 26, 0.52);
+  background: rgba(42, 31, 26, 0.58);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s ease;
@@ -744,17 +747,35 @@ textarea {
 
 .korea-wrap.is-expanded {
   position: fixed;
-  z-index: 75;
-  inset: max(16px, 3vh) max(16px, 6vw);
+  z-index: 10050;
+  inset: auto;
+  top: 56px;
+  left: 20px;
+  width: min(92vw, calc((100dvh - 80px) * 800 / 759));
+  height: min(calc(100dvh - 80px), calc(92vw * 759 / 800));
   min-height: 0;
-  padding: 28px 20px 20px;
+  padding: 0;
+  overflow: hidden;
   border-radius: 24px;
   box-shadow: 0 24px 80px rgba(42, 31, 26, 0.28);
   touch-action: none;
+  animation: map-expand-in 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.korea-wrap.is-expanded .korea-canvas,
+.korea-wrap.is-expanded .korea-map {
+  width: 100%;
+  height: auto;
+  max-height: 100%;
 }
 
 body.is-map-expanded {
   overflow: hidden;
+}
+
+body.is-map-expanded #global-header,
+body.is-map-expanded .bw-global-header {
+  visibility: hidden;
 }
 
 .korea-wrap.is-zoomed,
@@ -1023,6 +1044,11 @@ body.is-map-expanded {
     0 0 6px #fff3c0;
 }
 
+.pin-name.is-fresh {
+  z-index: 4;
+  animation: fresh-pin 1.1s cubic-bezier(0.22, 1, 0.36, 1) 2;
+}
+
 .pin-name.is-open {
   opacity: 1;
   transform: translate(-50%, -50%) translate(
@@ -1241,7 +1267,7 @@ body.is-map-expanded {
 .map-sheet {
   position: fixed;
   inset: 0;
-  z-index: 90;
+  z-index: 10080;
 }
 
 .map-sheet-backdrop {
@@ -1404,6 +1430,15 @@ body.is-sheet-open {
   background: linear-gradient(90deg, #f8e6d4 0%, #fff 70%);
 }
 
+.map-rank li.is-in {
+  animation: rank-in 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--rank-delay, 0s);
+}
+
+.map-rank li.is-fresh {
+  animation: fresh-row 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 .map-rank em {
   width: 28px;
   height: 28px;
@@ -1424,6 +1459,7 @@ body.is-sheet-open {
   background: #f5c542;
   color: #3a2a20;
   box-shadow: 0 0 0 3px rgba(245, 197, 66, 0.28);
+  animation: medal-pulse 2.2s ease-in-out infinite;
 }
 
 .map-rank li.is-rank-2 em {
@@ -1585,6 +1621,16 @@ body.is-sheet-open {
   background: #fff;
   border: 1px solid var(--line);
   border-top: 4px solid var(--score-color);
+  animation: dual-pop 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--delay, 0s);
+}
+
+.map-result.is-done .map-chem {
+  transition-delay: 0.12s;
+}
+
+.map-result.is-done .map-chem-line {
+  animation: line-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.18s both;
 }
 
 .map-dual-card small {
@@ -2016,6 +2062,43 @@ body.is-sheet-open {
   50% { opacity: 0.85; transform: scale(1.2); }
 }
 
+@keyframes map-expand-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes dual-pop {
+  0% { opacity: 0; transform: translateY(10px) scale(0.96); }
+  70% { transform: translateY(-2px) scale(1.03); }
+  100% { opacity: 1; transform: none; }
+}
+
+@keyframes line-pop {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: none; }
+}
+
+@keyframes rank-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes medal-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(245, 197, 66, 0.28); transform: scale(1); }
+  50% { box-shadow: 0 0 0 6px rgba(245, 197, 66, 0.18); transform: scale(1.08); }
+}
+
+@keyframes fresh-row {
+  0% { transform: scale(0.97); box-shadow: 0 0 0 0 rgba(255, 45, 149, 0.35); }
+  60% { transform: scale(1.02); box-shadow: 0 0 0 6px rgba(255, 45, 149, 0.12); }
+  100% { transform: none; box-shadow: none; }
+}
+
+@keyframes fresh-pin {
+  0%, 100% { filter: none; }
+  40% { filter: drop-shadow(0 0 8px #ff2d95); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .korea-map,
   .cluster-pin,
@@ -2028,7 +2111,14 @@ body.is-sheet-open {
   .pin-name,
   .map-spark,
   .map-sheet-panel,
-  .map-sheet-backdrop {
+  .map-sheet-backdrop,
+  .map-rank li.is-in,
+  .map-rank li.is-fresh,
+  .map-rank li.is-rank-1 em,
+  .map-dual-card,
+  .map-chem-line,
+  .pin-name.is-fresh,
+  .korea-wrap.is-expanded {
     animation: none !important;
     transition: none !important;
   }

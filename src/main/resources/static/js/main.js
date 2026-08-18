@@ -60,6 +60,7 @@
     resultBox.scrollIntoView({ behavior: "smooth", block: "center" });
     await MapApp.animateFolds(resultBox);
     document.getElementById("reveal-dual").innerHTML = MapApp.dualScores(data);
+    await MapApp.animateScores(resultBox);
     document.getElementById("reveal-status").textContent = "두 사람의 이름궁합";
     resultBox.classList.add("is-done");
     document.getElementById("save-result").addEventListener("click", () => {

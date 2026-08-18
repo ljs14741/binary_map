@@ -173,6 +173,9 @@
     bindMapZoom(wrap);
     ensureExpandUi(wrap);
     resetZoom(wrap, false);
+    if (wrap.classList.contains("is-expanded")) {
+      fitExpandedMap(wrap);
+    }
     requestAnimationFrame(() => canvas.classList.add("is-ready"));
     applyFilter();
   }
@@ -770,6 +773,24 @@
     return el;
   }
 
+  function expandCloseBtn() {
+    let el = document.getElementById("map-expand-close");
+    if (!el) {
+      el = document.createElement("button");
+      el.type = "button";
+      el.id = "map-expand-close";
+      el.className = "map-expand-close";
+      el.setAttribute("aria-label", "닫기");
+      el.textContent = "닫기";
+      el.addEventListener("click", (event) => {
+        event.stopPropagation();
+        collapseMap();
+      });
+      document.body.appendChild(el);
+    }
+    return el;
+  }
+
   function ensureExpandUi(wrap) {
     if (!wrap.querySelector(".map-expand-btn")) {
       const btn = document.createElement("button");
@@ -782,30 +803,49 @@
       });
       wrap.appendChild(btn);
     }
-    if (!wrap.querySelector(".map-expand-close")) {
-      const close = document.createElement("button");
-      close.type = "button";
-      close.className = "map-expand-close";
-      close.setAttribute("aria-label", "닫기");
-      close.textContent = "닫기";
-      close.addEventListener("click", (event) => {
-        event.stopPropagation();
-        closeExpand(wrap);
-      });
-      wrap.appendChild(close);
+  }
+
+  function fitExpandedMap(wrap) {
+    if (!wrap) {
+      return;
     }
+    if (!wrap.classList.contains("is-expanded")) {
+      wrap.style.top = "";
+      wrap.style.left = "";
+      wrap.style.width = "";
+      wrap.style.height = "";
+      return;
+    }
+    const topGap = 56;
+    const margin = 20;
+    const availW = Math.max(180, window.innerWidth - margin * 2);
+    const availH = Math.max(180, window.innerHeight - topGap - margin);
+    const aspect = VIEW.w / VIEW.h;
+    let width = availW;
+    let height = width / aspect;
+    if (height > availH) {
+      height = availH;
+      width = height * aspect;
+    }
+    wrap.style.width = `${Math.floor(width)}px`;
+    wrap.style.height = `${Math.floor(height)}px`;
+    wrap.style.left = `${Math.round((window.innerWidth - width) / 2)}px`;
+    wrap.style.top = `${Math.round(topGap + Math.max(0, availH - height) / 2)}px`;
   }
 
   function openExpand(wrap) {
     if (!wrap || !finePointer() || wrap.classList.contains("is-expanded")) {
       return;
     }
+    resetZoom(wrap, false);
     expandBackdrop().classList.add("is-open");
+    expandCloseBtn().classList.add("is-open");
     wrap.classList.add("is-expanded");
     document.body.classList.add("is-map-expanded");
+    fitExpandedMap(wrap);
     requestAnimationFrame(() => {
-      clampZoom(wrap);
-      applyZoom(wrap, false);
+      fitExpandedMap(wrap);
+      resetZoom(wrap, false);
     });
   }
 
@@ -814,12 +854,20 @@
       return;
     }
     wrap.classList.remove("is-expanded");
+    wrap.style.top = "";
+    wrap.style.left = "";
+    wrap.style.width = "";
+    wrap.style.height = "";
     resetZoom(wrap, false);
     if (!document.querySelector(".korea-wrap.is-expanded")) {
       document.body.classList.remove("is-map-expanded");
       const backdrop = document.getElementById("map-expand-backdrop");
+      const close = document.getElementById("map-expand-close");
       if (backdrop) {
         backdrop.classList.remove("is-open");
+      }
+      if (close) {
+        close.classList.remove("is-open");
       }
     }
   }
@@ -834,6 +882,15 @@
     }
     wrap.dataset.zoomBound = "true";
     const z = zoomState(wrap);
+    if (!window.__mapExpandResize) {
+      window.__mapExpandResize = true;
+      window.addEventListener("resize", () => {
+        document.querySelectorAll(".korea-wrap.is-expanded").forEach((el) => {
+          resetZoom(el, false);
+          fitExpandedMap(el);
+        });
+      });
+    }
 
     wrap.addEventListener("pointerdown", (event) => {
       z.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
@@ -976,7 +1033,7 @@
       if (!finePointer() || wrap.classList.contains("is-expanded")) {
         return;
       }
-      if (event.target.closest(".cluster-pin, .host-pin, .pin-name, .map-expand-btn, .map-expand-close")) {
+      if (event.target.closest(".cluster-pin, .host-pin, .pin-name, .map-expand-btn")) {
         return;
       }
       openExpand(wrap);

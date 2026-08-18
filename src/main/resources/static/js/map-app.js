@@ -627,10 +627,10 @@
       : [hostCard, guestCard];
     return `
       <div class="map-dual">
-        ${cards.map((card) => `
-        <div class="map-dual-card" style="--score-color:${card.color}">
+        ${cards.map((card, index) => `
+        <div class="map-dual-card" style="--score-color:${card.color}; --delay:${index * 0.08}s">
           <small>${escapeHtml(card.caption)}</small>
-          <b>${card.score}</b>
+          <b data-score="${card.score}">0</b>
           <span>${escapeHtml(card.label)}</span>
         </div>`).join("")}
       </div>`;
@@ -686,6 +686,60 @@
         await wait(70);
       }
     }
+  }
+
+  function animateScores(root) {
+    const nodes = [...(root || document).querySelectorAll("[data-score]")];
+    if (!nodes.length) {
+      return Promise.resolve();
+    }
+    const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) {
+      nodes.forEach((el) => {
+        el.textContent = el.dataset.score;
+      });
+      return Promise.resolve();
+    }
+    return Promise.all(nodes.map((el, index) => countUp(el, Number(el.dataset.score), 70 * index)));
+  }
+
+  function countUp(el, target, delay) {
+    const goal = Number.isFinite(target) ? target : 0;
+    return new Promise((resolve) => {
+      window.setTimeout(() => {
+        const start = performance.now();
+        const dur = 620;
+        const tick = (now) => {
+          const t = Math.min(1, (now - start) / dur);
+          const eased = 1 - (1 - t) * (1 - t);
+          el.textContent = String(Math.round(goal * eased));
+          if (t < 1) {
+            requestAnimationFrame(tick);
+          } else {
+            el.textContent = String(goal);
+            resolve();
+          }
+        };
+        requestAnimationFrame(tick);
+      }, delay);
+    });
+  }
+
+  function celebrateJoin(name) {
+    if (!name) {
+      return;
+    }
+    const nick = String(name).replace(/\s+/g, "").slice(-2);
+    document.querySelectorAll("#map-rank li").forEach((item) => {
+      if (item.dataset.name === name) {
+        item.classList.add("is-fresh");
+      }
+    });
+    document.querySelectorAll(".pin-name").forEach((el) => {
+      if (el.textContent.trim() === nick) {
+        el.classList.add("is-fresh");
+      }
+    });
   }
 
   async function shareKakao(payload) {
@@ -1274,8 +1328,9 @@
   function rankRowHtml(person, index, hostName) {
     const rank = rankMeta(person);
     const place = index < 3 ? ` is-rank-${index + 1}` : "";
+    const delay = Math.min(index, 10) * 0.05;
     return `
-      <li class="${place.trim()}" data-label="${escapeHtml(rank.label)}">
+      <li class="${place.trim()} is-in" style="--rank-delay:${delay}s" data-label="${escapeHtml(rank.label)}" data-name="${escapeHtml(person.name)}">
         <em>${index + 1}</em>
         ${rankBodyHtml(person, hostName)}
       </li>`;
@@ -1310,6 +1365,8 @@
     foldPane,
     dualFolds,
     animateFolds,
+    animateScores,
+    celebrateJoin,
     shareKakao,
     copyLink,
     captureShare,
