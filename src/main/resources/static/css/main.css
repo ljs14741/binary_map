@@ -749,10 +749,10 @@ textarea {
   position: fixed;
   z-index: 10050;
   inset: auto;
-  top: 56px;
+  top: 60px;
   left: 20px;
-  width: min(92vw, calc((100dvh - 80px) * 800 / 759));
-  height: min(calc(100dvh - 80px), calc(92vw * 759 / 800));
+  width: min(680px, calc(100vw - 400px), calc((100dvh - 144px) * 800 / 759));
+  height: min(calc(100dvh - 144px), calc(min(680px, 100vw - 400px) * 759 / 800));
   min-height: 0;
   padding: 0;
   overflow: hidden;
@@ -817,7 +817,7 @@ body.is-map-expanded .bw-global-header {
 }
 
 .korea-map .sido-land.is-filled {
-  stroke-width: 0.55;
+  stroke-width: 0.85;
 }
 
 .korea-map .sido-land.is-home {

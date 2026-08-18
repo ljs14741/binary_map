@@ -448,6 +448,26 @@
     return `#${[0, 1, 2].map((i) => Math.round(a[i] + (b[i] - a[i]) * n).toString(16).padStart(2, "0")).join("")}`;
   }
 
+  function landCodeAt(svg, x, y) {
+    const paths = [...svg.querySelectorAll("path.sido-land")];
+    const point = svg.createSVGPoint();
+    point.x = x;
+    point.y = y;
+    for (let i = paths.length - 1; i >= 0; i -= 1) {
+      const path = paths[i];
+      if (typeof path.isPointInFill !== "function") {
+        continue;
+      }
+      try {
+        if (path.isPointInFill(point)) {
+          return String(path.getAttribute("data-code") || "");
+        }
+      } catch (error) {
+      }
+    }
+    return "";
+  }
+
   function clusterLand(cluster) {
     return String(cluster.people[0]?.sigunguCode || cluster.people[0]?.sidoCode || "");
   }
@@ -471,13 +491,17 @@
   function colorRegions(svg, hostSigungu, clusters) {
     const byLand = {};
     clusters.forEach((cluster) => {
-      const code = landCodeOf(svg, clusterLand(cluster));
+      const raw = clusterLand(cluster);
+      let code = sidoPath(svg, raw) ? landCodeOf(svg, raw) : "";
+      if (!code) {
+        code = landCodeAt(svg, cluster.x, cluster.y);
+      }
       if (!code) {
         return;
       }
       byLand[code] = (byLand[code] || []).concat(cluster.people);
     });
-    const host = landCodeOf(svg, hostSigungu);
+    const host = sidoPath(svg, hostSigungu) ? landCodeOf(svg, hostSigungu) : "";
     svg.querySelectorAll("path.sido-land").forEach((path) => {
       const code = String(path.getAttribute("data-code") || "");
       const people = byLand[code] || [];
@@ -499,6 +523,9 @@
       path.style.stroke = "";
       path.setAttribute("fill", "#f7e2b8");
       path.setAttribute("stroke", "rgba(196, 148, 82, 0.22)");
+    });
+    svg.querySelectorAll("path.sido-land.is-filled, path.sido-land.is-home").forEach((path) => {
+      path.parentNode.appendChild(path);
     });
   }
 
@@ -816,10 +843,11 @@
       wrap.style.height = "";
       return;
     }
-    const topGap = 56;
-    const margin = 20;
-    const availW = Math.max(180, window.innerWidth - margin * 2);
-    const availH = Math.max(180, window.innerHeight - topGap - margin);
+    const sideGutter = 200;
+    const topGap = 60;
+    const bottomGap = 84;
+    const availW = Math.max(240, Math.min(680, window.innerWidth - sideGutter * 2));
+    const availH = Math.max(200, window.innerHeight - topGap - bottomGap);
     const aspect = VIEW.w / VIEW.h;
     let width = availW;
     let height = width / aspect;
