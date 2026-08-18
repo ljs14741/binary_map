@@ -132,7 +132,7 @@
     svg.classList.add("korea-map");
     svg.querySelectorAll("path[data-code]").forEach((path) => {
       path.classList.add("sido-land");
-      path.setAttribute("fill", "#f7e2b8");
+      path.setAttribute("fill", "#e2d3c0");
     });
     wrap.replaceChildren(canvas);
     landCache = new Map();
@@ -426,31 +426,32 @@
   function colorSidos(svg, hostSido, clusters) {
     const counts = {};
     clusters.forEach((cluster) => {
-      const code = cluster.people[0]?.sidoCode;
+      const code = String(cluster.people[0]?.sidoCode || "");
       if (!code) {
         return;
       }
       counts[code] = (counts[code] || 0) + cluster.count;
     });
     const max = Math.max(1, ...Object.values(counts), 1);
+    const host = String(hostSido || "");
     svg.querySelectorAll("path[data-code]").forEach((path) => {
-      const code = path.getAttribute("data-code");
+      const code = String(path.getAttribute("data-code") || "");
       const count = counts[code] || 0;
-      path.classList.toggle("is-home", code === hostSido);
-      path.classList.toggle("is-filled", count > 0 && code !== hostSido);
-      if (code === hostSido) {
-        path.setAttribute("fill", "#ffe08a");
-        path.setAttribute("stroke", "#e2b84a");
+      path.classList.toggle("is-home", code === host);
+      path.classList.toggle("is-filled", count > 0 && code !== host);
+      if (code === host) {
+        path.setAttribute("fill", "#ffc44a");
+        path.setAttribute("stroke", "#c48910");
         return;
       }
       if (count > 0) {
-        const t = 0.28 + 0.5 * (count / max);
-        path.setAttribute("fill", mixHex("#f7e2b8", "#ff9b73", t));
-        path.setAttribute("stroke", mixHex("#e2c08a", "#f07a4a", t));
+        const t = 0.55 + 0.4 * (count / max);
+        path.setAttribute("fill", mixHex("#e2d3c0", "#ff7048", t));
+        path.setAttribute("stroke", mixHex("#c4a078", "#e24d2c", t));
         return;
       }
-      path.setAttribute("fill", "#f7e2b8");
-      path.setAttribute("stroke", "rgba(196, 148, 82, 0.18)");
+      path.setAttribute("fill", "#e2d3c0");
+      path.setAttribute("stroke", "rgba(120, 96, 78, 0.22)");
     });
   }
 
@@ -754,6 +755,10 @@
       if (!z.pointers.has(event.pointerId)) {
         return;
       }
+      if (z.scale === 1 && z.pointers.size < 2) {
+        z.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        return;
+      }
       const prev = z.pointers.get(event.pointerId);
       z.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
       if (z.pointers.size === 2 && z.pinch && z.pinch.dist) {
@@ -774,10 +779,6 @@
         if (Math.hypot(event.clientX - prev.x, event.clientY - prev.y) > 2) {
           z.suppressClick = true;
         }
-        return;
-      }
-      if (z.pointers.size === 1 && z.scale === 1 && event.pointerType === "touch") {
-        window.scrollBy(0, prev.y - event.clientY);
       }
     }, { passive: false });
 
@@ -792,11 +793,6 @@
     };
     wrap.addEventListener("pointerup", endPointer);
     wrap.addEventListener("pointercancel", endPointer);
-    wrap.addEventListener("pointerleave", (event) => {
-      if (z.pointers.has(event.pointerId) && z.pointers.size < 2) {
-        endPointer(event);
-      }
-    });
     wrap.addEventListener("click", (event) => {
       if (!z.suppressClick) {
         return;
