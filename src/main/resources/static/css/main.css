@@ -719,13 +719,6 @@ textarea {
   stroke-width: 0.85;
 }
 
-.korea-map .sido-border {
-  fill: none;
-  pointer-events: none;
-  stroke: rgba(132, 86, 42, 0.62);
-  stroke-width: 1.35;
-}
-
 .cluster-layer {
   position: absolute;
   inset: 0;

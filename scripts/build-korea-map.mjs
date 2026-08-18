@@ -237,17 +237,11 @@ for (const [sidoCode, fileName] of Object.entries(FILES)) {
 }
 
 const missing = catalog.filter((item) => !used.has(item.code)).map((item) => `${item.code}:${item.label}`);
-const outlines = sidoPaths.map((path) =>
-  `<path class="sido-border" data-sido="${path.code}" data-name="${path.name || ""}" fill="none" d="${path.d}"/>`
-);
 
 const svg = `<?xml version="1.0"?>
 <svg xmlns="http://www.w3.org/2000/svg" version="1.2" baseProfile="tiny" width="800" height="759" viewBox="0 0 800 759" stroke-linecap="round" stroke-linejoin="round">
 <g id="시군구_경계">
 ${landPaths.join("\n")}
-</g>
-<g id="시도_외곽">
-${outlines.join("\n")}
 </g>
 </svg>
 `;
