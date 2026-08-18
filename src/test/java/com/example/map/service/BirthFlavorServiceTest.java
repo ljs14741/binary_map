@@ -98,12 +98,13 @@ class BirthFlavorServiceTest {
     void sameBirthSameSignGoesToGoodBucket() {
         var twin = service.profile(LocalDate.of(1998, 6, 15));
         assertThat(service.chemistryBucket(twin, twin)).isEqualTo(FlavorCopy.Bucket.GOOD);
-        assertThat(FlavorCopy.GOOD).contains(
-                "같이 술 마시면 아침까지 안 취하고 달리는 무적 조합 🍻");
-        assertThat(FlavorCopy.OK).contains(
-                "낮에 아메리카노 한 잔 때리면서 수다 떨기 딱 좋은 관계 ☕");
-        assertThat(FlavorCopy.BAD).contains(
-                "둘만 남겨지면 3초 만에 정적 흐르는 위험한 정막존 ⚡");
+        assertThat(FlavorCopy.GOOD).contains("새벽에 '야' 한 글자 보내도 바로 답 옴 💬");
+        assertThat(FlavorCopy.OK).contains("낮에 아메리카노 한 잔 때리며 수다 떨기 좋은 사이 ☕");
+        assertThat(FlavorCopy.BAD).contains("둘만 남으면 3초 만에 정적 흐르는 사이 ⚡");
+        assertThat(FlavorCopy.GOOD.length).isGreaterThanOrEqualTo(30);
+        assertThat(FlavorCopy.OK.length).isGreaterThanOrEqualTo(30);
+        assertThat(FlavorCopy.BAD.length).isGreaterThanOrEqualTo(30);
+        assertThat(java.util.Arrays.stream(FlavorCopy.BAD).noneMatch(line -> line.contains("부랄"))).isTrue();
     }
 
     @Test
