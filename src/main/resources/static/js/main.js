@@ -118,6 +118,7 @@
     const list = document.getElementById("map-rank");
     if (list) {
       list.innerHTML = friends.map((person, index) => MapApp.rankRowHtml(person, index, "수현")).join("");
+      MapApp.revealRank(list);
     }
     MapApp.renderAnimals(sampleAnimalCounts(friends));
   }

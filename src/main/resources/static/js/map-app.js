@@ -730,11 +730,48 @@
       return;
     }
     const nick = String(name).replace(/\s+/g, "").slice(-2);
+    document.querySelectorAll("#map-rank li").forEach((item) => {
+      const strong = item.querySelector(".map-rank-name strong");
+      if (strong && strong.textContent === name) {
+        item.classList.add("is-fresh");
+      }
+    });
     document.querySelectorAll(".pin-name").forEach((el) => {
       if (el.textContent.trim() === nick) {
         el.classList.add("is-fresh");
       }
     });
+  }
+
+  function revealRank(list) {
+    const root = list || document.getElementById("map-rank");
+    if (!root) {
+      return;
+    }
+    const items = [...root.querySelectorAll("li")];
+    if (!items.length) {
+      return;
+    }
+    root.dataset.reveal = "1";
+    const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const play = () => {
+      items.forEach((item, index) => {
+        item.style.setProperty("--rank-delay", `${Math.min(index, 8) * 0.09}s`);
+        item.classList.add("is-in");
+      });
+    };
+    if (reduced || !("IntersectionObserver" in window)) {
+      play();
+      return;
+    }
+    const io = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) {
+        return;
+      }
+      io.disconnect();
+      play();
+    }, { threshold: 0.2, rootMargin: "0px 0px -8% 0px" });
+    io.observe(root);
   }
 
   async function shareKakao(payload) {
@@ -1361,6 +1398,7 @@
     animateFolds,
     animateScores,
     celebrateJoin,
+    revealRank,
     shareKakao,
     copyLink,
     captureShare,

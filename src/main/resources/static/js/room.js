@@ -160,6 +160,7 @@
   function renderRank(people) {
     const list = document.getElementById("map-rank");
     list.innerHTML = people.map((person, index) => MapApp.rankRowHtml(person, index, view.hostName)).join("");
+    MapApp.revealRank(list);
   }
 
   function bind() {
