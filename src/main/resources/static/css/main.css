@@ -1459,7 +1459,7 @@ body.is-sheet-open {
   pointer-events: none;
   background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%);
   transform: translateX(-130%);
-  animation: rank-shine 4.8s ease-in-out calc(var(--rank-delay, 0s) + 0.4s) infinite;
+  animation: rank-shine 3.2s ease-in-out calc(var(--rank-delay, 0s) + 0.4s) infinite;
 }
 
 .map-rank li.is-rank-1.is-in::after {
@@ -2119,8 +2119,8 @@ body.is-sheet-open {
 }
 
 @keyframes rank-shine {
-  0%, 62% { transform: translateX(-130%); }
-  78% { transform: translateX(130%); }
+  0%, 48% { transform: translateX(-130%); }
+  68% { transform: translateX(130%); }
   100% { transform: translateX(130%); }
 }
 
