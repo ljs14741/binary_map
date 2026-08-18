@@ -138,7 +138,14 @@ public class MapController {
                 guest.starSign(),
                 guest.starEmoji(),
                 birth.toString(),
-                birthFlavorService.rankComment(host, guest, name, SAMPLE_HOST_BIRTH, birth)
+                birthFlavorService.rankComment(
+                        host,
+                        guest,
+                        name,
+                        SAMPLE_HOST_BIRTH,
+                        birth,
+                        RelationLabel.shown(score, reverseScore)
+                )
         );
     }
 
@@ -158,7 +165,7 @@ public class MapController {
     }
 
     private String rankLabel(SampleFriend friend) {
-        return friend.reverseScore() > friend.score() ? friend.reverseLabel() : friend.label();
+        return RelationLabel.shown(friend.score(), friend.reverseScore()).displayName();
     }
 
     private int compareRank(SampleFriend a, SampleFriend b) {

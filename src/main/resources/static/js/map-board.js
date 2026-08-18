@@ -171,6 +171,7 @@
     canvas.appendChild(nameLayer);
     canvas.appendChild(layer);
     bindMapZoom(wrap);
+    ensureExpandUi(wrap);
     resetZoom(wrap, false);
     requestAnimationFrame(() => canvas.classList.add("is-ready"));
     applyFilter();
@@ -449,7 +450,7 @@
   }
 
   function dominantMateColor(people) {
-    const rank = { "부랄짝꿍": 5, "찐 짝꿍": 4, "비즈니스짝꿍": 3, "어색 짝꿍": 2, "위험 짝꿍": 1 };
+    const rank = { "부랄짝꿍": 5, "인생짝꿍": 4, "비즈니스짝꿍": 3, "어색짝꿍": 2, "손절위기짝꿍": 1 };
     const tally = new Map();
     people.forEach((person) => {
       const meta = MapApp.rankMeta(person);
@@ -751,6 +752,82 @@
     return wrapPoint(wrap, (a.x + b.x) / 2, (a.y + b.y) / 2);
   }
 
+  function finePointer() {
+    return window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  }
+
+  function expandBackdrop() {
+    let el = document.getElementById("map-expand-backdrop");
+    if (!el) {
+      el = document.createElement("button");
+      el.type = "button";
+      el.id = "map-expand-backdrop";
+      el.className = "map-expand-backdrop";
+      el.setAttribute("aria-label", "크게 보기 닫기");
+      el.addEventListener("click", () => collapseMap());
+      document.body.appendChild(el);
+    }
+    return el;
+  }
+
+  function ensureExpandUi(wrap) {
+    if (!wrap.querySelector(".map-expand-btn")) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "map-expand-btn";
+      btn.textContent = "크게 보기";
+      btn.addEventListener("click", (event) => {
+        event.stopPropagation();
+        openExpand(wrap);
+      });
+      wrap.appendChild(btn);
+    }
+    if (!wrap.querySelector(".map-expand-close")) {
+      const close = document.createElement("button");
+      close.type = "button";
+      close.className = "map-expand-close";
+      close.setAttribute("aria-label", "닫기");
+      close.textContent = "닫기";
+      close.addEventListener("click", (event) => {
+        event.stopPropagation();
+        closeExpand(wrap);
+      });
+      wrap.appendChild(close);
+    }
+  }
+
+  function openExpand(wrap) {
+    if (!wrap || !finePointer() || wrap.classList.contains("is-expanded")) {
+      return;
+    }
+    expandBackdrop().classList.add("is-open");
+    wrap.classList.add("is-expanded");
+    document.body.classList.add("is-map-expanded");
+    requestAnimationFrame(() => {
+      clampZoom(wrap);
+      applyZoom(wrap, false);
+    });
+  }
+
+  function closeExpand(wrap) {
+    if (!wrap || !wrap.classList.contains("is-expanded")) {
+      return;
+    }
+    wrap.classList.remove("is-expanded");
+    resetZoom(wrap, false);
+    if (!document.querySelector(".korea-wrap.is-expanded")) {
+      document.body.classList.remove("is-map-expanded");
+      const backdrop = document.getElementById("map-expand-backdrop");
+      if (backdrop) {
+        backdrop.classList.remove("is-open");
+      }
+    }
+  }
+
+  function collapseMap() {
+    document.querySelectorAll(".korea-wrap.is-expanded").forEach(closeExpand);
+  }
+
   function bindMapZoom(wrap) {
     if (!wrap || wrap.dataset.zoomBound) {
       return;
@@ -894,6 +971,25 @@
       event.stopPropagation();
       z.suppressClick = false;
     }, true);
+
+    wrap.addEventListener("click", (event) => {
+      if (!finePointer() || wrap.classList.contains("is-expanded")) {
+        return;
+      }
+      if (event.target.closest(".cluster-pin, .host-pin, .pin-name, .map-expand-btn, .map-expand-close")) {
+        return;
+      }
+      openExpand(wrap);
+    });
+
+    wrap.addEventListener("wheel", (event) => {
+      if (!wrap.classList.contains("is-expanded")) {
+        return;
+      }
+      event.preventDefault();
+      const p = wrapPoint(wrap, event.clientX, event.clientY);
+      zoomAround(wrap, z.scale * (event.deltaY > 0 ? 1 / 1.12 : 1.12), p.x, p.y);
+    }, { passive: false });
   }
 
   function addSparkles(layer) {
@@ -934,9 +1030,14 @@
     document.getElementById("map-sheet-close").addEventListener("click", closeSheet);
     document.getElementById("map-sheet-backdrop").addEventListener("click", closeSheet);
     document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") {
-        closeSheet();
+      if (event.key !== "Escape") {
+        return;
       }
+      if (sheet.classList.contains("is-open")) {
+        closeSheet();
+        return;
+      }
+      collapseMap();
     });
   }
 
@@ -1014,5 +1115,5 @@
     return MapApp.escapeHtml(value);
   }
 
-  window.MapBoard = { paint, bindUi, closeSheet, escapeHtml };
+  window.MapBoard = { paint, bindUi, closeSheet, collapseMap, escapeHtml };
 })();

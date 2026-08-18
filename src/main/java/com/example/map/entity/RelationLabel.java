@@ -2,10 +2,10 @@ package com.example.map.entity;
 
 public enum RelationLabel {
     BURAL_MATE(85, 100, "부랄짝꿍", "#ff2d95", "💖"),
-    TRUE_MATE(70, 84, "찐 짝꿍", "#22c55e", "💚"),
+    TRUE_MATE(70, 84, "인생짝꿍", "#22c55e", "💚"),
     BIZ_MATE(50, 69, "비즈니스짝꿍", "#3b82f6", "💙"),
-    AWKWARD_MATE(30, 49, "어색 짝꿍", "#f97316", "🧡"),
-    DANGER_MATE(0, 29, "위험 짝꿍", "#ef4444", "❤️");
+    AWKWARD_MATE(30, 49, "어색짝꿍", "#f97316", "🧡"),
+    DANGER_MATE(0, 29, "손절위기짝꿍", "#ef4444", "❤️");
 
     private final int min;
     private final int max;
@@ -44,5 +44,9 @@ public enum RelationLabel {
             }
         }
         return DANGER_MATE;
+    }
+
+    public static RelationLabel shown(int score, int reverseScore) {
+        return reverseScore > score ? fromScore(reverseScore) : fromScore(score);
     }
 }

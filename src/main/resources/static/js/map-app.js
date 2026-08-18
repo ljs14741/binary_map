@@ -813,6 +813,9 @@
   }
 
   async function drawMapShareCard(stage) {
+    if (window.MapBoard && typeof MapBoard.collapseMap === "function") {
+      MapBoard.collapseMap();
+    }
     const scale = 2;
     const width = Math.ceil((stage.getBoundingClientRect().width || 360) * scale);
     const pad = 24;
@@ -1139,10 +1142,10 @@
 
   const HEARTS = {
     "부랄짝꿍": "💖",
-    "찐 짝꿍": "💚",
+    "인생짝꿍": "💚",
     "비즈니스짝꿍": "💙",
-    "어색 짝꿍": "🧡",
-    "위험 짝꿍": "❤️"
+    "어색짝꿍": "🧡",
+    "손절위기짝꿍": "❤️"
   };
 
   function heartOf(label) {

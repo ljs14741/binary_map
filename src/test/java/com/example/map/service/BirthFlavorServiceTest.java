@@ -1,6 +1,7 @@
 package com.example.map.service;
 
 import com.example.map.entity.AnimalFit;
+import com.example.map.entity.RelationLabel;
 import com.example.map.entity.StarFit;
 import com.example.map.entity.ZodiacAnimal;
 import org.junit.jupiter.api.Test;
@@ -68,12 +69,10 @@ class BirthFlavorServiceTest {
         var guest = service.profile(LocalDate.of(1999, 10, 23));
         LocalDate hostBirth = LocalDate.of(1998, 6, 15);
         LocalDate guestBirth = LocalDate.of(1999, 10, 23);
-        String first = service.rankComment(host, guest, "민지", hostBirth, guestBirth);
-        String again = service.rankComment(host, guest, "민지", hostBirth, guestBirth);
+        String first = service.rankComment(host, guest, "민지", hostBirth, guestBirth, RelationLabel.TRUE_MATE);
+        String again = service.rankComment(host, guest, "민지", hostBirth, guestBirth, RelationLabel.TRUE_MATE);
         assertThat(first).isEqualTo(again);
-        FlavorCopy.Bucket bucket = service.chemistryBucket(host, guest);
-        assertThat(bucket).isNotNull();
-        assertThat(FlavorCopy.lines(bucket)).contains(first);
+        assertThat(FlavorCopy.GOOD).contains(first);
     }
 
     @Test
@@ -89,7 +88,7 @@ class BirthFlavorServiceTest {
                 "유진", "민준", "채원", "건우", "소율", "시현"
         };
         var lines = java.util.Arrays.stream(names)
-                .map(name -> service.rankComment(host, guest, name, hostBirth, guestBirth))
+                .map(name -> service.rankComment(host, guest, name, hostBirth, guestBirth, RelationLabel.BIZ_MATE))
                 .collect(java.util.stream.Collectors.toSet());
         assertThat(lines).hasSizeGreaterThan(8);
     }
@@ -105,6 +104,21 @@ class BirthFlavorServiceTest {
         assertThat(FlavorCopy.OK.length).isGreaterThanOrEqualTo(30);
         assertThat(FlavorCopy.BAD.length).isGreaterThanOrEqualTo(30);
         assertThat(java.util.Arrays.stream(FlavorCopy.BAD).noneMatch(line -> line.contains("부랄"))).isTrue();
+        assertThat(FlavorCopy.ofLabel(RelationLabel.BURAL_MATE)).isEqualTo(FlavorCopy.Bucket.GOOD);
+        assertThat(FlavorCopy.ofLabel(RelationLabel.TRUE_MATE)).isEqualTo(FlavorCopy.Bucket.GOOD);
+        assertThat(FlavorCopy.ofLabel(RelationLabel.BIZ_MATE)).isEqualTo(FlavorCopy.Bucket.OK);
+        assertThat(FlavorCopy.ofLabel(RelationLabel.AWKWARD_MATE)).isEqualTo(FlavorCopy.Bucket.BAD);
+        assertThat(FlavorCopy.ofLabel(RelationLabel.DANGER_MATE)).isEqualTo(FlavorCopy.Bucket.BAD);
+    }
+
+    @Test
+    void awkwardMateUsesBadCopyEvenWhenChemistryIsGood() {
+        var twin = service.profile(LocalDate.of(1998, 6, 15));
+        LocalDate birth = LocalDate.of(1998, 6, 15);
+        assertThat(service.chemistryBucket(twin, twin)).isEqualTo(FlavorCopy.Bucket.GOOD);
+        String line = service.rankComment(twin, twin, "현우", birth, birth, RelationLabel.AWKWARD_MATE);
+        assertThat(FlavorCopy.BAD).contains(line);
+        assertThat(FlavorCopy.GOOD).doesNotContain(line);
     }
 
     @Test

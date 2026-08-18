@@ -277,7 +277,8 @@ public class CoupleMapService {
                         guestProfile,
                         person.getPersonName(),
                         map.getHostBirthDate(),
-                        person.getBirthDate()
+                        person.getBirthDate(),
+                        RelationLabel.shown(forward.score(), reverse.score())
                 ),
                 fit == null ? null : fit.simpleLabel(),
                 starFit == null ? null : starFit.displayName(),
@@ -394,7 +395,8 @@ public class CoupleMapService {
                         profile,
                         person.getPersonName(),
                         map.getHostBirthDate(),
-                        person.getBirthDate()
+                        person.getBirthDate(),
+                        RelationLabel.shown(person.getScore(), person.getReverseScore())
                 ),
                 person.getCreatedAt()
         );
@@ -470,7 +472,7 @@ public class CoupleMapService {
     }
 
     private String rankLabel(MapPersonView person) {
-        return person.score() >= person.reverseScore() ? person.label() : person.reverseLabel();
+        return RelationLabel.shown(person.score(), person.reverseScore()).displayName();
     }
 
     private String shareUrl(String mapId) {

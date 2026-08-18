@@ -671,6 +671,92 @@ textarea {
     linear-gradient(180deg, #b9dce8 0%, #9ecfde 40%, #c5e6d8 100%);
 }
 
+.map-expand-btn,
+.map-expand-close {
+  display: none;
+  position: absolute;
+  z-index: 12;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .korea-wrap:not(.is-expanded):not(.is-zoomed) {
+    cursor: zoom-in;
+  }
+
+  .korea-wrap .cluster-pin,
+  .korea-wrap .host-pin,
+  .korea-wrap .pin-name,
+  .korea-wrap .map-expand-btn,
+  .korea-wrap .map-expand-close {
+    cursor: pointer;
+  }
+
+  .map-expand-btn {
+    display: inline-flex;
+    align-items: center;
+    top: 10px;
+    right: 10px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    color: #3a2a22;
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: 0 4px 12px rgba(42, 31, 26, 0.12);
+  }
+}
+
+.korea-wrap.is-expanded .map-expand-btn {
+  display: none;
+}
+
+.korea-wrap.is-expanded .map-expand-close {
+  display: inline-flex;
+  align-items: center;
+  top: 12px;
+  right: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  color: #3a2a22;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 4px 12px rgba(42, 31, 26, 0.16);
+}
+
+.map-expand-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  border: 0;
+  padding: 0;
+  background: rgba(42, 31, 26, 0.52);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.map-expand-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.korea-wrap.is-expanded {
+  position: fixed;
+  z-index: 75;
+  inset: max(16px, 3vh) max(16px, 6vw);
+  min-height: 0;
+  padding: 28px 20px 20px;
+  border-radius: 24px;
+  box-shadow: 0 24px 80px rgba(42, 31, 26, 0.28);
+  touch-action: none;
+}
+
+body.is-map-expanded {
+  overflow: hidden;
+}
+
 .korea-wrap.is-zoomed,
 .korea-wrap.is-pinching {
   cursor: grab;
@@ -987,6 +1073,15 @@ textarea {
   }
 }
 
+.map-zoom-hint {
+  margin: 8px 0 0;
+  color: #8a6d52;
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+  font-weight: 600;
+}
+
 .map-stats {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
@@ -1146,7 +1241,7 @@ textarea {
 .map-sheet {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: 90;
 }
 
 .map-sheet-backdrop {

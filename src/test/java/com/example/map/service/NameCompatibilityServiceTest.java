@@ -65,5 +65,10 @@ class NameCompatibilityServiceTest {
         assertThat(RelationLabel.fromScore(61)).isEqualTo(RelationLabel.BIZ_MATE);
         assertThat(RelationLabel.fromScore(41)).isEqualTo(RelationLabel.AWKWARD_MATE);
         assertThat(RelationLabel.fromScore(12)).isEqualTo(RelationLabel.DANGER_MATE);
+        assertThat(RelationLabel.TRUE_MATE.displayName()).isEqualTo("인생짝꿍");
+        assertThat(RelationLabel.AWKWARD_MATE.displayName()).isEqualTo("어색짝꿍");
+        assertThat(RelationLabel.DANGER_MATE.displayName()).isEqualTo("손절위기짝꿍");
+        assertThat(RelationLabel.shown(40, 82)).isEqualTo(RelationLabel.TRUE_MATE);
+        assertThat(RelationLabel.shown(91, 40)).isEqualTo(RelationLabel.BURAL_MATE);
     }
 }

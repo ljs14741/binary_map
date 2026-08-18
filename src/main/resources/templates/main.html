@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>짝꿍지도 - 이름궁합 테스트 | Binary World</title>
-  <meta name="description" content="두 이름으로 보는 이름궁합. 친구가 사는 곳에 핀이 찍히는 짝꿍지도. 획수 궁합으로 부랄짝꿍부터 위험 짝꿍까지 바로 확인하세요.">
+  <meta name="description" content="두 이름으로 보는 이름궁합. 친구가 사는 곳에 핀이 찍히는 짝꿍지도. 획수 궁합으로 부랄짝꿍부터 손절위기짝꿍까지 바로 확인하세요.">
   <meta name="keywords" content="짝꿍지도, 이름궁합, 이름 궁합 테스트, 획수 궁합, 친구 궁합, 궁합 테스트, Binary World">
   <meta name="robots" content="index, follow">
   <meta name="author" content="Binary World">
@@ -163,6 +163,7 @@
         <span th:text="|${sampleTotal}명 참여|">12명 참여</span>
       </div>
       <div class="korea-wrap" id="korea-wrap" aria-label="대한민국 시군구 예시 지도"></div>
+      <p class="map-zoom-hint">지도를 크게 볼 수 있어요</p>
       <div class="map-stats" id="map-stats">
         <button type="button" class="map-stat" th:each="count : ${sampleCounts}"
                 th:style="|--stat:${count.color()}|"

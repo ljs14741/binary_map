@@ -1,5 +1,7 @@
 package com.example.map.service;
 
+import com.example.map.entity.RelationLabel;
+
 final class FlavorCopy {
 
     enum Bucket {
@@ -125,6 +127,17 @@ final class FlavorCopy {
     };
 
     private FlavorCopy() {
+    }
+
+    static Bucket ofLabel(RelationLabel label) {
+        if (label == null) {
+            return null;
+        }
+        return switch (label) {
+            case BURAL_MATE, TRUE_MATE -> Bucket.GOOD;
+            case BIZ_MATE -> Bucket.OK;
+            case AWKWARD_MATE, DANGER_MATE -> Bucket.BAD;
+        };
     }
 
     static String pick(Bucket bucket, String seed) {

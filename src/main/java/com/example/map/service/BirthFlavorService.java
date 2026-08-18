@@ -1,6 +1,7 @@
 package com.example.map.service;
 
 import com.example.map.entity.AnimalFit;
+import com.example.map.entity.RelationLabel;
 import com.example.map.entity.StarFit;
 import com.example.map.entity.ZodiacAnimal;
 import org.springframework.stereotype.Service;
@@ -166,9 +167,10 @@ public class BirthFlavorService {
             BirthProfile guest,
             String guestName,
             LocalDate hostBirth,
-            LocalDate guestBirth
+            LocalDate guestBirth,
+            RelationLabel label
     ) {
-        return rankComment(host, guest, guestName, hostBirth, guestBirth);
+        return rankComment(host, guest, guestName, hostBirth, guestBirth, label);
     }
 
     FlavorCopy.Bucket chemistryBucket(BirthProfile host, BirthProfile guest) {
@@ -195,9 +197,10 @@ public class BirthFlavorService {
             BirthProfile guest,
             String guestName,
             LocalDate hostBirth,
-            LocalDate guestBirth
+            LocalDate guestBirth,
+            RelationLabel label
     ) {
-        FlavorCopy.Bucket bucket = chemistryBucket(host, guest);
+        FlavorCopy.Bucket bucket = FlavorCopy.ofLabel(label);
         if (bucket == null) {
             return null;
         }
