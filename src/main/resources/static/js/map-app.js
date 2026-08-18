@@ -730,11 +730,6 @@
       return;
     }
     const nick = String(name).replace(/\s+/g, "").slice(-2);
-    document.querySelectorAll("#map-rank li").forEach((item) => {
-      if (item.dataset.name === name) {
-        item.classList.add("is-fresh");
-      }
-    });
     document.querySelectorAll(".pin-name").forEach((el) => {
       if (el.textContent.trim() === nick) {
         el.classList.add("is-fresh");
@@ -1328,9 +1323,8 @@
   function rankRowHtml(person, index, hostName) {
     const rank = rankMeta(person);
     const place = index < 3 ? ` is-rank-${index + 1}` : "";
-    const delay = Math.min(index, 10) * 0.05;
     return `
-      <li class="${place.trim()} is-in" style="--rank-delay:${delay}s" data-label="${escapeHtml(rank.label)}" data-name="${escapeHtml(person.name)}">
+      <li class="${place.trim()}" data-label="${escapeHtml(rank.label)}">
         <em>${index + 1}</em>
         ${rankBodyHtml(person, hostName)}
       </li>`;

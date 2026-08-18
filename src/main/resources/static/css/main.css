@@ -1430,15 +1430,6 @@ body.is-sheet-open {
   background: linear-gradient(90deg, #f8e6d4 0%, #fff 70%);
 }
 
-.map-rank li.is-in {
-  animation: rank-in 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: var(--rank-delay, 0s);
-}
-
-.map-rank li.is-fresh {
-  animation: fresh-row 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
 .map-rank em {
   width: 28px;
   height: 28px;
@@ -1459,7 +1450,6 @@ body.is-sheet-open {
   background: #f5c542;
   color: #3a2a20;
   box-shadow: 0 0 0 3px rgba(245, 197, 66, 0.28);
-  animation: medal-pulse 2.2s ease-in-out infinite;
 }
 
 .map-rank li.is-rank-2 em {
@@ -2078,22 +2068,6 @@ body.is-sheet-open {
   100% { opacity: 1; transform: none; }
 }
 
-@keyframes rank-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: none; }
-}
-
-@keyframes medal-pulse {
-  0%, 100% { box-shadow: 0 0 0 3px rgba(245, 197, 66, 0.28); transform: scale(1); }
-  50% { box-shadow: 0 0 0 6px rgba(245, 197, 66, 0.18); transform: scale(1.08); }
-}
-
-@keyframes fresh-row {
-  0% { transform: scale(0.97); box-shadow: 0 0 0 0 rgba(255, 45, 149, 0.35); }
-  60% { transform: scale(1.02); box-shadow: 0 0 0 6px rgba(255, 45, 149, 0.12); }
-  100% { transform: none; box-shadow: none; }
-}
-
 @keyframes fresh-pin {
   0%, 100% { filter: none; }
   40% { filter: drop-shadow(0 0 8px #ff2d95); }
@@ -2112,9 +2086,6 @@ body.is-sheet-open {
   .map-spark,
   .map-sheet-panel,
   .map-sheet-backdrop,
-  .map-rank li.is-in,
-  .map-rank li.is-fresh,
-  .map-rank li.is-rank-1 em,
   .map-dual-card,
   .map-chem-line,
   .pin-name.is-fresh,
