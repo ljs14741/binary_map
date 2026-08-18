@@ -895,13 +895,16 @@
         });
       });
     }
-    y += mapH + 28 * scale;
-    ctx.fillStyle = "#5c4a40";
-    ctx.font = `700 ${12 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
-    ctx.textAlign = "center";
-    ctx.fillText(caption, width / 2, y);
-    ctx.textAlign = "left";
-    y += 28 * scale;
+    y += mapH + 16 * scale;
+    if (caption.trim()) {
+      y += 12 * scale;
+      ctx.fillStyle = "#5c4a40";
+      ctx.font = `700 ${12 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.fillText(caption, width / 2, y);
+      ctx.textAlign = "left";
+      y += 28 * scale;
+    }
     if (stats.length) {
       const gap = 8 * scale;
       const col = (width - pad * 2 - gap * 2) / 3;

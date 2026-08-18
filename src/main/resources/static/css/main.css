@@ -671,7 +671,8 @@ textarea {
     linear-gradient(180deg, #b9dce8 0%, #9ecfde 40%, #c5e6d8 100%);
 }
 
-.korea-wrap.is-zoomed {
+.korea-wrap.is-zoomed,
+.korea-wrap.is-pinching {
   cursor: grab;
   touch-action: none;
 }
@@ -702,13 +703,15 @@ textarea {
 }
 
 .korea-map .sido-land {
-  fill: #e2d3c0;
-  stroke: rgba(120, 96, 78, 0.22);
+  fill: #f7e2b8;
+  stroke: rgba(196, 148, 82, 0.18);
   stroke-width: 0.65;
   transition: fill 0.6s ease, stroke 0.6s ease;
 }
 
 .korea-map .sido-land.is-filled {
+  fill: #ff8a5c;
+  stroke: #e25a38;
   stroke-width: 1.05;
 }
 

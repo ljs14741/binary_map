@@ -1,5 +1,6 @@
 (() => {
   const VIEW = { w: 800, h: 759 };
+  const MAP_ZOOM_MAX = 4;
   const CENTER_FIX = { 11: [252, 154], 28: [200, 152], 41: [248, 172] };
   const SIDO_NAME = {
     "11": "서울", "26": "부산", "27": "대구", "28": "인천", "29": "광주",
@@ -132,7 +133,9 @@
     svg.classList.add("korea-map");
     svg.querySelectorAll("path[data-code]").forEach((path) => {
       path.classList.add("sido-land");
-      path.setAttribute("fill", "#e2d3c0");
+      path.setAttribute("fill", "#f7e2b8");
+      path.style.fill = "";
+      path.style.stroke = "";
     });
     wrap.replaceChildren(canvas);
     landCache = new Map();
@@ -440,18 +443,20 @@
       path.classList.toggle("is-home", code === host);
       path.classList.toggle("is-filled", count > 0 && code !== host);
       if (code === host) {
-        path.setAttribute("fill", "#ffc44a");
-        path.setAttribute("stroke", "#c48910");
+        path.style.fill = "#ffc44a";
+        path.style.stroke = "#c48910";
         return;
       }
       if (count > 0) {
-        const t = 0.55 + 0.4 * (count / max);
-        path.setAttribute("fill", mixHex("#e2d3c0", "#ff7048", t));
-        path.setAttribute("stroke", mixHex("#c4a078", "#e24d2c", t));
+        const t = 0.62 + 0.32 * (count / max);
+        path.style.fill = mixHex("#f7e2b8", "#ff7048", t);
+        path.style.stroke = mixHex("#e2c08a", "#e24d2c", t);
         return;
       }
-      path.setAttribute("fill", "#e2d3c0");
-      path.setAttribute("stroke", "rgba(120, 96, 78, 0.22)");
+      path.style.fill = "";
+      path.style.stroke = "";
+      path.setAttribute("fill", "#f7e2b8");
+      path.setAttribute("stroke", "rgba(196, 148, 82, 0.18)");
     });
   }
 
@@ -619,7 +624,7 @@
 
   function clampZoom(wrap) {
     const z = zoomState(wrap);
-    z.scale = Math.min(2.5, Math.max(1, z.scale));
+    z.scale = Math.min(MAP_ZOOM_MAX, Math.max(1, z.scale));
     if (z.scale <= 1) {
       z.scale = 1;
       z.x = 0;
@@ -680,7 +685,7 @@
   function zoomAround(wrap, nextScale, cx, cy) {
     const z = zoomState(wrap);
     const prev = z.scale || 1;
-    const next = Math.min(2.5, Math.max(1, nextScale));
+    const next = Math.min(MAP_ZOOM_MAX, Math.max(1, nextScale));
     if (next === 1) {
       resetZoom(wrap, false);
       return;
@@ -793,6 +798,56 @@
     };
     wrap.addEventListener("pointerup", endPointer);
     wrap.addEventListener("pointercancel", endPointer);
+
+    wrap.addEventListener("touchstart", (event) => {
+      if (event.touches.length < 2) {
+        return;
+      }
+      event.preventDefault();
+      wrap.classList.add("is-pinching");
+      const first = event.touches[0];
+      const second = event.touches[1];
+      z.pinch = {
+        dist: Math.hypot(first.clientX - second.clientX, first.clientY - second.clientY) || 1,
+        scale: z.scale
+      };
+      z.suppressClick = true;
+    }, { passive: false });
+
+    wrap.addEventListener("touchmove", (event) => {
+      if (event.touches.length < 2 || !z.pinch) {
+        return;
+      }
+      event.preventDefault();
+      const first = event.touches[0];
+      const second = event.touches[1];
+      const dist = Math.hypot(first.clientX - second.clientX, first.clientY - second.clientY) || 1;
+      const mid = wrapPoint(wrap, (first.clientX + second.clientX) / 2, (first.clientY + second.clientY) / 2);
+      zoomAround(wrap, z.pinch.scale * (dist / z.pinch.dist), mid.x, mid.y);
+      z.suppressClick = true;
+    }, { passive: false });
+
+    wrap.addEventListener("touchend", (event) => {
+      if (event.touches.length < 2) {
+        z.pinch = null;
+        wrap.classList.remove("is-pinching");
+      }
+      if (!event.touches.length && z.scale < 1.08) {
+        resetZoom(wrap, z.scale !== 1);
+      }
+    }, { passive: false });
+    wrap.addEventListener("touchcancel", (event) => {
+      wrap.classList.remove("is-pinching");
+      z.pinch = null;
+      if (!event.touches.length && z.scale < 1.08) {
+        resetZoom(wrap, z.scale !== 1);
+      }
+    }, { passive: false });
+
+    ["gesturestart", "gesturechange", "gestureend"].forEach((name) => {
+      wrap.addEventListener(name, (event) => event.preventDefault(), { passive: false });
+    });
+
     wrap.addEventListener("click", (event) => {
       if (!z.suppressClick) {
         return;
