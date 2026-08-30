@@ -16,6 +16,10 @@ public record SampleFriend(
         String starSign,
         String starEmoji,
         String birthDate,
-        String comment
+        String comment,
+        String mbti,
+        Integer mbtiScore,
+        String mbtiLabel,
+        String mbtiColor
 ) {
 }

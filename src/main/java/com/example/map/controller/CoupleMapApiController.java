@@ -13,8 +13,10 @@ import com.example.map.service.CoupleMapService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -148,9 +150,36 @@ public class CoupleMapApiController {
         return ResponseEntity.badRequest().body(Map.of("message", exception.getMessage()));
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, String>> unreadable(HttpMessageNotReadableException exception) {
+        return ResponseEntity.badRequest().body(Map.of("message", "이름, 생년월일, 사는 곳을 다시 확인해 주세요."));
+    }
+
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<Map<String, String>> dataAccess(DataAccessException exception) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("message", dbHint(exception)));
+    }
+
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<Map<String, String>> status(ResponseStatusException exception) {
         HttpStatus status = HttpStatus.valueOf(exception.getStatusCode().value());
         return ResponseEntity.status(status).body(Map.of("message", exception.getReason() == null ? "" : exception.getReason()));
+    }
+
+    private static String dbHint(Throwable error) {
+        String text = "";
+        for (Throwable current = error; current != null; current = current.getCause()) {
+            if (current.getMessage() != null) {
+                text += current.getMessage();
+            }
+        }
+        if (text.contains("host_mbti") || text.contains("Unknown column 'mbti'") || text.contains("Unknown column")) {
+            return "DB에 MBTI 칸이 없어요. couple_map.host_mbti와 couple_map_person.mbti를 추가해 주세요.";
+        }
+        if (text.contains("user_id") && (text.contains("cannot be null") || text.contains("doesn't have a default"))) {
+            return "로그인 없이 만들려면 couple_map.user_id를 NULL 허용으로 바꿔 주세요.";
+        }
+        return "다시 시도해 주세요.";
     }
 }

@@ -180,7 +180,18 @@
   <section id="sample-map" class="map-sample">
     <p class="map-card-kicker">미리보기</p>
     <h2>친구가 들어오면<br>이렇게 보여요</h2>
-    <p class="map-sample-lead">같은 동네는 점이 모여요. 점을 누르면 누가 있는지 나와요.</p>
+    <p class="map-sample-lead">친구가 들어오면 지도가 칠해지고, 1등 왕좌와 전국 정복도가 생겨요.</p>
+
+    <div class="map-grade">
+      <span class="map-grade-badge" th:text="|${sampleConquest.gradeEmoji()} ${sampleConquest.grade()}|">👑 전국구 인맥왕</span>
+      <span class="map-grade-top" th:if="${sampleConquest.topPercent() != null}" th:text="|상위 ${sampleConquest.topPercent()}%|">상위 8%</span>
+    </div>
+    <div class="map-conquest">
+      <div class="map-conquest-bar">
+        <i th:style="|width:${sampleConquest.percent()}%|"></i>
+      </div>
+      <p class="map-conquest-text" th:text="|전국 정복도 ${sampleConquest.percent()}% · ${sampleConquest.sidoFilled()}/${sampleConquest.sidoTotal()}개 시도|">전국 정복도 65% · 11/17개 시도</p>
+    </div>
 
     <div class="map-stage">
       <div class="map-stage-head">
@@ -201,8 +212,17 @@
         </button>
       </div>
       <div class="map-animals" id="map-animals" hidden></div>
+      <p class="map-mbti-head" id="map-mbti-head" th:hidden="${sampleMbtiHeadline == null}" th:text="${sampleMbtiHeadline}">F가 12명, T는 1명</p>
     </div>
-
+    <div class="map-throne" style="--throne:#ff2d95">
+      <span class="map-throne-crown" aria-hidden="true">👑</span>
+      <span class="map-throne-body">
+        <small>지금 수현님의 1등 짝꿍</small>
+        <strong>민지</strong>
+        <em>💖 부랄짝꿍</em>
+      </span>
+      <b>97</b>
+    </div>
     <ol class="map-rank" id="map-rank"></ol>
   </section>
 

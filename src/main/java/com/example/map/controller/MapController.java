@@ -1,11 +1,14 @@
 package com.example.map.controller;
 
+import com.example.map.dto.MapConquest;
 import com.example.map.dto.SampleFriend;
 import com.example.map.dto.SampleLabelCount;
+import com.example.map.entity.MapGrade;
 import com.example.map.entity.RelationLabel;
 import com.example.map.entity.Sido;
 import com.example.map.service.BirthFlavorService;
 import com.example.map.service.CoupleMapService;
+import com.example.map.service.MbtiCompatibilityService;
 import com.example.map.service.NameCompatibilityService;
 import com.example.map.service.RegionCatalog;
 import com.example.map.service.ShareImageService;
@@ -24,8 +27,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -39,6 +44,7 @@ public class MapController {
     private final CoupleMapService coupleMapService;
     private final BirthFlavorService birthFlavorService;
     private final NameCompatibilityService nameCompatibilityService;
+    private final MbtiCompatibilityService mbtiCompatibilityService;
     private final RegionCatalog regionCatalog;
     private final ShareImageService shareImageService;
 
@@ -52,6 +58,11 @@ public class MapController {
         model.addAttribute("sampleCounts", sampleCounts(friends));
         model.addAttribute("sampleTotal", friends.size());
         model.addAttribute("sampleHostSign", host.animalEmoji() + " " + host.animalName() + " · " + host.starText());
+        model.addAttribute("sampleConquest", sampleConquest(friends));
+        model.addAttribute("sampleMbtiHeadline", mbtiCompatibilityService.headline(
+                "ENFP",
+                friends.stream().map(SampleFriend::mbti).toList()
+        ));
         model.addAttribute("sampleFoldJson", objectMapper.writeValueAsString(Map.of(
                 "letters", sampleFold.letters(),
                 "stages", sampleFold.stages(),
@@ -108,18 +119,18 @@ public class MapController {
 
     private List<SampleFriend> sampleFriends() {
         List<SampleFriend> friends = List.of(
-                friend("민지", "서울 강남구", "11", "11680", 97, 97, RelationLabel.BURAL_MATE, RelationLabel.BURAL_MATE, LocalDate.of(1999, 10, 23)),
-                friend("하은", "제주 제주시", "50", "50110", 88, 91, RelationLabel.BURAL_MATE, RelationLabel.BURAL_MATE, LocalDate.of(2000, 8, 5)),
-                friend("예린", "광주 북구", "29", "29170", 91, 72, RelationLabel.BURAL_MATE, RelationLabel.TRUE_MATE, LocalDate.of(1998, 7, 1)),
-                friend("서준", "부산 해운대구", "26", "26350", 82, 70, RelationLabel.TRUE_MATE, RelationLabel.TRUE_MATE, LocalDate.of(1996, 1, 10)),
-                friend("도윤", "경기 성남 분당구", "41", "41135", 74, 80, RelationLabel.TRUE_MATE, RelationLabel.TRUE_MATE, LocalDate.of(1990, 5, 1)),
-                friend("나연", "충북 청주 흥덕구", "43", "43113", 78, 55, RelationLabel.TRUE_MATE, RelationLabel.BIZ_MATE, LocalDate.of(1997, 9, 25)),
-                friend("지아", "인천 연수구", "28", "28185", 61, 58, RelationLabel.BIZ_MATE, RelationLabel.BIZ_MATE, LocalDate.of(1989, 3, 21)),
-                friend("시우", "대전 유성구", "30", "30200", 58, 42, RelationLabel.BIZ_MATE, RelationLabel.AWKWARD_MATE, LocalDate.of(1992, 11, 22)),
-                friend("현우", "대구 수성구", "27", "27260", 41, 35, RelationLabel.AWKWARD_MATE, RelationLabel.AWKWARD_MATE, LocalDate.of(1994, 12, 25)),
-                friend("지민", "대구 달서구", "27", "27290", 38, 48, RelationLabel.AWKWARD_MATE, RelationLabel.AWKWARD_MATE, LocalDate.of(1993, 4, 20)),
-                friend("수아", "강원 춘천시", "42", "42110", 35, 22, RelationLabel.AWKWARD_MATE, RelationLabel.DANGER_MATE, LocalDate.of(1991, 2, 19)),
-                friend("태민", "울산 남구", "31", "31140", 18, 7, RelationLabel.DANGER_MATE, RelationLabel.DANGER_MATE, LocalDate.of(1995, 6, 22))
+                friend("민지", "서울 강남구", "11", "11680", 97, 97, RelationLabel.BURAL_MATE, RelationLabel.BURAL_MATE, LocalDate.of(1999, 10, 23), "ENFP"),
+                friend("하은", "제주 제주시", "50", "50110", 88, 91, RelationLabel.BURAL_MATE, RelationLabel.BURAL_MATE, LocalDate.of(2000, 8, 5), "INFP"),
+                friend("예린", "광주 북구", "29", "29170", 91, 72, RelationLabel.BURAL_MATE, RelationLabel.TRUE_MATE, LocalDate.of(1998, 7, 1), "ESFJ"),
+                friend("서준", "부산 해운대구", "26", "26350", 82, 70, RelationLabel.TRUE_MATE, RelationLabel.TRUE_MATE, LocalDate.of(1996, 1, 10), "ENFJ"),
+                friend("도윤", "경기 성남 분당구", "41", "41135", 74, 80, RelationLabel.TRUE_MATE, RelationLabel.TRUE_MATE, LocalDate.of(1990, 5, 1), "ISFP"),
+                friend("나연", "충북 청주 흥덕구", "43", "43113", 78, 55, RelationLabel.TRUE_MATE, RelationLabel.BIZ_MATE, LocalDate.of(1997, 9, 25), "ESFP"),
+                friend("지아", "인천 연수구", "28", "28185", 61, 58, RelationLabel.BIZ_MATE, RelationLabel.BIZ_MATE, LocalDate.of(1989, 3, 21), "INFJ"),
+                friend("시우", "대전 유성구", "30", "30200", 58, 42, RelationLabel.BIZ_MATE, RelationLabel.AWKWARD_MATE, LocalDate.of(1992, 11, 22), "ISFJ"),
+                friend("현우", "대구 수성구", "27", "27260", 41, 35, RelationLabel.AWKWARD_MATE, RelationLabel.AWKWARD_MATE, LocalDate.of(1994, 12, 25), "ESFJ"),
+                friend("지민", "대구 달서구", "27", "27290", 38, 48, RelationLabel.AWKWARD_MATE, RelationLabel.AWKWARD_MATE, LocalDate.of(1993, 4, 20), "INFP"),
+                friend("수아", "강원 춘천시", "42", "42110", 35, 22, RelationLabel.AWKWARD_MATE, RelationLabel.DANGER_MATE, LocalDate.of(1991, 2, 19), "ENFP"),
+                friend("태민", "울산 남구", "31", "31140", 18, 7, RelationLabel.DANGER_MATE, RelationLabel.DANGER_MATE, LocalDate.of(1995, 6, 22), "ESTP")
         );
         return friends.stream()
                 .sorted(this::compareRank)
@@ -135,10 +146,12 @@ public class MapController {
             int reverseScore,
             RelationLabel label,
             RelationLabel reverse,
-            LocalDate birth
+            LocalDate birth,
+            String mbti
     ) {
         var host = birthFlavorService.profile(SAMPLE_HOST_BIRTH);
         var guest = birthFlavorService.profile(birth);
+        var mbtiFit = mbtiCompatibilityService.calculate("ENFP", mbti);
         return new SampleFriend(
                 name,
                 sido,
@@ -162,7 +175,39 @@ public class MapController {
                         SAMPLE_HOST_BIRTH,
                         birth,
                         RelationLabel.shown(score, reverseScore)
-                )
+                ),
+                mbti,
+                mbtiFit == null ? null : mbtiFit.score(),
+                mbtiFit == null ? null : mbtiFit.label(),
+                mbtiFit == null ? null : mbtiFit.color()
+        );
+    }
+
+    private MapConquest sampleConquest(List<SampleFriend> friends) {
+        Set<String> sidos = new LinkedHashSet<>();
+        sidos.add("11");
+        friends.forEach(friend -> sidos.add(friend.sidoCode()));
+        int filled = sidos.size();
+        int total = Sido.all().size();
+        MapGrade grade = MapGrade.fromSidoCount(filled);
+        List<String> empty = Sido.all().stream()
+                .filter(sido -> !sidos.contains(sido.code()))
+                .map(Sido::label)
+                .toList();
+        String nudge = empty.size() <= 3
+                ? String.join("·", empty) + "만 비었어요."
+                : String.join("·", empty.subList(0, 3)) + " 등 " + empty.size() + "곳이 비었어요.";
+        return new MapConquest(
+                filled,
+                total,
+                Math.round(filled * 100f / total),
+                filled,
+                grade.displayName(),
+                grade.emoji(),
+                grade.note(),
+                empty,
+                nudge,
+                8
         );
     }
 
