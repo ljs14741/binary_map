@@ -13,9 +13,16 @@
   <meta property="og:site_name" content="짝꿍지도">
   <meta property="og:locale" content="ko_KR">
   <meta property="og:title" th:content="|${mapView.hostName()}님의 짝꿍지도|">
-  <meta property="og:description" content="닉네임과 생일을 적으면 궁합이 나오고, 친구가 사는 곳에 핀이 찍혀요.">
-  <meta property="og:image" content="https://binaryworld.kr/img/radish.png">
+  <meta property="og:description" th:content="${mapView.ogDescription()}">
+  <meta property="og:image" th:content="${mapView.ogImageUrl()}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" th:content="|${mapView.hostName()}님의 짝꿍지도|">
   <meta property="og:url" th:content="${mapView.shareUrl()}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" th:content="|${mapView.hostName()}님의 짝꿍지도|">
+  <meta name="twitter:description" th:content="${mapView.ogDescription()}">
+  <meta name="twitter:image" th:content="${mapView.ogImageUrl()}">
 
   <link rel="icon" href="https://binaryworld.kr/img/favicon/favicon.ico" type="image/x-icon">
   <meta name="theme-color" content="#fff4ea">
@@ -25,6 +32,14 @@
   <link rel="stylesheet" th:href="@{/css/main.css}">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6890085609044109"
           crossorigin="anonymous"></script>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-0TSFJBQ41N"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-0TSFJBQ41N');
+  </script>
 </head>
 <body data-theme="light">
 <header id="global-header" aria-label="Binary World 공통 메뉴"></header>
@@ -39,12 +54,24 @@
        th:hidden="${mapView.hostAnimal() == null}"
        th:text="${mapView.hostSignText()}">🐰 토끼 · 🦂 전갈</p>
     <p class="map-lead" id="room-lead" th:text="${mapView.leadText()}">서울 강남구 · 0명 참여 · 부랄친구 0명</p>
+
+    <div class="map-grade" id="room-grade">
+      <span class="map-grade-badge" id="room-grade-badge" th:text="${mapView.gradeText()}">🗺️ 빈 지도</span>
+      <span class="map-grade-top" id="room-grade-top" hidden></span>
+    </div>
+    <div class="map-conquest">
+      <div class="map-conquest-bar">
+        <i id="room-conquest-fill" th:style="|width:${mapView.conquestPercent()}%|"></i>
+      </div>
+      <p class="map-conquest-text" id="room-conquest-text" th:text="${mapView.conquestText()}">전국 정복도 0% · 0/17개 시도</p>
+    </div>
   </section>
 
   <section class="map-card" id="host-tools" th:hidden="${!mapView.host()}">
     <p class="map-card-kicker">내 지도</p>
     <h2>친구 초대</h2>
     <p class="map-sample-lead" id="host-keep-lead">카톡으로 보내면 친구는 닉네임, 사는 곳, 생일을 적어요. 목록에는 띠랑 별자리만 보여요.</p>
+    <p class="map-nudge" id="invite-nudge">아직 아무도 없어요. 링크를 보내면 친구 사는 곳에 첫 핀이 찍혀요.</p>
     <p id="account-status" class="map-account" hidden></p>
     <button type="button" class="map-share" id="room-share">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2C6.7 3.2 2.4 6.6 2.4 10.8c0 2.7 1.8 5.1 4.5 6.5l-.9 3.4c-.1.3.3.6.5.4l3.8-2.5c.6.1 1.1.1 1.7.1 5.3 0 9.6-3.4 9.6-7.6S17.3 3.2 12 3.2z"/></svg>
@@ -67,6 +94,10 @@
         <input id="edit-birth" type="hidden">
       </div>
       <p class="map-field-hint">연도를 고르거나, 19960710처럼 숫자만 적어도 돼요. 띠랑 별자리 보려고 받아요.</p>
+      <div class="map-field">
+        <span>MBTI <small>선택 · 모르면 넘어가도 돼요</small></span>
+        <input id="edit-mbti" type="hidden">
+      </div>
       <p id="birth-nudge" class="map-warn" hidden>생일을 적어야 친구랑 띠 케미가 나와요.</p>
       <div class="map-region-row">
         <div class="map-field">
@@ -101,6 +132,10 @@
         <input id="join-birth" type="hidden">
       </div>
       <p class="map-field-hint">연도를 고르거나, 19960710처럼 숫자만 적어도 돼요. 띠랑 별자리 보려고 받아요.</p>
+      <div class="map-field">
+        <span>MBTI <small>선택 · 모르면 넘어가도 돼요</small></span>
+        <input id="join-mbti" type="hidden">
+      </div>
       <div class="map-region-row">
         <div class="map-field">
           <span>시도</span>
@@ -145,11 +180,13 @@
         </button>
       </div>
       <div class="map-animals" id="map-animals" hidden></div>
+      <p class="map-mbti-head" id="map-mbti-head" hidden></p>
     </div>
     <div class="map-capture-row">
       <button type="button" class="map-save" id="save-map">이미지 저장</button>
       <p>지도와 짝꿍, 1~3등이 한 장에 저장돼요. 휴대폰에서는 인스타·스토리로 바로 올릴 수 있어요.</p>
     </div>
+    <div class="map-throne" id="map-throne" hidden></div>
     <ol class="map-rank" id="map-rank"></ol>
     <a class="map-cta" id="guest-create" href="/#create-map" th:hidden="${mapView.host()}">나도 내 지도 만들기</a>
   </section>

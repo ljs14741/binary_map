@@ -1630,6 +1630,264 @@ body.is-sheet-open {
   display: none;
 }
 
+.map-grade {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 10px;
+}
+
+.map-grade-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  box-shadow: 0 8px 18px rgba(80, 40, 20, 0.08);
+}
+
+.map-grade-top {
+  color: var(--coral-deep);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.map-grade-top[hidden] {
+  display: none;
+}
+
+.map-conquest {
+  margin: 0 0 4px;
+}
+
+.map-conquest-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: #f0ddd0;
+  overflow: hidden;
+}
+
+.map-conquest-bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ff7a59, #ff2d95);
+  transition: width 0.4s ease;
+}
+
+.map-conquest-text {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.map-nudge {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #fff4ea;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.map-nudge[hidden] {
+  display: none;
+}
+
+.map-throne {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 10px 8px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  background: #fffdf9;
+  border: 1.5px solid color-mix(in srgb, var(--throne, #f5c542) 42%, #fff);
+  box-shadow: 0 10px 24px rgba(80, 40, 20, 0.07);
+}
+
+.map-throne[hidden] {
+  display: none;
+}
+
+.map-throne-crown {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.map-throne-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.map-throne-body small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.map-throne-body strong {
+  display: block;
+  font-size: 18px;
+  letter-spacing: -0.03em;
+}
+
+.map-throne-body em {
+  display: block;
+  margin-top: 2px;
+  color: var(--throne, #c45c2d);
+  font-style: normal;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.map-throne b {
+  flex-shrink: 0;
+  color: var(--throne, #f5c542);
+  font-size: 28px;
+  letter-spacing: -0.04em;
+}
+
+.map-my-rank {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: #fff8d6;
+}
+
+.map-my-rank b {
+  flex-shrink: 0;
+  font-size: 22px;
+  letter-spacing: -0.04em;
+}
+
+.map-my-rank span {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.map-field small {
+  color: #b08978;
+  font-weight: 600;
+}
+
+.map-mbti {
+  display: grid;
+  gap: 8px;
+}
+
+.map-mbti-axes {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.map-mbti-axis {
+  display: grid;
+  gap: 4px;
+}
+
+.map-mbti-letter,
+.map-mbti-skip {
+  border: 1.5px solid #f0ddd0;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.map-mbti-letter {
+  padding: 10px 0;
+  border-radius: 12px;
+  font-size: 15px;
+  letter-spacing: -0.03em;
+}
+
+.map-mbti-letter.is-on {
+  border-color: var(--coral);
+  background: #fff4ea;
+  color: var(--coral-deep);
+  box-shadow: 0 0 0 3px rgba(255, 122, 89, 0.12);
+}
+
+.map-mbti-skip {
+  padding: 8px 10px;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.map-mbti-skip:active,
+.map-mbti-letter:active {
+  transform: scale(0.97);
+}
+
+.map-mbti-result {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #fffdf9;
+  border: 1.5px solid color-mix(in srgb, var(--mbti, #3b82f6) 35%, #fff);
+  text-align: center;
+}
+
+.map-mbti-result small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.map-mbti-result b {
+  display: block;
+  margin: 4px 0 2px;
+  color: var(--mbti, #3b82f6);
+  font-size: 32px;
+  letter-spacing: -0.04em;
+}
+
+.map-mbti-result span {
+  display: block;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.map-mbti-result p {
+  margin: 8px 0 0;
+  color: #c45c2d;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.map-mbti-head {
+  margin: 8px 4px 0;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.map-mbti-head[hidden] {
+  display: none;
+}
+
 .map-form-tight {
   margin-top: 16px;
 }

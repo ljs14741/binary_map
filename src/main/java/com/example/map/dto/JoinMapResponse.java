@@ -31,6 +31,15 @@ public record JoinMapResponse(
         String hostStarSign,
         String hostStarEmoji,
         String guestStarSign,
-        String guestStarEmoji
+        String guestStarEmoji,
+        int myRank,
+        int rankTotal,
+        String rankLine,
+        String hostMbti,
+        String guestMbti,
+        Integer mbtiScore,
+        String mbtiLabel,
+        String mbtiColor,
+        String mbtiLine
 ) {
 }

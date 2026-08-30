@@ -8,10 +8,14 @@ import com.example.map.service.BirthFlavorService;
 import com.example.map.service.CoupleMapService;
 import com.example.map.service.NameCompatibilityService;
 import com.example.map.service.RegionCatalog;
+import com.example.map.service.ShareImageService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,6 +26,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Controller
@@ -35,6 +40,7 @@ public class MapController {
     private final BirthFlavorService birthFlavorService;
     private final NameCompatibilityService nameCompatibilityService;
     private final RegionCatalog regionCatalog;
+    private final ShareImageService shareImageService;
 
     @GetMapping("/")
     public String home(Model model) throws JsonProcessingException {
@@ -67,6 +73,17 @@ public class MapController {
         model.addAttribute("mapJson", objectMapper.writeValueAsString(view));
         addRegionAttrs(model);
         return "room";
+    }
+
+    @GetMapping(value = "/m/{id}/og.png", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> shareImage(@PathVariable String id) {
+        var view = coupleMapService.view(id, null, null);
+        byte[] png = shareImageService.render(view);
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_PNG)
+                .cacheControl(CacheControl.maxAge(2, TimeUnit.MINUTES).cachePublic())
+                .eTag(view.total() + "-" + view.conquestPercent())
+                .body(png);
     }
 
     @GetMapping("/privacy-policy")

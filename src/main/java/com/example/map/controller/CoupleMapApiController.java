@@ -8,6 +8,7 @@ import com.example.map.dto.JoinMapResponse;
 import com.example.map.dto.MapView;
 import com.example.map.dto.UpdateGuestRequest;
 import com.example.map.dto.UpdateMapRequest;
+import com.example.map.service.AnonymousCreateGuard;
 import com.example.map.service.CoupleMapService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -34,6 +35,7 @@ import java.util.Map;
 public class CoupleMapApiController {
 
     private final CoupleMapService coupleMapService;
+    private final AnonymousCreateGuard anonymousCreateGuard;
 
     @PostMapping
     public CreatedMapResponse create(
@@ -42,14 +44,30 @@ public class CoupleMapApiController {
             HttpServletResponse response,
             Authentication authentication
     ) {
+        String userId = KakaoAuth.userId(authentication);
+        if ((userId == null || userId.isBlank()) && !anonymousCreateGuard.allow(clientKey(request))) {
+            throw new ResponseStatusException(
+                    HttpStatus.TOO_MANY_REQUESTS,
+                    "오늘은 지도를 너무 많이 만들었어요. 내일 다시 시도하거나 카카오 로그인 후 만들어 주세요."
+            );
+        }
         CreatedMapResponse created = coupleMapService.create(
                 body.hostName(),
                 body.hostSigunguCode(),
                 body.hostBirthDate(),
-                KakaoAuth.userId(authentication)
+                body.hostMbti(),
+                userId
         );
         HostTokenSupport.write(request, response, created.id(), created.hostToken());
         return created;
+    }
+
+    private static String clientKey(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            return forwarded.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 
     @PostMapping("/claim")
@@ -65,7 +83,7 @@ public class CoupleMapApiController {
 
     @PostMapping("/{id}/join")
     public JoinMapResponse join(@PathVariable String id, @RequestBody JoinMapRequest body) {
-        return coupleMapService.join(id, body.guestName(), body.sigunguCode(), body.birthDate());
+        return coupleMapService.join(id, body.guestName(), body.sigunguCode(), body.birthDate(), body.mbti());
     }
 
     @PatchMapping("/{id}/me")
@@ -75,7 +93,8 @@ public class CoupleMapApiController {
                 body.previousName(),
                 body.guestName(),
                 body.sigunguCode(),
-                body.birthDate()
+                body.birthDate(),
+                body.mbti()
         );
     }
 
@@ -92,7 +111,8 @@ public class CoupleMapApiController {
                 KakaoAuth.userId(authentication),
                 body.hostName(),
                 body.hostSigunguCode(),
-                body.hostBirthDate()
+                body.hostBirthDate(),
+                body.hostMbti()
         );
     }
 

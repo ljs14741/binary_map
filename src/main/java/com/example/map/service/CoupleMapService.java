@@ -4,6 +4,7 @@ import com.example.map.dto.AnimalCount;
 import com.example.map.dto.ClaimMapItem;
 import com.example.map.dto.CreatedMapResponse;
 import com.example.map.dto.JoinMapResponse;
+import com.example.map.dto.MapConquest;
 import com.example.map.dto.MapPersonView;
 import com.example.map.dto.MapSummary;
 import com.example.map.dto.MapView;
@@ -11,7 +12,9 @@ import com.example.map.dto.SampleLabelCount;
 import com.example.map.entity.AnimalFit;
 import com.example.map.entity.CoupleMap;
 import com.example.map.entity.CoupleMapPerson;
+import com.example.map.entity.MapGrade;
 import com.example.map.entity.RelationLabel;
+import com.example.map.entity.Sido;
 import com.example.map.entity.Sigungu;
 import com.example.map.entity.ZodiacAnimal;
 import com.example.map.repository.CoupleMapPersonRepository;
@@ -27,8 +30,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -38,21 +43,30 @@ public class CoupleMapService {
 
     public static final int MAX_PEOPLE = 60;
     private static final String SHARE_BASE = "https://map.binaryworld.kr/m/";
+    private static final int MIN_PEOPLE_FOR_PERCENT = 3;
+    private static final int MIN_MAPS_FOR_PERCENT = 20;
 
     private final CoupleMapRepository coupleMapRepository;
     private final CoupleMapPersonRepository coupleMapPersonRepository;
     private final NameCompatibilityService nameCompatibilityService;
     private final BirthFlavorService birthFlavorService;
+    private final MbtiCompatibilityService mbtiCompatibilityService;
     private final RegionCatalog regionCatalog;
 
     @Transactional
-    public CreatedMapResponse create(String hostName, String hostSigunguCode, LocalDate hostBirthDate, String userId) {
-        if (userId == null || userId.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "카카오 로그인 후 지도를 만들 수 있어요.");
-        }
-        var existing = coupleMapRepository.findFirstByUserIdOrderByCreatedAtAsc(userId);
-        if (existing.isPresent()) {
-            return toCreated(existing.get());
+    public CreatedMapResponse create(
+            String hostName,
+            String hostSigunguCode,
+            LocalDate hostBirthDate,
+            String hostMbti,
+            String userId
+    ) {
+        boolean loggedIn = userId != null && !userId.isBlank();
+        if (loggedIn) {
+            var existing = coupleMapRepository.findFirstByUserIdOrderByCreatedAtAsc(userId);
+            if (existing.isPresent()) {
+                return toCreated(existing.get());
+            }
         }
         String name = requireName(hostName);
         Sigungu sigungu = regionCatalog.fromCode(hostSigunguCode);
@@ -64,8 +78,9 @@ public class CoupleMapService {
         map.setHostName(name);
         map.setHostSigunguCode(sigungu.code());
         map.setHostBirthDate(birth);
+        map.setHostMbti(mbtiCompatibilityService.normalize(hostMbti));
         map.setHostToken(UUID.randomUUID().toString());
-        map.setUserId(userId);
+        map.setUserId(loggedIn ? userId : null);
         map.setCreatedAt(now);
         map.setUpdatedAt(now);
         coupleMapRepository.save(map);
@@ -90,7 +105,7 @@ public class CoupleMapService {
     }
 
     @Transactional
-    public JoinMapResponse join(String mapId, String guestName, String sigunguCode, LocalDate birthDate) {
+    public JoinMapResponse join(String mapId, String guestName, String sigunguCode, LocalDate birthDate, String mbti) {
         CoupleMap map = getMap(mapId);
         String name = requireName(guestName);
         Sigungu sigungu = regionCatalog.fromCode(sigunguCode);
@@ -111,6 +126,7 @@ public class CoupleMapService {
         person.setPersonName(name);
         person.setSigunguCode(sigungu.code());
         person.setBirthDate(birth);
+        person.setMbti(mbtiCompatibilityService.normalize(mbti));
         person.setCreatedAt(now);
         person.setUpdatedAt(now);
         applyScores(map, person);
@@ -124,7 +140,8 @@ public class CoupleMapService {
             String previousName,
             String guestName,
             String sigunguCode,
-            LocalDate birthDate
+            LocalDate birthDate,
+            String mbti
     ) {
         CoupleMap map = getMap(mapId);
         String oldName = requireName(previousName);
@@ -143,6 +160,7 @@ public class CoupleMapService {
         person.setPersonName(name);
         person.setSigunguCode(sigungu.code());
         person.setBirthDate(birth);
+        person.setMbti(mbtiCompatibilityService.normalize(mbti));
         person.setUpdatedAt(LocalDateTime.now());
         if (nameChanged) {
             applyScores(map, person);
@@ -157,7 +175,8 @@ public class CoupleMapService {
             String userId,
             String hostName,
             String hostSigunguCode,
-            LocalDate hostBirthDate
+            LocalDate hostBirthDate,
+            String hostMbti
     ) {
         CoupleMap map = requireHost(mapId, hostToken, userId);
         String name = requireName(hostName);
@@ -170,6 +189,7 @@ public class CoupleMapService {
         map.setHostName(name);
         map.setHostSigunguCode(sigungu.code());
         map.setHostBirthDate(birth);
+        map.setHostMbti(mbtiCompatibilityService.normalize(hostMbti));
         map.setUpdatedAt(LocalDateTime.now());
         if (nameChanged) {
             recalculate(map);
@@ -258,6 +278,10 @@ public class CoupleMapService {
         var starFit = hostProfile == null || guestProfile == null
                 ? null
                 : birthFlavorService.starFit(hostProfile.starSign(), guestProfile.starSign());
+        var mbti = mbtiCompatibilityService.calculate(map.getHostMbti(), person.getMbti());
+        MapView mapView = toView(map, false);
+        int rankTotal = mapView.people().size();
+        int myRank = rankOf(mapView.people(), person.getPersonName());
         return new JoinMapResponse(
                 map.getHostName(),
                 person.getPersonName(),
@@ -271,7 +295,7 @@ public class CoupleMapService {
                 reverse.score(),
                 reverse.label().titledName(),
                 reverse.label().mapColor(),
-                toView(map, false),
+                mapView,
                 birthFlavorService.rankComment(
                         hostProfile,
                         guestProfile,
@@ -291,8 +315,40 @@ public class CoupleMapService {
                 hostProfile == null ? null : hostProfile.starSign(),
                 hostProfile == null ? null : hostProfile.starEmoji(),
                 guestProfile == null ? null : guestProfile.starSign(),
-                guestProfile == null ? null : guestProfile.starEmoji()
+                guestProfile == null ? null : guestProfile.starEmoji(),
+                myRank,
+                rankTotal,
+                rankLine(myRank, rankTotal, map.getHostName()),
+                mbti == null ? null : mbti.hostMbti(),
+                mbti == null ? person.getMbti() : mbti.guestMbti(),
+                mbti == null ? null : mbti.score(),
+                mbti == null ? null : mbti.label(),
+                mbti == null ? null : mbti.color(),
+                mbti == null ? null : mbti.line()
         );
+    }
+
+    private int rankOf(List<MapPersonView> people, String name) {
+        for (int index = 0; index < people.size(); index++) {
+            if (people.get(index).name().equals(name)) {
+                return index + 1;
+            }
+        }
+        return people.size();
+    }
+
+    /** 게스트가 다시 들어올 이유를 만드는 한 줄. 1등은 왕좌, 나머지는 추격 대상을 알려 준다. */
+    private String rankLine(int myRank, int total, String hostName) {
+        if (total <= 1) {
+            return hostName + "님의 첫 짝꿍이에요.";
+        }
+        if (myRank == 1) {
+            return total + "명 중 1위. 지금 " + hostName + "님의 1등 짝꿍이에요.";
+        }
+        if (myRank == total) {
+            return total + "명 중 " + myRank + "위. 아직 꼴등이에요.";
+        }
+        return total + "명 중 " + myRank + "위. " + (myRank - 1) + "명만 넘으면 1등이에요.";
     }
 
     private CoupleMap requireHost(String mapId, String hostToken, String userId) {
@@ -313,6 +369,66 @@ public class CoupleMapService {
             return true;
         }
         return userId != null && !userId.isBlank() && userId.equals(map.getUserId());
+    }
+
+    /** 채운 시도·시군구 수와 등급. 빈 지도는 0으로 둬서 채우고 싶게 만든다. */
+    private MapConquest conquestOf(CoupleMap map, List<CoupleMapPerson> rows) {
+        Set<String> sidoCodes = new LinkedHashSet<>();
+        Set<String> sigunguCodes = new LinkedHashSet<>();
+        Sigungu hostSigungu = regionCatalog.fromCode(map.getHostSigunguCode());
+        sidoCodes.add(hostSigungu.sidoCode());
+        sigunguCodes.add(hostSigungu.code());
+        for (CoupleMapPerson person : rows) {
+            Sigungu sigungu = regionCatalog.fromCode(person.getSigunguCode());
+            sidoCodes.add(sigungu.sidoCode());
+            sigunguCodes.add(sigungu.code());
+        }
+        List<String> emptySidos = Sido.all().stream()
+                .filter(sido -> !sidoCodes.contains(sido.code()))
+                .map(Sido::label)
+                .toList();
+        boolean alone = rows.isEmpty();
+        int sidoTotal = Sido.all().size();
+        int sidoFilled = alone ? 0 : sidoCodes.size();
+        MapGrade grade = MapGrade.fromSidoCount(sidoFilled);
+        return new MapConquest(
+                sidoFilled,
+                sidoTotal,
+                Math.round(sidoFilled * 100f / sidoTotal),
+                alone ? 0 : sigunguCodes.size(),
+                grade.displayName(),
+                grade.emoji(),
+                grade.note(),
+                emptySidos,
+                inviteNudge(emptySidos, alone),
+                topPercentOf(rows.size())
+        );
+    }
+
+    private String inviteNudge(List<String> emptySidos, boolean alone) {
+        if (alone) {
+            return "아직 아무도 없어요. 링크를 보내면 친구 사는 곳에 첫 핀이 찍혀요.";
+        }
+        if (emptySidos.isEmpty()) {
+            return "17개 시도를 다 칠했어요. 이제 시군구를 채워 보세요.";
+        }
+        if (emptySidos.size() <= 3) {
+            return String.join("·", emptySidos) + "만 비었어요. 거기 사는 친구에게 링크를 보내세요.";
+        }
+        return String.join("·", emptySidos.subList(0, 3)) + " 등 " + emptySidos.size() + "곳이 비었어요.";
+    }
+
+    /** 비교 대상이 적으면 순위가 의미 없으니 숨긴다. */
+    private Integer topPercentOf(int people) {
+        if (people < MIN_PEOPLE_FOR_PERCENT) {
+            return null;
+        }
+        long totalMaps = coupleMapRepository.count();
+        if (totalMaps < MIN_MAPS_FOR_PERCENT) {
+            return null;
+        }
+        long better = coupleMapPersonRepository.countMapsWithMorePeopleThan(people);
+        return (int) Math.min(100, Math.max(1, Math.round((better + 1) * 100.0 / totalMaps)));
     }
 
     private MapView toView(CoupleMap map, boolean host) {
@@ -340,7 +456,13 @@ public class CoupleMapService {
                 hostProfile == null ? null : hostProfile.animalName(),
                 hostProfile == null ? null : hostProfile.animalEmoji(),
                 hostProfile == null ? null : hostProfile.starSign(),
-                hostProfile == null ? null : hostProfile.starEmoji()
+                hostProfile == null ? null : hostProfile.starEmoji(),
+                conquestOf(map, rows),
+                map.getHostMbti(),
+                mbtiCompatibilityService.headline(
+                        map.getHostMbti(),
+                        rows.stream().map(CoupleMapPerson::getMbti).toList()
+                )
         );
     }
 
@@ -373,6 +495,7 @@ public class CoupleMapService {
         RelationLabel reverse = RelationLabel.fromScore(person.getReverseScore());
         Sigungu sigungu = regionCatalog.fromCode(person.getSigunguCode());
         var profile = birthFlavorService.profile(person.getBirthDate());
+        var mbti = mbtiCompatibilityService.calculate(map.getHostMbti(), person.getMbti());
         return new MapPersonView(
                 person.getId(),
                 person.getPersonName(),
@@ -398,7 +521,11 @@ public class CoupleMapService {
                         person.getBirthDate(),
                         RelationLabel.shown(person.getScore(), person.getReverseScore())
                 ),
-                person.getCreatedAt()
+                person.getCreatedAt(),
+                person.getMbti(),
+                mbti == null ? null : mbti.score(),
+                mbti == null ? null : mbti.label(),
+                mbti == null ? null : mbti.color()
         );
     }
 

@@ -14,6 +14,12 @@ public record CompatibilityResponse(
         List<List<Integer>> reverseStages,
         int reverseScore,
         String reverseLabel,
-        String reverseColor
+        String reverseColor,
+        String hostMbti,
+        String guestMbti,
+        Integer mbtiScore,
+        String mbtiLabel,
+        String mbtiColor,
+        String mbtiLine
 ) {
 }

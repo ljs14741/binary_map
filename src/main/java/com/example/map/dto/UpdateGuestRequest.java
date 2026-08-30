@@ -6,6 +6,7 @@ public record UpdateGuestRequest(
         String previousName,
         String guestName,
         String sigunguCode,
-        LocalDate birthDate
+        LocalDate birthDate,
+        String mbti
 ) {
 }

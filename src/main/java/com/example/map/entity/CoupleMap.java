@@ -31,10 +31,13 @@ public class CoupleMap {
     @Column(name = "host_birth_date")
     private LocalDate hostBirthDate;
 
+    @Column(name = "host_mbti", length = 4)
+    private String hostMbti;
+
     @Column(name = "host_token", nullable = false, length = 36)
     private String hostToken;
 
-    @Column(name = "user_id", nullable = false, length = 64)
+    @Column(name = "user_id", length = 64)
     private String userId;
 
     @Column(name = "created_at", nullable = false)

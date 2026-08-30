@@ -54,7 +54,14 @@
     document.getElementById("stage-count").textContent = `${view.total}명 참여`;
     const people = MapApp.sortPeople(view.people);
     renderStats(view.counts);
+    renderConquest(view.conquest);
+    renderThrone(people);
     MapApp.renderAnimals(view.animalCounts);
+    const mbtiHead = document.getElementById("map-mbti-head");
+    if (mbtiHead) {
+      mbtiHead.hidden = !view.mbtiHeadline;
+      mbtiHead.textContent = view.mbtiHeadline || "";
+    }
     renderRank(people);
     document.getElementById("host-tools").hidden = !view.host;
     document.getElementById("guest-create").hidden = !!view.host;
@@ -63,6 +70,11 @@
       document.getElementById("edit-name").value = view.hostName;
       MapApp.bindBirthInput(document.getElementById("edit-birth"));
       document.getElementById("edit-birth").value = view.hostBirthDate || "";
+      MapApp.bindMbtiInput(document.getElementById("edit-mbti"));
+      const editMbti = document.getElementById("edit-mbti");
+      if (editMbti) {
+        editMbti.value = view.hostMbti || "";
+      }
       const nudge = document.getElementById("birth-nudge");
       if (nudge) {
         nudge.hidden = !!view.hostBirthDate;
@@ -123,9 +135,14 @@
       : "궁합 확인하고 들어가기";
     const birthEl = document.getElementById("join-birth");
     MapApp.bindBirthInput(birthEl);
+    MapApp.bindMbtiInput(document.getElementById("join-mbti"));
     if (editing) {
       document.getElementById("join-name").value = mine.name;
       birthEl.value = (mine.birthDate || "").slice(0, 10);
+      const joinMbti = document.getElementById("join-mbti");
+      if (joinMbti) {
+        joinMbti.value = mine.mbti || "";
+      }
       MapApp.bindRegionSelects(
         document.getElementById("join-sido"),
         document.getElementById("join-sigungu"),
@@ -145,6 +162,61 @@
     bits.push(`${view.total}명 참여`);
     bits.push(`부랄친구 ${n}명`);
     return bits.join(" · ");
+  }
+
+  /** 등급 배지 · 정복도 바 · 빈 지역 초대 문구. 자랑거리와 초대 이유를 한자리에 둔다. */
+  function renderConquest(conquest) {
+    const badge = document.getElementById("room-grade-badge");
+    const top = document.getElementById("room-grade-top");
+    const fill = document.getElementById("room-conquest-fill");
+    const text = document.getElementById("room-conquest-text");
+    const nudge = document.getElementById("invite-nudge");
+    if (!conquest) {
+      return;
+    }
+    if (badge) {
+      badge.textContent = [conquest.gradeEmoji, conquest.grade].filter(Boolean).join(" ");
+    }
+    if (top) {
+      top.hidden = !conquest.topPercent;
+      top.textContent = conquest.topPercent ? `상위 ${conquest.topPercent}%` : "";
+    }
+    if (fill) {
+      fill.style.width = `${conquest.percent}%`;
+    }
+    if (text) {
+      text.textContent = `전국 정복도 ${conquest.percent}% · ${conquest.sidoFilled}/${conquest.sidoTotal}개 시도`;
+    }
+    if (nudge) {
+      nudge.hidden = !conquest.inviteNudge;
+      nudge.textContent = conquest.inviteNudge || "";
+    }
+  }
+
+  /** 1등 짝꿍을 왕좌로 세운다. 게스트가 넘고 싶어지는 자리. */
+  function renderThrone(people) {
+    const box = document.getElementById("map-throne");
+    if (!box) {
+      return;
+    }
+    const top = (people || [])[0];
+    if (!top) {
+      box.hidden = true;
+      box.innerHTML = "";
+      return;
+    }
+    const meta = MapApp.rankMeta(top);
+    const best = Math.max(top.score || 0, top.reverseScore || 0);
+    box.hidden = false;
+    box.style.setProperty("--throne", meta.color);
+    box.innerHTML = `
+      <span class="map-throne-crown" aria-hidden="true">👑</span>
+      <span class="map-throne-body">
+        <small>지금 ${MapApp.escapeHtml(view.hostName)}님의 1등 짝꿍</small>
+        <strong>${MapApp.escapeHtml(top.name)}</strong>
+        <em>${MapApp.heartOf(meta.label)} ${MapApp.escapeHtml(meta.label)}</em>
+      </span>
+      <b>${best}</b>`;
   }
 
   function renderStats(counts) {
@@ -169,13 +241,21 @@
       document.getElementById("join-sigungu")
     );
     MapApp.bindBirthInput(document.getElementById("join-birth"));
+    MapApp.bindMbtiInput(document.getElementById("join-mbti"));
+    MapApp.bindMbtiInput(document.getElementById("edit-mbti"));
     document.getElementById("room-share").addEventListener("click", () => {
+      const nudge = view.conquest && view.conquest.inviteNudge ? view.conquest.inviteNudge : "";
       MapApp.shareKakao({
         title: `${view.hostName}님의 짝꿍지도`,
-        description: "닉네임과 생일을 적으면 궁합이 나오고, 사는 곳에 핀이 찍혀요.",
+        description: view.ogDescription || nudge || "닉네임과 생일을 적으면 궁합이 나오고, 사는 곳에 핀이 찍혀요.",
         button: "나도 들어가기",
-        url: view.shareUrl
+        url: view.shareUrl,
+        imageUrl: view.ogImageUrl,
+        place: "room_invite"
       });
+    });
+    document.getElementById("guest-create")?.addEventListener("click", () => {
+      MapApp.track("guest_create_click", { total: view.total });
     });
     document.getElementById("join-form").addEventListener("submit", join);
     document.getElementById("host-edit").addEventListener("submit", updateHost);
@@ -183,7 +263,8 @@
     document.getElementById("save-map").addEventListener("click", () => {
       MapApp.captureShare(document.getElementById("map-stage"), {
         filename: `${view.hostName}의_짝꿍지도.png`,
-        text: `${view.hostName}님의 짝꿍지도`
+        text: `${view.hostName}님의 짝꿍지도`,
+        place: "room_map"
       });
     });
   }
@@ -205,7 +286,8 @@
             previousName,
             guestName: document.getElementById("join-name").value,
             sigunguCode: document.getElementById("join-sigungu").value,
-            birthDate: document.getElementById("join-birth").value
+            birthDate: document.getElementById("join-birth").value,
+            mbti: document.getElementById("join-mbti")?.value || ""
           }
         });
         MapApp.setJoined(view.id, data.guestName);
@@ -217,10 +299,12 @@
           body: {
             guestName: document.getElementById("join-name").value,
             sigunguCode: document.getElementById("join-sigungu").value,
-            birthDate: document.getElementById("join-birth").value
+            birthDate: document.getElementById("join-birth").value,
+            mbti: document.getElementById("join-mbti")?.value || ""
           }
         });
         MapApp.setJoined(view.id, data.guestName);
+        MapApp.track("guest_join_success", { rank: data.myRank, total: data.rankTotal });
         await playReveal(data);
         await render(data.map);
         MapApp.celebrateJoin(data.guestName);
@@ -243,6 +327,7 @@
       <div class="map-share-card" id="share-card">
         <p class="map-result-status" id="reveal-status">이름궁합 계산 중</p>
         <div id="reveal-dual"></div>
+        <div id="reveal-rank"></div>
         <div id="reveal-chem"></div>
       </div>
       ${MapApp.dualFolds(data)}
@@ -250,8 +335,20 @@
     `;
     box.scrollIntoView({ behavior: "smooth", block: "center" });
     await MapApp.animateFolds(box);
-    document.getElementById("reveal-dual").innerHTML = MapApp.dualScores(data);
+    document.getElementById("reveal-dual").innerHTML = MapApp.dualScores(data) + MapApp.mbtiHtml(data);
     await MapApp.animateScores(box);
+    const rankBox = document.getElementById("reveal-rank");
+    if (rankBox) {
+      if (data.rankLine) {
+        rankBox.outerHTML = `
+          <p class="map-my-rank">
+            <b>${data.myRank}위</b>
+            <span>${MapApp.escapeHtml(data.rankLine)}</span>
+          </p>`;
+      } else {
+        rankBox.remove();
+      }
+    }
     const chem = document.getElementById("reveal-chem");
     if (chem) {
       chem.outerHTML = MapApp.chemistryHtml(data);
@@ -261,7 +358,8 @@
     document.getElementById("save-result").addEventListener("click", () => {
       MapApp.captureShare(document.getElementById("share-card"), {
         filename: `${data.hostName}_${data.guestName}_이름궁합.png`,
-        text: `${data.hostName}랑 ${data.guestName} 이름궁합`
+        text: `${data.hostName}랑 ${data.guestName} 이름궁합`,
+        place: "room_result"
       });
     });
   }
@@ -279,7 +377,8 @@
         body: {
           hostName: document.getElementById("edit-name").value,
           hostSigunguCode: document.getElementById("edit-sigungu").value,
-          hostBirthDate: document.getElementById("edit-birth").value
+          hostBirthDate: document.getElementById("edit-birth").value,
+          hostMbti: document.getElementById("edit-mbti")?.value || ""
         }
       });
       if (token) {

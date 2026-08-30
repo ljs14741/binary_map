@@ -19,7 +19,8 @@
     MapApp.shareKakao({
       title: "짝꿍지도",
       description: "이름 두 개로 궁합 보고, 내 지도에 친구를 모아보세요.",
-      button: "나도 해보기"
+      button: "나도 해보기",
+      place: "home_hero"
     });
   });
 
@@ -33,9 +34,12 @@
         method: "POST",
         body: {
           hostName: document.getElementById("host-name").value,
-          guestName: document.getElementById("guest-name").value
+          guestName: document.getElementById("guest-name").value,
+          hostMbti: document.getElementById("host-mbti")?.value || "",
+          guestMbti: document.getElementById("guest-mbti")?.value || ""
         }
       });
+      MapApp.track("compat_calc", { score: data.score });
       await playReveal(data);
     } catch (error) {
       showError(error.message);
@@ -59,14 +63,15 @@
     `;
     resultBox.scrollIntoView({ behavior: "smooth", block: "center" });
     await MapApp.animateFolds(resultBox);
-    document.getElementById("reveal-dual").innerHTML = MapApp.dualScores(data);
+    document.getElementById("reveal-dual").innerHTML = MapApp.dualScores(data) + MapApp.mbtiHtml(data);
     await MapApp.animateScores(resultBox);
     document.getElementById("reveal-status").textContent = "두 사람의 이름궁합";
     resultBox.classList.add("is-done");
     document.getElementById("save-result").addEventListener("click", () => {
       MapApp.captureShare(document.getElementById("share-card"), {
         filename: `${data.hostName}_${data.guestName}_이름궁합.png`,
-        text: `${data.hostName}랑 ${data.guestName} 이름궁합`
+        text: `${data.hostName}랑 ${data.guestName} 이름궁합`,
+        place: "home_compat"
       });
     });
   }
@@ -131,11 +136,12 @@
     if (hostName.value && createName && !createName.value) {
       createName.value = hostName.value;
     }
-    const target = createCard && !createCard.hidden ? createCard : myMaps;
+    const open = createCard && !createCard.hidden;
+    const target = open ? createCard : myMaps;
     if (target) {
       target.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-    if (createCard && !createCard.hidden && createName && !document.getElementById("create-form").hidden) {
+    if (open && createName) {
       createName.focus();
     }
   }
@@ -146,6 +152,9 @@
       document.getElementById("create-sigungu")
     );
     MapApp.bindBirthInput(document.getElementById("create-birth"));
+    MapApp.bindMbtiInput(document.getElementById("host-mbti"));
+    MapApp.bindMbtiInput(document.getElementById("guest-mbti"));
+    MapApp.bindMbtiInput(document.getElementById("create-mbti"));
     const createForm = document.getElementById("create-form");
     if (!createForm) {
       return;
@@ -157,13 +166,15 @@
       error.hidden = true;
       button.disabled = true;
       button.textContent = "만드는 중...";
+      MapApp.track("map_create_attempt");
       try {
         const created = await MapApp.api("/api/maps", {
           method: "POST",
           body: {
             hostName: document.getElementById("create-name").value,
             hostSigunguCode: document.getElementById("create-sigungu").value,
-            hostBirthDate: document.getElementById("create-birth").value
+            hostBirthDate: document.getElementById("create-birth").value,
+            hostMbti: document.getElementById("create-mbti")?.value || ""
           }
         });
         MapApp.saveMap({
@@ -171,12 +182,14 @@
           token: created.hostToken,
           name: created.hostName
         });
+        MapApp.track("map_create_success");
         window.location.href = `/m/${created.id}`;
       } catch (err) {
         error.hidden = false;
         error.textContent = err.message;
         button.disabled = false;
         button.textContent = "내 짝꿍지도 만들기";
+        MapApp.track("map_create_fail", { reason: err.message });
       }
     });
   }
@@ -190,32 +203,61 @@
       return;
     }
     let me = { loggedIn: false, maps: [] };
+    let local = [];
     try {
-      await MapApp.pruneMaps();
+      local = await MapApp.pruneMaps();
       me = await MapApp.syncAccount();
     } catch (error) {
       me = { loggedIn: false, maps: [] };
     }
-    applyCreateGate(me);
-    const maps = me.loggedIn ? (me.maps || []) : [];
+    const maps = mergeMaps(me, local);
+    applyCreateGate(me, maps);
     if (!maps.length) {
       box.hidden = true;
       return;
     }
     box.hidden = false;
     title.textContent = "내 짝꿍지도 열기";
-    lead.textContent = "아래 버튼을 누르면 내 지도로 들어가요. 친구 초대도 거기서 해요.";
+    lead.textContent = me.loggedIn
+      ? "아래 버튼을 누르면 내 지도로 들어가요. 친구 초대도 거기서 해요."
+      : "이 폰에만 저장된 지도예요. 카카오 로그인하면 다른 기기에서도 열 수 있어요.";
     list.innerHTML = maps.map((item) => `
       <li>
         <a class="map-mine-link" href="/m/${item.id}">
           <span>
             <strong>${MapApp.escapeHtml(item.hostName)}님의 짝꿍지도</strong>
-            ${item.place ? `<small>${MapApp.escapeHtml(item.place)} · ${item.total}명</small>` : `<small>눌러서 지도 열기</small>`}
+            <small>${MapApp.escapeHtml(item.subline)}</small>
           </span>
           <em>열기</em>
         </a>
       </li>
     `).join("");
+  }
+
+  /** 계정에 붙은 지도와 이 폰에만 있는 지도를 합친다. 같은 id는 계정 쪽을 남긴다. */
+  function mergeMaps(me, local) {
+    const merged = new Map();
+    (me.loggedIn ? me.maps || [] : []).forEach((item) => {
+      merged.set(item.id, {
+        id: item.id,
+        hostName: item.hostName,
+        subline: item.place ? `${item.place} · ${item.total}명` : "눌러서 지도 열기"
+      });
+    });
+    (local || []).forEach((item) => {
+      if (merged.has(item.id)) {
+        return;
+      }
+      const view = item.view || {};
+      const grade = view.conquest ? view.conquest.grade : "";
+      const bits = [view.hostSido, `${view.total || 0}명`, grade].filter(Boolean);
+      merged.set(item.id, {
+        id: item.id,
+        hostName: view.hostName || item.name || "내",
+        subline: bits.length ? bits.join(" · ") : "눌러서 지도 열기"
+      });
+    });
+    return [...merged.values()];
   }
 
   function fillAccount(el, me) {
@@ -228,30 +270,29 @@
     }
   }
 
-  function applyCreateGate(me) {
+  /**
+   * 지도 만들기는 로그인 없이 된다. 이미 내 지도가 있을 때만 만들기 카드를 감춘다.
+   * 로그인은 "만든 지도를 지키는 장치"라서 만들기 뒤로 미룬다.
+   */
+  function applyCreateGate(me, maps) {
     const createCard = document.getElementById("create-map");
-    const form = document.getElementById("create-form");
     const gate = document.getElementById("create-gate");
     const login = document.getElementById("create-login");
     const lead = document.getElementById("create-lead");
-    const title = document.querySelector("#create-map h2");
-    const maps = me.maps || [];
-    const hasMap = me.loggedIn && maps.length > 0;
+    const hasMap = (maps || []).length > 0;
     if (login) {
       login.href = MapApp.loginUrl("/#create-map");
     }
     if (createCard) {
       createCard.hidden = hasMap;
     }
-    if (form) form.hidden = !(me.loggedIn && !hasMap);
-    if (gate) gate.hidden = me.loggedIn;
+    if (gate) {
+      gate.hidden = me.loggedIn;
+    }
     fillAccount(document.getElementById("account-bar"), me);
     fillAccount(document.getElementById("account-bar-maps"), me);
-    if (title) {
-      title.textContent = "내 짝꿍지도 만들기";
-    }
     if (lead) {
-      lead.textContent = "지도를 만들려면 카카오 로그인이 필요해요. 계정에 저장돼서 휴대폰을 바꿔도 다시 볼 수 있어요. 친구가 들어오는 건 로그인 없이 됩니다.";
+      lead.textContent = "로그인 없이 바로 만들어요. 만든 뒤에 카카오 로그인하면 휴대폰을 바꿔도 다시 열 수 있어요.";
     }
   }
 

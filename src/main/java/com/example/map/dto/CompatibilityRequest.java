@@ -1,4 +1,4 @@
 package com.example.map.dto;
 
-public record CompatibilityRequest(String hostName, String guestName) {
+public record CompatibilityRequest(String hostName, String guestName, String hostMbti, String guestMbti) {
 }

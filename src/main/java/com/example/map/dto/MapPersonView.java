@@ -23,6 +23,10 @@ public record MapPersonView(
         String starEmoji,
         String birthDate,
         String comment,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        String mbti,
+        Integer mbtiScore,
+        String mbtiLabel,
+        String mbtiColor
 ) {
 }

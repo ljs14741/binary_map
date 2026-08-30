@@ -3,6 +3,16 @@
   const KAKAO_KEY = "8b68c737be6b8e9a8007c61ee6f9b8da";
   const MAPS_KEY = "coupleMaps.v2";
 
+  function track(name, params) {
+    try {
+      if (typeof window.gtag === "function") {
+        window.gtag("event", name, params || {});
+      }
+    } catch (error) {
+      // 계측 실패는 화면 동작을 막지 않는다
+    }
+  }
+
   function showToast(message) {
     let toast = document.querySelector(".map-toast");
     if (!toast) {
@@ -39,18 +49,22 @@
     localStorage.removeItem("coupleJoin_" + id);
   }
 
+  /** 죽은 지도를 localStorage에서 걷어내고, 살아 있는 지도는 서버 뷰까지 붙여서 돌려준다. */
   async function pruneMaps() {
     const maps = listMaps();
     const alive = [];
     await Promise.all(maps.map(async (item) => {
       try {
-        await api("/api/maps/" + item.id, { token: item.token });
-        alive.push(item);
+        const view = await api("/api/maps/" + item.id, { token: item.token });
+        alive.push({ ...item, view });
       } catch (error) {
         localStorage.removeItem("coupleJoin_" + item.id);
       }
     }));
-    localStorage.setItem(MAPS_KEY, JSON.stringify(alive));
+    localStorage.setItem(
+      MAPS_KEY,
+      JSON.stringify(alive.map(({ id, token, name }) => ({ id, token, name })))
+    );
     return alive;
   }
 
@@ -548,6 +562,84 @@
     syncBirthFromValue(el);
   }
 
+  const MBTI_AXES = [
+    ["E", "I"],
+    ["S", "N"],
+    ["T", "F"],
+    ["J", "P"]
+  ];
+
+  function mountMbtiPicker(el) {
+    const wrap = document.createElement("div");
+    wrap.className = "map-mbti";
+    wrap.innerHTML = `
+      <div class="map-mbti-axes">
+        ${MBTI_AXES.map((pair) => `
+          <div class="map-mbti-axis">
+            ${pair.map((letter) => `<button type="button" class="map-mbti-letter" data-letter="${letter}">${letter}</button>`).join("")}
+          </div>`).join("")}
+      </div>
+      <button type="button" class="map-mbti-skip">잘 모르겠어요</button>`;
+    el.type = "hidden";
+    el.parentNode.insertBefore(wrap, el);
+    wrap.appendChild(el);
+    el._mbtiDraft = ["", "", "", ""];
+    const valueDesc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+
+    const paint = () => {
+      wrap.querySelectorAll(".map-mbti-letter").forEach((btn) => {
+        const axis = MBTI_AXES.findIndex((pair) => pair.includes(btn.dataset.letter));
+        btn.classList.toggle("is-on", el._mbtiDraft[axis] === btn.dataset.letter);
+      });
+      wrap.classList.toggle("is-skip", !el._mbtiDraft.some(Boolean));
+    };
+
+    const commit = () => {
+      const complete = el._mbtiDraft.every(Boolean) ? el._mbtiDraft.join("") : "";
+      valueDesc.set.call(el, complete);
+      paint();
+    };
+
+    wrap.addEventListener("click", (event) => {
+      if (event.target.closest(".map-mbti-skip")) {
+        el._mbtiDraft = ["", "", "", ""];
+        commit();
+        return;
+      }
+      const btn = event.target.closest(".map-mbti-letter");
+      if (!btn) {
+        return;
+      }
+      const axis = MBTI_AXES.findIndex((pair) => pair.includes(btn.dataset.letter));
+      el._mbtiDraft[axis] = el._mbtiDraft[axis] === btn.dataset.letter ? "" : btn.dataset.letter;
+      commit();
+    });
+
+    Object.defineProperty(el, "value", {
+      configurable: true,
+      enumerable: true,
+      get() {
+        return valueDesc.get.call(this);
+      },
+      set(next) {
+        const typed = String(next || "").toUpperCase();
+        el._mbtiDraft = /^[EI][SN][TF][JP]$/.test(typed) ? typed.split("") : ["", "", "", ""];
+        commit();
+      }
+    });
+    paint();
+  }
+
+  function bindMbtiInput(el) {
+    if (!el) {
+      return;
+    }
+    if (!el.dataset.mbtiBound) {
+      el.dataset.mbtiBound = "true";
+      mountMbtiPicker(el);
+    }
+  }
+
   function chemRowText(row) {
     if (!row) {
       return "";
@@ -582,6 +674,19 @@
         ${chemRow("띠", animalPair, data.animalFitLabel, "map-chem-animals")}
         ${chemRow("별자리", starPair, data.starFitLabel, "map-stars")}
         ${data.chemistryLine ? `<p class="map-chem-line">${escapeHtml(data.chemistryLine)}</p>` : ""}
+      </div>`;
+  }
+
+  function mbtiHtml(data) {
+    if (!data || data.mbtiScore == null) {
+      return "";
+    }
+    return `
+      <div class="map-mbti-result" style="--mbti:${data.mbtiColor || "#3b82f6"}">
+        <small>성격궁합 ${escapeHtml(data.hostMbti || "")} × ${escapeHtml(data.guestMbti || "")}</small>
+        <b>${data.mbtiScore}</b>
+        <span>${escapeHtml(data.mbtiLabel || "")}</span>
+        ${data.mbtiLine ? `<p>${escapeHtml(data.mbtiLine)}</p>` : ""}
       </div>`;
   }
 
@@ -779,6 +884,7 @@
     const description = payload.description || "두 이름으로 보는 이름궁합";
     const button = payload.button || "나도 해보기";
     const url = payload.url || "https://map.binaryworld.kr/";
+    track("share_click", { method: "kakao", place: payload.place || "unknown" });
     try {
       if (window.Kakao) {
         if (!Kakao.isInitialized()) {
@@ -789,7 +895,7 @@
           content: {
             title,
             description,
-            imageUrl: SHARE_IMAGE,
+            imageUrl: payload.imageUrl || SHARE_IMAGE,
             link: { mobileWebUrl: url, webUrl: url }
           },
           buttons: [{ title: button, link: { mobileWebUrl: url, webUrl: url } }]
@@ -908,6 +1014,10 @@
     const title = (document.getElementById("stage-title") || stage.querySelector(".map-stage-head strong"))?.textContent || "짝꿍지도";
     const count = (document.getElementById("stage-count") || stage.querySelector(".map-stage-head span"))?.textContent || "";
     const caption = (document.getElementById("stage-caption") || stage.querySelector(".map-stage-caption"))?.textContent || "";
+    const grade = (document.getElementById("room-grade-badge")?.textContent || "").trim();
+    const topEl = document.getElementById("room-grade-top");
+    const topPct = topEl && !topEl.hidden ? (topEl.textContent || "").trim() : "";
+    const conquest = (document.getElementById("room-conquest-text")?.textContent || "").trim();
     const wrap = stage.querySelector(".korea-wrap");
     const svg = wrap ? wrap.querySelector("svg") : null;
     const mapBox = wrap ? wrap.getBoundingClientRect() : { width: 320, height: 300 };
@@ -916,10 +1026,11 @@
     const stats = [...stage.querySelectorAll(".map-stat")];
     const animals = [...stage.querySelectorAll(".map-animal")];
     const rankItems = [...document.querySelectorAll("#map-rank li")].slice(0, 3);
+    const boastH = grade && conquest ? 56 * scale : (grade || conquest) ? 32 * scale : 0;
     const statH = stats.length ? 78 * scale : 0;
     const animalH = animals.length ? 36 * scale : 0;
     const rankH = rankItems.length ? 20 * scale + rankItems.length * 58 * scale : 0;
-    const height = pad + 56 * scale + mapH + 36 * scale + statH + animalH + rankH + 48 * scale + pad;
+    const height = pad + 56 * scale + boastH + mapH + 36 * scale + statH + animalH + rankH + 48 * scale + pad;
     const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = Math.ceil(height);
@@ -936,6 +1047,28 @@
     ctx.fillText(count, width - pad, pad + 6 * scale);
     ctx.textAlign = "left";
     let y = pad + 40 * scale;
+    if (grade || conquest) {
+      if (grade) {
+        ctx.font = `800 ${11 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+        const gradeW = Math.min(width * 0.55, ctx.measureText(grade).width + 20 * scale);
+        roundRect(ctx, pad, y, gradeW, 24 * scale, 12 * scale);
+        ctx.fillStyle = "#fff";
+        ctx.fill();
+        ctx.fillStyle = "#2a1f1a";
+        ctx.fillText(fitText(ctx, grade, gradeW - 16 * scale), pad + 10 * scale, y + 6 * scale);
+        if (topPct) {
+          ctx.fillStyle = "#f05a3a";
+          ctx.font = `800 ${11 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+          ctx.fillText(topPct, pad + gradeW + 10 * scale, y + 6 * scale);
+        }
+      }
+      if (conquest) {
+        ctx.fillStyle = "#8a6d52";
+        ctx.font = `700 ${11 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+        ctx.fillText(fitText(ctx, conquest, width - pad * 2), pad, y + (grade ? 28 : 6) * scale);
+      }
+      y += boastH;
+    }
     roundRect(ctx, pad - 4, y, width - pad * 2 + 8, mapH + 16 * scale, 20 * scale);
     ctx.fillStyle = "#9ecfde";
     ctx.fill();
@@ -1157,6 +1290,7 @@
       return;
     }
     const filename = options.filename || "짝꿍지도.png";
+    track("image_save", { place: options.place || "unknown" });
     showToast("이미지 만드는 중...");
     try {
       const blob = element.id === "map-stage" || element.classList.contains("map-stage")
@@ -1330,7 +1464,7 @@
   function personMetaHtml(person) {
     const animal = withEmoji(person.animalEmoji, person.animal);
     const star = withEmoji(person.starEmoji, person.starSign);
-    const bits = [person.sido, animal, star].filter(Boolean);
+    const bits = [person.sido, person.mbti, animal, star].filter(Boolean);
     if (!bits.length) {
       return "";
     }
@@ -1377,6 +1511,7 @@
   }
 
   window.MapApp = {
+    track,
     showToast,
     wait,
     listMaps,
@@ -1389,8 +1524,10 @@
     loginUrl,
     bindRegionSelects,
     bindBirthInput,
+    bindMbtiInput,
     formatBirth,
     chemistryHtml,
+    mbtiHtml,
     renderAnimals,
     dualScores,
     foldPane,

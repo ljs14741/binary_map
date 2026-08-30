@@ -41,6 +41,9 @@ public class CoupleMapPerson {
     @Column(name = "birth_date")
     private LocalDate birthDate;
 
+    @Column(name = "mbti", length = 4)
+    private String mbti;
+
     @Column(name = "score", nullable = false)
     private Integer score;
 

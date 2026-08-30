@@ -2,6 +2,7 @@ package com.example.map.controller;
 
 import com.example.map.dto.CompatibilityRequest;
 import com.example.map.dto.CompatibilityResponse;
+import com.example.map.service.MbtiCompatibilityService;
 import com.example.map.service.NameCompatibilityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import java.util.Map;
 public class CompatibilityApiController {
 
     private final NameCompatibilityService nameCompatibilityService;
+    private final MbtiCompatibilityService mbtiCompatibilityService;
 
     @PostMapping("/compatibility")
     public CompatibilityResponse calculate(@RequestBody CompatibilityRequest request) {
@@ -26,6 +28,7 @@ public class CompatibilityApiController {
         String guest = nameCompatibilityService.normalize(request.guestName());
         var forward = nameCompatibilityService.calculate(host, guest);
         var reverse = nameCompatibilityService.calculate(guest, host);
+        var mbti = mbtiCompatibilityService.calculate(request.hostMbti(), request.guestMbti());
         return new CompatibilityResponse(
                 host,
                 guest,
@@ -38,7 +41,13 @@ public class CompatibilityApiController {
                 reverse.stages(),
                 reverse.score(),
                 reverse.label().titledName(),
-                reverse.label().mapColor()
+                reverse.label().mapColor(),
+                mbti == null ? null : mbti.hostMbti(),
+                mbti == null ? null : mbti.guestMbti(),
+                mbti == null ? null : mbti.score(),
+                mbti == null ? null : mbti.label(),
+                mbti == null ? null : mbti.color(),
+                mbti == null ? null : mbti.line()
         );
     }
 
