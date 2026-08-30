@@ -102,12 +102,16 @@
       </label>
       <div class="map-region-row">
         <div class="map-field">
-          <span>내 MBTI <small>선택</small></span>
-          <input id="host-mbti" type="hidden">
+          <span>내 MBTI</span>
+          <select id="host-mbti">
+            <option value="" selected>잘 모르겠어요</option>
+          </select>
         </div>
         <div class="map-field">
-          <span>상대 MBTI <small>선택</small></span>
-          <input id="guest-mbti" type="hidden">
+          <span>상대 MBTI</span>
+          <select id="guest-mbti">
+            <option value="" selected>잘 모르겠어요</option>
+          </select>
         </div>
       </div>
       <p id="compat-error" class="map-error" hidden></p>
@@ -133,8 +137,10 @@
       </div>
       <p class="map-field-hint">연도를 고르거나, 19960710처럼 숫자만 적어도 돼요. 띠랑 별자리 보려고 받아요.</p>
       <div class="map-field">
-        <span>MBTI <small>선택 · 모르면 넘어가도 돼요</small></span>
-        <input id="create-mbti" type="hidden">
+        <span>MBTI</span>
+        <select id="create-mbti">
+          <option value="" selected>잘 모르겠어요</option>
+        </select>
       </div>
       <div class="map-region-row">
         <div class="map-field">

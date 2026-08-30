@@ -1786,59 +1786,6 @@ body.is-sheet-open {
   font-weight: 600;
 }
 
-.map-mbti {
-  display: grid;
-  gap: 8px;
-}
-
-.map-mbti-axes {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-}
-
-.map-mbti-axis {
-  display: grid;
-  gap: 4px;
-}
-
-.map-mbti-letter,
-.map-mbti-skip {
-  border: 1.5px solid #f0ddd0;
-  background: #fff;
-  color: var(--ink);
-  font: inherit;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.map-mbti-letter {
-  padding: 10px 0;
-  border-radius: 12px;
-  font-size: 15px;
-  letter-spacing: -0.03em;
-}
-
-.map-mbti-letter.is-on {
-  border-color: var(--coral);
-  background: #fff4ea;
-  color: var(--coral-deep);
-  box-shadow: 0 0 0 3px rgba(255, 122, 89, 0.12);
-}
-
-.map-mbti-skip {
-  padding: 8px 10px;
-  border-radius: 999px;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.map-mbti-skip:active,
-.map-mbti-letter:active {
-  transform: scale(0.97);
-}
-
 .map-mbti-result {
   margin-top: 12px;
   padding: 14px 16px;

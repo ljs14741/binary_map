@@ -70,11 +70,11 @@
       document.getElementById("edit-name").value = view.hostName;
       MapApp.bindBirthInput(document.getElementById("edit-birth"));
       document.getElementById("edit-birth").value = view.hostBirthDate || "";
-      MapApp.bindMbtiInput(document.getElementById("edit-mbti"));
       const editMbti = document.getElementById("edit-mbti");
       if (editMbti) {
         editMbti.value = view.hostMbti || "";
       }
+      MapApp.bindMbtiInput(editMbti);
       const nudge = document.getElementById("birth-nudge");
       if (nudge) {
         nudge.hidden = !!view.hostBirthDate;
@@ -135,7 +135,6 @@
       : "궁합 확인하고 들어가기";
     const birthEl = document.getElementById("join-birth");
     MapApp.bindBirthInput(birthEl);
-    MapApp.bindMbtiInput(document.getElementById("join-mbti"));
     if (editing) {
       document.getElementById("join-name").value = mine.name;
       birthEl.value = (mine.birthDate || "").slice(0, 10);
@@ -143,12 +142,13 @@
       if (joinMbti) {
         joinMbti.value = mine.mbti || "";
       }
-      MapApp.bindRegionSelects(
-        document.getElementById("join-sido"),
-        document.getElementById("join-sigungu"),
-        mine.sigunguCode
-      );
     }
+    MapApp.bindMbtiInput(document.getElementById("join-mbti"));
+    MapApp.bindRegionSelects(
+      document.getElementById("join-sido"),
+      document.getElementById("join-sigungu"),
+      mine ? mine.sigunguCode : ""
+    );
   }
 
   function leadText(view) {

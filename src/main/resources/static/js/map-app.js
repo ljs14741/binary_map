@@ -562,82 +562,24 @@
     syncBirthFromValue(el);
   }
 
-  const MBTI_AXES = [
-    ["E", "I"],
-    ["S", "N"],
-    ["T", "F"],
-    ["J", "P"]
+  const MBTI_TYPES = [
+    "ISTJ", "ISFJ", "INFJ", "INTJ",
+    "ISTP", "ISFP", "INFP", "INTP",
+    "ESTP", "ESFP", "ENFP", "ENTP",
+    "ESTJ", "ESFJ", "ENFJ", "ENTJ"
   ];
 
-  function mountMbtiPicker(el) {
-    const wrap = document.createElement("div");
-    wrap.className = "map-mbti";
-    wrap.innerHTML = `
-      <div class="map-mbti-axes">
-        ${MBTI_AXES.map((pair) => `
-          <div class="map-mbti-axis">
-            ${pair.map((letter) => `<button type="button" class="map-mbti-letter" data-letter="${letter}">${letter}</button>`).join("")}
-          </div>`).join("")}
-      </div>
-      <button type="button" class="map-mbti-skip">잘 모르겠어요</button>`;
-    el.type = "hidden";
-    el.parentNode.insertBefore(wrap, el);
-    wrap.appendChild(el);
-    el._mbtiDraft = ["", "", "", ""];
-    const valueDesc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
-
-    const paint = () => {
-      wrap.querySelectorAll(".map-mbti-letter").forEach((btn) => {
-        const axis = MBTI_AXES.findIndex((pair) => pair.includes(btn.dataset.letter));
-        btn.classList.toggle("is-on", el._mbtiDraft[axis] === btn.dataset.letter);
-      });
-      wrap.classList.toggle("is-skip", !el._mbtiDraft.some(Boolean));
-    };
-
-    const commit = () => {
-      const complete = el._mbtiDraft.every(Boolean) ? el._mbtiDraft.join("") : "";
-      valueDesc.set.call(el, complete);
-      paint();
-    };
-
-    wrap.addEventListener("click", (event) => {
-      if (event.target.closest(".map-mbti-skip")) {
-        el._mbtiDraft = ["", "", "", ""];
-        commit();
-        return;
-      }
-      const btn = event.target.closest(".map-mbti-letter");
-      if (!btn) {
-        return;
-      }
-      const axis = MBTI_AXES.findIndex((pair) => pair.includes(btn.dataset.letter));
-      el._mbtiDraft[axis] = el._mbtiDraft[axis] === btn.dataset.letter ? "" : btn.dataset.letter;
-      commit();
-    });
-
-    Object.defineProperty(el, "value", {
-      configurable: true,
-      enumerable: true,
-      get() {
-        return valueDesc.get.call(this);
-      },
-      set(next) {
-        const typed = String(next || "").toUpperCase();
-        el._mbtiDraft = /^[EI][SN][TF][JP]$/.test(typed) ? typed.split("") : ["", "", "", ""];
-        commit();
-      }
-    });
-    paint();
-  }
-
   function bindMbtiInput(el) {
-    if (!el) {
+    if (!el || el.tagName !== "SELECT") {
       return;
     }
+    const keep = el.value || "";
     if (!el.dataset.mbtiBound) {
       el.dataset.mbtiBound = "true";
-      mountMbtiPicker(el);
+      el.innerHTML = `<option value="">잘 모르겠어요</option>`
+        + MBTI_TYPES.map((type) => `<option value="${type}">${type}</option>`).join("");
     }
+    el.value = MBTI_TYPES.includes(keep.toUpperCase()) ? keep.toUpperCase() : "";
   }
 
   function chemRowText(row) {
