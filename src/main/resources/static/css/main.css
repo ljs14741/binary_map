@@ -2118,6 +2118,35 @@ body.is-sheet-open {
   margin: 12px 10px 4px;
 }
 
+.map-story {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f58529, #dd2a7b 55%, #8134af);
+  color: #fff;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  box-shadow: 0 10px 22px rgba(221, 42, 123, 0.3);
+  cursor: pointer;
+}
+
+.map-story svg {
+  width: 18px;
+  height: 18px;
+  fill: #fff;
+}
+
+.map-story:active {
+  transform: scale(0.97);
+}
+
 .map-capture-row p {
   margin: 0;
   color: var(--muted);

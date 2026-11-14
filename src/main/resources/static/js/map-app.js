@@ -1017,47 +1017,7 @@
     if (svg) {
       const mapCanvas = await rasterizeSvg(svg, mapW, mapH);
       ctx.drawImage(mapCanvas, pad, y + 8 * scale, mapW, mapH);
-      const names = [...wrap.querySelectorAll(".pin-name")];
-      names.forEach((nameEl) => {
-        const px = pad + (parseFloat(nameEl.style.left) / 100) * mapW;
-        const py = y + 8 * scale + (parseFloat(nameEl.style.top) / 100) * mapH;
-        const host = nameEl.classList.contains("is-host");
-        const style = getComputedStyle(nameEl);
-        const nx = parseFloat(style.getPropertyValue("--nx")) || 15;
-        const ny = parseFloat(style.getPropertyValue("--ny")) || 0;
-        ctx.font = `800 ${11 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
-        const label = fitText(ctx, nameEl.textContent.trim(), 40 * scale);
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.lineJoin = "round";
-        ctx.lineWidth = 4 * scale;
-        ctx.strokeStyle = host ? "#fff6cf" : "#fff8ea";
-        ctx.strokeText(label, px + nx * scale, py + ny * scale);
-        ctx.fillStyle = host ? "#9a7408" : "#3d2a20";
-        ctx.fillText(label, px + nx * scale, py + ny * scale);
-        ctx.textAlign = "left";
-        ctx.textBaseline = "top";
-      });
-      [...wrap.querySelectorAll(".cluster-pin, .host-pin")].forEach((pin) => {
-        const px = pad + (parseFloat(pin.style.left) / 100) * mapW;
-        const py = y + 8 * scale + (parseFloat(pin.style.top) / 100) * mapH;
-        const host = pin.classList.contains("host-pin");
-        const many = pin.classList.contains("is-many");
-        const color = host ? "#f5c542" : cssColorToRgb(getComputedStyle(pin).getPropertyValue("--pin") || "#ff2d95");
-        const dots = host ? [[0, 0]] : [...pin.querySelectorAll(".cluster-dot")].map((dot) => {
-          const style = getComputedStyle(dot);
-          return [parseFloat(style.getPropertyValue("--ox")) || 0, parseFloat(style.getPropertyValue("--oy")) || 0];
-        });
-        (dots.length ? dots : [[0, 0]]).forEach(([ox, oy]) => {
-          ctx.beginPath();
-          ctx.fillStyle = color;
-          ctx.arc(px + ox * scale, py + oy * scale, (host ? 8 : (many ? 4 : 5)) * scale, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.strokeStyle = "#fff";
-          ctx.lineWidth = (many ? 1.5 : 2) * scale;
-          ctx.stroke();
-        });
-      });
+      drawPins(ctx, wrap, pad, y + 8 * scale, mapW, mapH, scale);
     }
     y += mapH + 16 * scale;
     if (caption.trim()) {
@@ -1150,6 +1110,274 @@
     return blobFromCanvas(canvas);
   }
 
+  /** 화면의 핀·이름 위치(%)를 캔버스 좌표로 옮겨 그린다. 지도 카드와 스토리 카드가 같이 씀 */
+  function drawPins(ctx, wrap, ox, oy, mapW, mapH, scale) {
+    const names = [...wrap.querySelectorAll(".pin-name")];
+    names.forEach((nameEl) => {
+      const px = ox + (parseFloat(nameEl.style.left) / 100) * mapW;
+      const py = oy + (parseFloat(nameEl.style.top) / 100) * mapH;
+      const host = nameEl.classList.contains("is-host");
+      const style = getComputedStyle(nameEl);
+      const nx = parseFloat(style.getPropertyValue("--nx")) || 15;
+      const ny = parseFloat(style.getPropertyValue("--ny")) || 0;
+      ctx.font = `800 ${11 * scale}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+      const label = fitText(ctx, nameEl.textContent.trim(), 40 * scale);
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.lineJoin = "round";
+      ctx.lineWidth = 4 * scale;
+      ctx.strokeStyle = host ? "#fff6cf" : "#fff8ea";
+      ctx.strokeText(label, px + nx * scale, py + ny * scale);
+      ctx.fillStyle = host ? "#9a7408" : "#3d2a20";
+      ctx.fillText(label, px + nx * scale, py + ny * scale);
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+    });
+    [...wrap.querySelectorAll(".cluster-pin, .host-pin")].forEach((pin) => {
+      const px = ox + (parseFloat(pin.style.left) / 100) * mapW;
+      const py = oy + (parseFloat(pin.style.top) / 100) * mapH;
+      const host = pin.classList.contains("host-pin");
+      const many = pin.classList.contains("is-many");
+      const color = host ? "#f5c542" : cssColorToRgb(getComputedStyle(pin).getPropertyValue("--pin") || "#ff2d95");
+      const dots = host ? [[0, 0]] : [...pin.querySelectorAll(".cluster-dot")].map((dot) => {
+        const style = getComputedStyle(dot);
+        return [parseFloat(style.getPropertyValue("--ox")) || 0, parseFloat(style.getPropertyValue("--oy")) || 0];
+      });
+      (dots.length ? dots : [[0, 0]]).forEach(([dx, dy]) => {
+        ctx.beginPath();
+        ctx.fillStyle = color;
+        ctx.arc(px + dx * scale, py + dy * scale, (host ? 8 : (many ? 4 : 5)) * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = (many ? 1.5 : 2) * scale;
+        ctx.stroke();
+      });
+    });
+  }
+
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      if (document.querySelector(`script[src="${src}"]`)) {
+        resolve();
+        return;
+      }
+      const el = document.createElement("script");
+      el.src = src;
+      el.onload = () => resolve();
+      el.onerror = () => reject(new Error("script"));
+      document.head.appendChild(el);
+    });
+  }
+
+  /** 스토리 카드 구석에 넣는 QR. 라이브러리를 못 받으면 조용히 건너뜀 */
+  async function drawQr(ctx, text, x, y, size) {
+    try {
+      await loadScript("https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js");
+      if (typeof window.qrcode !== "function") {
+        return false;
+      }
+      const qr = window.qrcode(0, "M");
+      qr.addData(text);
+      qr.make();
+      const n = qr.getModuleCount();
+      const quiet = Math.round(size * 0.06);
+      const cell = (size - quiet * 2) / n;
+      roundRect(ctx, x, y, size, size, Math.round(size * 0.08));
+      ctx.fillStyle = "#fff";
+      ctx.fill();
+      ctx.fillStyle = "#2a1f1a";
+      for (let r = 0; r < n; r += 1) {
+        for (let c = 0; c < n; c += 1) {
+          if (qr.isDark(r, c)) {
+            ctx.fillRect(x + quiet + c * cell, y + quiet + r * cell, Math.ceil(cell), Math.ceil(cell));
+          }
+        }
+      }
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /** 인스타 스토리용 1080x1920 카드. 위아래 250px은 스토리 UI가 가리니 비워 둔다 */
+  async function drawStoryCard(stage, options = {}) {
+    if (window.MapBoard && typeof MapBoard.collapseMap === "function") {
+      MapBoard.collapseMap();
+    }
+    const W = 1080;
+    const H = 1920;
+    const pad = 70;
+    const inner = W - pad * 2;
+    const font = (weight, size) => `${weight} ${size}px Pretendard, Apple SD Gothic Neo, sans-serif`;
+    const title = (document.getElementById("stage-title") || stage.querySelector(".map-stage-head strong"))?.textContent || "짝꿍지도";
+    const count = (document.getElementById("stage-count") || stage.querySelector(".map-stage-head span"))?.textContent || "";
+    const sign = (document.getElementById("stage-host-sign")?.textContent || "").trim();
+    const grade = (document.getElementById("room-grade-badge")?.textContent || "").trim();
+    const topEl = document.getElementById("room-grade-top");
+    const topPct = topEl && !topEl.hidden ? (topEl.textContent || "").trim() : "";
+    const conquest = (document.getElementById("room-conquest-text")?.textContent || "").trim();
+    const fillEl = document.getElementById("room-conquest-fill");
+    const percent = fillEl ? parseFloat(fillEl.style.width) || 0 : 0;
+    const wrap = stage.querySelector(".korea-wrap");
+    const svg = wrap ? wrap.querySelector("svg") : null;
+    const throne = document.getElementById("map-throne");
+    const shareUrl = options.url || window.location.href.split("?")[0];
+    const cta = options.cta || "너도 들어와서 궁합 찍어 👉";
+
+    const canvas = document.createElement("canvas");
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext("2d");
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, "#fff4ea");
+    bg.addColorStop(1, "#ffe1cf");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+    const blob1 = ctx.createRadialGradient(180, 300, 10, 180, 300, 420);
+    blob1.addColorStop(0, "rgba(255, 214, 140, 0.55)");
+    blob1.addColorStop(1, "rgba(255, 214, 140, 0)");
+    ctx.fillStyle = blob1;
+    ctx.fillRect(0, 0, W, H);
+    const blob2 = ctx.createRadialGradient(900, 1500, 10, 900, 1500, 460);
+    blob2.addColorStop(0, "rgba(255, 122, 89, 0.28)");
+    blob2.addColorStop(1, "rgba(255, 122, 89, 0)");
+    ctx.fillStyle = blob2;
+    ctx.fillRect(0, 0, W, H);
+    ctx.textBaseline = "top";
+    ctx.textAlign = "left";
+
+    let y = 250;
+    ctx.fillStyle = "#c45c2d";
+    ctx.font = font(800, 28);
+    ctx.fillText("짝꿍지도", pad, y);
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#8a6d52";
+    ctx.font = font(800, 28);
+    ctx.fillText(count, W - pad, y);
+    ctx.textAlign = "left";
+    y += 40;
+    ctx.fillStyle = "#2a1f1a";
+    ctx.font = font(800, 62);
+    ctx.fillText(fitText(ctx, title, inner), pad, y);
+    y += 74;
+    if (sign) {
+      ctx.fillStyle = "#6b5344";
+      ctx.font = font(700, 28);
+      ctx.fillText(fitText(ctx, sign, inner), pad, y);
+      y += 40;
+    }
+    y += 8;
+    if (grade) {
+      ctx.font = font(800, 28);
+      const gradeW = Math.min(inner * 0.6, ctx.measureText(grade).width + 48);
+      roundRect(ctx, pad, y, gradeW, 56, 28);
+      ctx.fillStyle = "#fff";
+      ctx.fill();
+      ctx.strokeStyle = "#f0ddd0";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = "#2a1f1a";
+      ctx.fillText(fitText(ctx, grade, gradeW - 40), pad + 24, y + 13);
+      if (topPct) {
+        ctx.fillStyle = "#f05a3a";
+        ctx.font = font(800, 28);
+        ctx.fillText(topPct, pad + gradeW + 20, y + 13);
+      }
+      y += 72;
+    }
+    if (conquest) {
+      roundRect(ctx, pad, y, inner, 20, 10);
+      ctx.fillStyle = "rgba(255,255,255,0.8)";
+      ctx.fill();
+      if (percent > 0) {
+        roundRect(ctx, pad, y, Math.max(20, inner * Math.min(100, percent) / 100), 20, 10);
+        const bar = ctx.createLinearGradient(pad, 0, pad + inner, 0);
+        bar.addColorStop(0, "#ff7a59");
+        bar.addColorStop(1, "#ff2d95");
+        ctx.fillStyle = bar;
+        ctx.fill();
+      }
+      y += 30;
+      ctx.fillStyle = "#8a6d52";
+      ctx.font = font(700, 26);
+      ctx.fillText(fitText(ctx, conquest, inner), pad, y);
+      y += 44;
+    }
+
+    // 지도: 핀 좌표가 800x759 기준 %라서 그 비율로 그리고, 아래 1등·CTA 자리를 빼고 남는 높이에 맞춘다
+    const bottomLimit = 1670;
+    const ctaH = 190;
+    const throneH = 84;
+    const ratio = 759 / 800;
+    const availH = bottomLimit - ctaH - 24 - throneH - 24 - y - 16;
+    const mapW = Math.min(inner, Math.floor(availH / ratio));
+    const mapH = Math.round(mapW * ratio);
+    const mapX = Math.round((W - mapW) / 2);
+    const svgBox = svg ? svg.getBoundingClientRect() : { width: 320 };
+    const mapScale = mapW / (svgBox.width || 320);
+    roundRect(ctx, mapX, y, mapW, mapH, 36);
+    const sea = ctx.createLinearGradient(0, y, 0, y + mapH);
+    sea.addColorStop(0, "#b9dce8");
+    sea.addColorStop(0.4, "#9ecfde");
+    sea.addColorStop(1, "#c5e6d8");
+    ctx.fillStyle = sea;
+    ctx.fill();
+    if (svg) {
+      const mapCanvas = await rasterizeSvg(svg, mapW, mapH);
+      ctx.save();
+      roundRect(ctx, mapX, y, mapW, mapH, 36);
+      ctx.clip();
+      ctx.drawImage(mapCanvas, mapX, y, mapW, mapH);
+      ctx.restore();
+      drawPins(ctx, wrap, mapX, y, mapW, mapH, mapScale);
+    }
+    y += mapH + 24;
+
+    // 1등 짝꿍 한 줄
+    const topName = throne && !throne.hidden ? (throne.querySelector("strong")?.textContent || "").trim() : "";
+    const topLabel = throne && !throne.hidden ? (throne.querySelector("em")?.textContent || "").trim() : "";
+    const topScore = throne && !throne.hidden ? (throne.querySelector("b")?.textContent || "").trim() : "";
+    {
+      roundRect(ctx, pad, y, inner, 84, 24);
+      ctx.fillStyle = topName ? "#fff8d6" : "rgba(255,255,255,0.7)";
+      ctx.fill();
+      ctx.font = font(800, 34);
+      if (topName) {
+        ctx.fillText("👑", pad + 22, y + 22);
+        ctx.fillStyle = "#2a1f1a";
+        ctx.fillText(fitText(ctx, `1등 ${topName}`, inner * 0.45), pad + 80, y + 22);
+        ctx.fillStyle = "#c45c2d";
+        ctx.font = font(800, 26);
+        ctx.fillText(fitText(ctx, topLabel, inner * 0.3), pad + 80 + Math.min(inner * 0.45, ctx.measureText(`1등 ${topName}`).width * 1.35) + 20, y + 28);
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#ff2d95";
+        ctx.font = font(800, 40);
+        ctx.fillText(topScore, W - pad - 24, y + 18);
+        ctx.textAlign = "left";
+      } else {
+        ctx.fillStyle = "#8a6d52";
+        ctx.font = font(800, 30);
+        ctx.fillText("👑 1등 자리 비어 있음 · 먼저 들어오는 사람이 왕좌", pad + 22, y + 24);
+      }
+      y += 84 + 24;
+    }
+
+    // 맨 아래: 부르는 말 + 주소 + QR
+    const qrSize = 150;
+    const ctaY = Math.min(y, bottomLimit - ctaH);
+    ctx.fillStyle = "#2a1f1a";
+    ctx.font = font(800, 42);
+    ctx.fillText(fitText(ctx, cta, inner - qrSize - 30), pad, ctaY + 20);
+    ctx.fillStyle = "#c45c2d";
+    ctx.font = font(800, 32);
+    ctx.fillText("map.binaryworld.kr", pad, ctaY + 84);
+    ctx.fillStyle = "#8a6d52";
+    ctx.font = font(700, 24);
+    ctx.fillText("링크 스티커 누르거나 QR 찍으면 바로 들어와요", pad, ctaY + 134);
+    await drawQr(ctx, shareUrl, W - pad - qrSize, ctaY + 10, qrSize);
+    return blobFromCanvas(canvas);
+  }
+
   async function drawScoreShareCard(card) {
     const scale = 2;
     const width = Math.ceil((card.getBoundingClientRect().width || 360) * scale);
@@ -1235,9 +1463,11 @@
     track("image_save", { place: options.place || "unknown" });
     showToast("이미지 만드는 중...");
     try {
-      const blob = element.id === "map-stage" || element.classList.contains("map-stage")
-        ? await drawMapShareCard(element)
-        : await drawScoreShareCard(element);
+      const blob = options.story
+        ? await drawStoryCard(element, options)
+        : element.id === "map-stage" || element.classList.contains("map-stage")
+          ? await drawMapShareCard(element)
+          : await drawScoreShareCard(element);
       if (!blob) {
         throw new Error("empty");
       }
@@ -1481,6 +1711,7 @@
     shareKakao,
     copyLink,
     captureShare,
+    drawStoryCard,
     api,
     syncAccount,
     heartOf,

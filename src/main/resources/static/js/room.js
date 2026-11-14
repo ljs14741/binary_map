@@ -260,6 +260,15 @@
     document.getElementById("join-form").addEventListener("submit", join);
     document.getElementById("host-edit").addEventListener("submit", updateHost);
     document.getElementById("delete-map").addEventListener("click", removeMap);
+    document.getElementById("story-map")?.addEventListener("click", () => {
+      MapApp.captureShare(document.getElementById("map-stage"), {
+        story: true,
+        url: view.shareUrl,
+        filename: `${view.hostName}의_짝꿍지도_스토리.png`,
+        text: `${view.hostName}님의 짝꿍지도`,
+        place: "room_story"
+      });
+    });
     document.getElementById("save-map").addEventListener("click", () => {
       MapApp.captureShare(document.getElementById("map-stage"), {
         filename: `${view.hostName}의_짝꿍지도.png`,
