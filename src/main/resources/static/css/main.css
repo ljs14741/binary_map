@@ -428,6 +428,46 @@ textarea {
   margin-top: 10px;
 }
 
+.map-next {
+  margin-top: 16px;
+  padding: 16px 14px 14px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fff7f2 0%, #ffeede 100%);
+  border: 1px solid #ffd4c6;
+}
+
+.map-next-kicker {
+  margin: 0 0 4px;
+  color: var(--coral-deep);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.map-next-line {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.45;
+  letter-spacing: -0.02em;
+}
+
+.map-next .map-next-cta {
+  display: flex;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 800;
+  text-align: center;
+  justify-content: center;
+}
+
+.map-next .map-save {
+  margin-top: 8px;
+}
+
 .map-result[hidden] {
   display: none;
 }

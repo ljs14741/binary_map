@@ -128,12 +128,47 @@
     MapApp.renderAnimals(sampleAnimalCounts(friends));
   }
 
+  /** 친구 지도에서 넘어온 사람은 적었던 정보를 그대로 채우고, 문구도 그 사람 기준으로 바꾼다 */
+  function applyPrefill() {
+    const prefill = MapApp.takePrefill();
+    const createName = document.getElementById("create-name");
+    if (!prefill || !createName || !prefill.name) {
+      return false;
+    }
+    createName.value = prefill.name;
+    const birth = document.getElementById("create-birth");
+    if (birth && prefill.birthDate) {
+      birth.value = prefill.birthDate;
+      MapApp.bindBirthInput(birth);
+    }
+    const mbti = document.getElementById("create-mbti");
+    if (mbti) {
+      mbti.value = prefill.mbti || "";
+      MapApp.bindMbtiInput(mbti);
+    }
+    if (prefill.sigunguCode) {
+      MapApp.bindRegionSelects(
+        document.getElementById("create-sido"),
+        document.getElementById("create-sigungu"),
+        prefill.sigunguCode
+      );
+    }
+    const lead = document.getElementById("create-lead");
+    if (lead && prefill.fromHost) {
+      lead.textContent = prefill.myRank > 0
+        ? `${prefill.fromHost}님 지도에서 ${prefill.myRank}위였죠. 적은 정보 그대로 가져왔어요. 버튼만 누르면 내 지도가 생겨요.`
+        : `${prefill.fromHost}님 지도에서 적은 정보를 그대로 가져왔어요. 버튼만 누르면 내 지도가 생겨요.`;
+    }
+    return true;
+  }
+
   function openCreate() {
     const createCard = document.getElementById("create-map");
     const myMaps = document.getElementById("my-maps");
     const hostName = document.getElementById("host-name");
     const createName = document.getElementById("create-name");
-    if (hostName.value && createName && !createName.value) {
+    const prefilled = applyPrefill();
+    if (!prefilled && hostName.value && createName && !createName.value) {
       createName.value = hostName.value;
     }
     const open = createCard && !createCard.hidden;
@@ -183,6 +218,7 @@
           name: created.hostName
         });
         MapApp.track("map_create_success");
+        MapApp.clearPrefill();
         window.location.href = `/m/${created.id}`;
       } catch (err) {
         error.hidden = false;

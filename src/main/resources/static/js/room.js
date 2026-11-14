@@ -352,8 +352,13 @@
         <div id="reveal-rank"></div>
         <div id="reveal-chem"></div>
       </div>
+      <div class="map-next" id="join-next" hidden>
+        <p class="map-next-kicker">다음은 네 차례</p>
+        <p class="map-next-line" id="join-next-line"></p>
+        <a class="map-cta map-next-cta" id="join-next-create" href="/#create-map">내 지도 만들기</a>
+        <button type="button" class="map-save" id="save-result">결과 이미지 저장</button>
+      </div>
       ${MapApp.dualFolds(data)}
-      <button type="button" class="map-save" id="save-result">이미지 저장</button>
     `;
     box.scrollIntoView({ behavior: "smooth", block: "center" });
     await MapApp.animateFolds(box);
@@ -377,13 +382,50 @@
     }
     document.getElementById("reveal-status").textContent = `${data.hostName}랑 ${data.guestName}`;
     box.classList.add("is-done");
+    showNext(data);
     document.getElementById("save-result").addEventListener("click", () => {
       MapApp.captureShare(document.getElementById("share-card"), {
+        url: view.shareUrl,
         filename: `${data.hostName}_${data.guestName}_이름궁합.png`,
         text: `${data.hostName}랑 ${data.guestName} 이름궁합`,
         place: "room_result"
       });
     });
+  }
+
+  /** 결과 바로 아래에 "네 지도에선 누가 1위?" 를 붙여서 합류한 사람이 자기 지도를 만들게 한다 */
+  function showNext(data) {
+    const box = document.getElementById("join-next");
+    const line = document.getElementById("join-next-line");
+    const create = document.getElementById("join-next-create");
+    if (!box || !line || !create) {
+      return;
+    }
+    const rank = data.myRank > 0 ? `${data.hostName}님 지도에서 ${data.myRank}위` : `${data.hostName}님 지도에 들어왔어요`;
+    const tail = data.myRank === 1
+      ? "1등 자리 지켰네요. 네 지도에선 누가 1위일까?"
+      : data.myRank > 0 && data.myRank <= 3
+        ? "아깝다. 네 지도에선 누가 1위일까?"
+        : "네 지도에선 누가 1위일까? 만들어서 친구들 불러 봐요.";
+    line.textContent = `${data.guestName}, ${rank}. ${tail}`;
+    const prefill = {
+      name: data.guestName,
+      sigunguCode: document.getElementById("join-sigungu")?.value || "",
+      birthDate: document.getElementById("join-birth")?.value || "",
+      mbti: document.getElementById("join-mbti")?.value || "",
+      fromHost: data.hostName,
+      myRank: data.myRank,
+      rankTotal: data.rankTotal
+    };
+    create.addEventListener("click", () => {
+      MapApp.savePrefill(prefill);
+      MapApp.track("guest_create_click", { total: view.total, place: "join_result", rank: data.myRank });
+    });
+    const bottom = document.getElementById("guest-create");
+    if (bottom) {
+      bottom.addEventListener("click", () => MapApp.savePrefill(prefill));
+    }
+    box.hidden = false;
   }
 
   async function updateHost(event) {

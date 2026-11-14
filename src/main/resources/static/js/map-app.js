@@ -73,6 +73,34 @@
     return found ? found.token : "";
   }
 
+  const PREFILL_KEY = "coupleMapPrefill";
+
+  /** 친구 지도에 합류한 정보로 내 지도를 바로 만들게 넘겨 둔다 */
+  function savePrefill(data) {
+    try {
+      localStorage.setItem(PREFILL_KEY, JSON.stringify(data || {}));
+    } catch (error) {
+      // 저장 실패는 무시
+    }
+  }
+
+  function takePrefill() {
+    try {
+      const raw = localStorage.getItem(PREFILL_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function clearPrefill() {
+    try {
+      localStorage.removeItem(PREFILL_KEY);
+    } catch (error) {
+      // 무시
+    }
+  }
+
   function joinedName(id) {
     return localStorage.getItem("coupleJoin_" + id) || "";
   }
@@ -1777,6 +1805,9 @@
     celebrateJoin,
     revealRank,
     shareKakao,
+    savePrefill,
+    takePrefill,
+    clearPrefill,
     copyLink,
     copyLink,
     captureShare,
