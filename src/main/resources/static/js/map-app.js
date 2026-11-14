@@ -839,14 +839,51 @@
       play();
       return;
     }
+    // 목록 한 픽셀이라도 보이면 나타낸다. 예전 threshold 0.2 는 수십 명짜리 목록이 화면보다 커서 영영 안 나타났음
     const io = new IntersectionObserver((entries) => {
       if (!entries.some((entry) => entry.isIntersecting)) {
         return;
       }
       io.disconnect();
       play();
-    }, { threshold: 0.2, rootMargin: "0px 0px -8% 0px" });
+    }, { threshold: 0, rootMargin: "0px 0px -5% 0px" });
     io.observe(root);
+    // 새로고침 스크롤 복원처럼 관찰이 늦는 경우 대비
+    window.setTimeout(() => {
+      const box = root.getBoundingClientRect();
+      if (!items[0].classList.contains("is-in") && box.bottom > 0 && box.top < window.innerHeight) {
+        io.disconnect();
+        play();
+      }
+    }, 1500);
+  }
+
+  const RANK_FOLD = 10;
+
+  /** 순위가 길면 10명까지만 펴고 나머지는 버튼으로 연다. 공유 CTA가 화면 밖으로 밀리지 않게 */
+  function foldRank(list, total) {
+    const root = list || document.getElementById("map-rank");
+    if (!root) {
+      return;
+    }
+    root.parentElement?.querySelector(".map-rank-more")?.remove();
+    const items = [...root.querySelectorAll("li")];
+    root.classList.remove("is-open");
+    items.forEach((item, index) => item.classList.toggle("is-fold", index >= RANK_FOLD));
+    if (items.length <= RANK_FOLD) {
+      return;
+    }
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "map-rank-more";
+    button.textContent = `나머지 ${items.length - RANK_FOLD}명 더 보기`;
+    button.addEventListener("click", () => {
+      root.classList.add("is-open");
+      root.dataset.opened = "1";
+      button.remove();
+      track("rank_expand", { total: total || items.length });
+    });
+    root.insertAdjacentElement("afterend", button);
   }
 
   /** 공유 멘트. 호스트가 친구를 부르는 말투로 인원·정복도·1등을 넣는다. 카톡·스토리·OG가 같이 씀 */
@@ -1832,6 +1869,7 @@
     animateScores,
     celebrateJoin,
     revealRank,
+    foldRank,
     shareKakao,
     inviteCopy,
     savePrefill,

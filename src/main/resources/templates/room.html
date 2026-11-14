@@ -92,6 +92,8 @@
         카카오로 로그인하고 저장
       </a>
     </div>
+    <button type="button" class="map-copy map-edit-toggle" id="host-edit-toggle" hidden>내 이름·지역·생일 수정</button>
+    <div id="host-edit-wrap">
     <form id="host-edit" class="map-form map-form-tight">
       <label>
         내 이름 (닉네임)
@@ -127,6 +129,7 @@
       <button type="submit" class="map-cta-secondary" id="edit-submit">내 정보 수정</button>
     </form>
     <button type="button" class="map-danger" id="delete-map">이 지도 삭제</button>
+    </div>
   </section>
 
   <section class="map-card" id="join-card" th:hidden="${mapView.host()}">

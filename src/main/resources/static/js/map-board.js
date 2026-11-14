@@ -1147,6 +1147,14 @@
     document.querySelectorAll("#map-rank li").forEach((item) => {
       item.hidden = !!activeFilter && item.dataset.label !== activeFilter;
     });
+    const rank = document.getElementById("map-rank");
+    if (rank) {
+      rank.classList.toggle("is-open", !!activeFilter || rank.dataset.opened === "1");
+      const more = rank.parentElement?.querySelector(".map-rank-more");
+      if (more) {
+        more.hidden = !!activeFilter;
+      }
+    }
   }
 
   function openSheet(cluster) {

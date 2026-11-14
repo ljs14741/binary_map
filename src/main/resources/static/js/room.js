@@ -79,6 +79,13 @@
       if (nudge) {
         nudge.hidden = !!view.hostBirthDate;
       }
+      const editWrap = document.getElementById("host-edit-wrap");
+      const editToggle = document.getElementById("host-edit-toggle");
+      if (editWrap && editToggle && !editWrap.dataset.touched) {
+        // 생일이 없으면 적으라고 펼쳐 둔다
+        editWrap.hidden = !!view.hostBirthDate;
+        editToggle.hidden = !editWrap.hidden;
+      }
       MapApp.bindRegionSelects(
         document.getElementById("edit-sido"),
         document.getElementById("edit-sigungu"),
@@ -154,11 +161,7 @@
   function leadText(view) {
     const bural = (view.counts || []).find((item) => item.filterKey === "부랄짝꿍");
     const n = bural ? bural.count : 0;
-    const birth = MapApp.formatBirth(view.hostBirthDate);
     const bits = [view.hostSido];
-    if (birth) {
-      bits.push(birth);
-    }
     bits.push(`${view.total}명 참여`);
     bits.push(`부랄친구 ${n}명`);
     return bits.join(" · ");
@@ -233,7 +236,13 @@
 
   function renderRank(people) {
     const list = document.getElementById("map-rank");
+    const wasOpen = list.dataset.opened === "1";
     list.innerHTML = people.map((person, index) => MapApp.rankRowHtml(person, index, view.hostName)).join("");
+    MapApp.foldRank(list, people.length);
+    if (wasOpen) {
+      list.classList.add("is-open");
+      list.parentElement?.querySelector(".map-rank-more")?.remove();
+    }
     MapApp.revealRank(list);
   }
 
@@ -275,6 +284,13 @@
     });
     document.getElementById("join-form").addEventListener("submit", join);
     document.getElementById("host-edit").addEventListener("submit", updateHost);
+    document.getElementById("host-edit-toggle")?.addEventListener("click", () => {
+      const wrap = document.getElementById("host-edit-wrap");
+      wrap.hidden = false;
+      wrap.dataset.touched = "1";
+      document.getElementById("host-edit-toggle").hidden = true;
+      document.getElementById("edit-name")?.focus();
+    });
     document.getElementById("delete-map").addEventListener("click", removeMap);
     document.getElementById("story-map")?.addEventListener("click", () => {
       MapApp.captureShare(document.getElementById("map-stage"), {

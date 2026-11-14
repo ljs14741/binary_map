@@ -15,6 +15,11 @@
       openCreate();
     }
   });
+  document.getElementById("hero-create")?.addEventListener("click", (event) => {
+    event.preventDefault();
+    MapApp.track("hero_create_click");
+    openCreate();
+  });
   document.getElementById("kakao-share")?.addEventListener("click", () => {
     MapApp.shareKakao({
       title: "짝꿍지도 · 내 친구들은 어디 살까",

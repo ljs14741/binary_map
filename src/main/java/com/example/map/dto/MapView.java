@@ -69,9 +69,8 @@ public record MapView(
                 }
             }
         }
-        return hostSido
-                + (hostBirthDate != null && !hostBirthDate.isBlank() ? " · " + hostBirthDate.replace('-', '.') : "")
-                + " · " + total + "명 참여 · 부랄친구 " + bural + "명";
+        // 생일은 공개 안 함. 띠·별자리만 위에 따로 보여 줌
+        return hostSido + " · " + total + "명 참여 · 부랄친구 " + bural + "명";
     }
 
     /** 카톡·SNS 크롤러가 가져갈 미리보기 이미지. 인원이 바뀌면 쿼리가 바뀌어 캐시가 갱신된다. */
