@@ -243,6 +243,19 @@
     MapApp.bindBirthInput(document.getElementById("join-birth"));
     MapApp.bindMbtiInput(document.getElementById("join-mbti"));
     MapApp.bindMbtiInput(document.getElementById("edit-mbti"));
+    document.getElementById("host-story")?.addEventListener("click", () => {
+      MapApp.captureShare(document.getElementById("map-stage"), {
+        story: true,
+        url: view.shareUrl,
+        filename: `${view.hostName}의_짝꿍지도_스토리.png`,
+        text: `${view.hostName}님의 짝꿍지도`,
+        place: "host_story"
+      });
+    });
+    document.getElementById("room-copy")?.addEventListener("click", () => {
+      MapApp.track("share_click", { method: "copy", place: "host_copy" });
+      MapApp.copyLink(view.shareUrl);
+    });
     document.getElementById("room-share").addEventListener("click", () => {
       const nudge = view.conquest && view.conquest.inviteNudge ? view.conquest.inviteNudge : "";
       MapApp.shareKakao({

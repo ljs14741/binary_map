@@ -1454,13 +1454,69 @@
     return blobFromCanvas(canvas);
   }
 
+  /** 인스타·카톡 같은 앱 안 브라우저. 여기선 파일 공유·다운로드가 자주 막힘 */
+  function inAppBrowser() {
+    const ua = navigator.userAgent || "";
+    return /Instagram|FBAN|FBAV|KAKAOTALK|Line\/|NAVER\(inapp|; wv\)|DaumApps/i.test(ua);
+  }
+
+  async function copyQuiet(text) {
+    if (!text) {
+      return false;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /** 공유 시트가 없을 때: 이미지를 화면에 띄우고 길게 눌러 저장하게 안내 */
+  function showImageSheet(blob, options = {}) {
+    document.querySelector(".map-img-sheet")?.remove();
+    const url = URL.createObjectURL(blob);
+    const sheet = document.createElement("div");
+    sheet.className = "map-img-sheet";
+    const steps = options.steps || [
+      "이미지를 <b>길게 눌러 저장</b>해요.",
+      "인스타 스토리에서 방금 저장한 이미지를 골라요.",
+      "<b>링크 스티커</b>에 붙여넣기. 링크는 이미 복사해 뒀어요."
+    ];
+    sheet.innerHTML = `
+      <button type="button" class="map-img-sheet-backdrop" aria-label="닫기"></button>
+      <div class="map-img-sheet-panel" role="dialog" aria-modal="true">
+        <div class="map-sheet-handle"></div>
+        <p class="map-img-sheet-title">${escapeHtml(options.title || "스토리에 올리기")}</p>
+        <img src="${url}" alt="공유 이미지">
+        <ol class="map-img-sheet-steps">${steps.map((step) => `<li>${step}</li>`).join("")}</ol>
+        <div class="map-img-sheet-actions">
+          <button type="button" class="map-img-sheet-copy">링크 다시 복사</button>
+          <a class="map-img-sheet-down" download="${escapeHtml(options.filename || "짝꿍지도.png")}" href="${url}">이미지 저장</a>
+        </div>
+        <button type="button" class="map-img-sheet-close">닫기</button>
+      </div>`;
+    document.body.appendChild(sheet);
+    const close = () => {
+      sheet.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 2000);
+    };
+    sheet.querySelector(".map-img-sheet-backdrop").addEventListener("click", close);
+    sheet.querySelector(".map-img-sheet-close").addEventListener("click", close);
+    sheet.querySelector(".map-img-sheet-copy").addEventListener("click", async () => {
+      const ok = await copyQuiet(options.url);
+      showToast(ok ? "링크를 복사했어요." : options.url || "복사를 못 했어요.");
+    });
+    requestAnimationFrame(() => sheet.classList.add("is-open"));
+  }
+
   async function captureShare(element, options = {}) {
     if (!element) {
       showToast("저장할 화면이 없어요.");
       return;
     }
     const filename = options.filename || "짝꿍지도.png";
-    track("image_save", { place: options.place || "unknown" });
+    track(options.story ? "story_share" : "image_save", { place: options.place || "unknown" });
     showToast("이미지 만드는 중...");
     try {
       const blob = options.story
@@ -1471,17 +1527,28 @@
       if (!blob) {
         throw new Error("empty");
       }
+      // 링크는 먼저 복사해 둔다. 스토리 링크 스티커에 붙여넣을 수 있게
+      const copied = await copyQuiet(options.url);
       const file = new File([blob], filename, { type: "image/png" });
       try {
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           await navigator.share({ files: [file] });
-          showToast("공유 창에서 인스타·스토리를 고르면 돼요.");
+          track("story_share_done", { place: options.place || "unknown", via: "share_sheet" });
+          showToast(copied
+            ? "Instagram → 스토리를 고르세요. 링크는 복사해 뒀으니 링크 스티커에 붙여넣기!"
+            : "Instagram → 스토리를 고르면 돼요.");
           return;
         }
       } catch (error) {
         if (error && error.name === "AbortError") {
           return;
         }
+      }
+      const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
+      if (mobile || inAppBrowser()) {
+        track("story_share_done", { place: options.place || "unknown", via: "image_sheet" });
+        showImageSheet(blob, { url: options.url, filename, title: options.story ? "스토리에 올리기" : "이미지 저장" });
+        return;
       }
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -1491,7 +1558,8 @@
       link.click();
       link.remove();
       window.setTimeout(() => URL.revokeObjectURL(url), 2000);
-      showToast("이미지를 저장했어요. 인스타 스토리에 올리면 돼요.");
+      track("story_share_done", { place: options.place || "unknown", via: "download" });
+      showToast(copied ? "이미지를 저장했어요. 링크도 복사해 뒀어요." : "이미지를 저장했어요.");
     } catch (error) {
       console.error(error);
       showToast("이미지 저장에 실패했어요. 화면을 캡처해 주세요.");
@@ -1709,6 +1777,7 @@
     celebrateJoin,
     revealRank,
     shareKakao,
+    copyLink,
     copyLink,
     captureShare,
     drawStoryCard,

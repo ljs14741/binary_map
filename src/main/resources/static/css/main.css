@@ -2147,6 +2147,140 @@ body.is-sheet-open {
   transform: scale(0.97);
 }
 
+.map-invite-row {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.map-invite-row .map-share {
+  margin-top: 0;
+  display: flex;
+  width: 100%;
+}
+
+.map-copy {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.map-invite-hint {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.map-img-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 10090;
+}
+
+.map-img-sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(42, 31, 26, 0.5);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.map-img-sheet-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 92vh;
+  overflow-y: auto;
+  padding: 10px 16px calc(16px + env(safe-area-inset-bottom));
+  border-radius: 22px 22px 0 0;
+  background: #fff8f2;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.map-img-sheet.is-open .map-img-sheet-backdrop {
+  opacity: 1;
+}
+
+.map-img-sheet.is-open .map-img-sheet-panel {
+  transform: none;
+}
+
+.map-img-sheet-title {
+  margin: 6px 0 10px;
+  font-size: 17px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.map-img-sheet img {
+  display: block;
+  width: min(100%, 230px);
+  margin: 0 auto;
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(42, 31, 26, 0.18);
+}
+
+.map-img-sheet-steps {
+  margin: 14px 0 0;
+  padding-left: 22px;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.map-img-sheet-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.map-img-sheet-copy,
+.map-img-sheet-down {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.map-img-sheet-close {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .map-capture-row p {
   margin: 0;
   color: var(--muted);

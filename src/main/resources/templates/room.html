@@ -70,13 +70,21 @@
   <section class="map-card" id="host-tools" th:hidden="${!mapView.host()}">
     <p class="map-card-kicker">내 지도</p>
     <h2>친구 초대</h2>
-    <p class="map-sample-lead" id="host-keep-lead">카톡으로 보내면 친구는 닉네임, 사는 곳, 생일을 적어요. 목록에는 띠랑 별자리만 보여요.</p>
+    <p class="map-sample-lead" id="host-keep-lead">스토리에 올리면 보는 친구마다 들어와서 핀을 찍어요. 친구는 닉네임, 사는 곳, 생일만 적고, 목록에는 띠랑 별자리만 보여요.</p>
     <p class="map-nudge" id="invite-nudge">아직 아무도 없어요. 링크를 보내면 친구 사는 곳에 첫 핀이 찍혀요.</p>
     <p id="account-status" class="map-account" hidden></p>
-    <button type="button" class="map-share" id="room-share">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2C6.7 3.2 2.4 6.6 2.4 10.8c0 2.7 1.8 5.1 4.5 6.5l-.9 3.4c-.1.3.3.6.5.4l3.8-2.5c.6.1 1.1.1 1.7.1 5.3 0 9.6-3.4 9.6-7.6S17.3 3.2 12 3.2z"/></svg>
-      카톡으로 친구 초대
-    </button>
+    <div class="map-invite-row">
+      <button type="button" class="map-story" id="host-story">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.2c2.7 0 3 0 4.1.1 2.7.1 4.4 1.7 4.5 4.5.1 1.1.1 1.4.1 4.1s0 3-.1 4.1c-.1 2.7-1.7 4.4-4.5 4.5-1.1.1-1.4.1-4.1.1s-3 0-4.1-.1c-2.7-.1-4.4-1.7-4.5-4.5C2.2 15 2.2 14.7 2.2 12s0-3 .1-4.1C2.4 5.2 4 3.6 6.8 3.5 7.9 3.4 8.3 3.4 11 3.4h1zm0 1.8c-2.6 0-2.9 0-4 .1-1.8.1-2.8 1-2.9 2.9-.1 1-.1 1.3-.1 4s0 3 .1 4c.1 1.8 1 2.8 2.9 2.9 1 .1 1.3.1 4 .1s3 0 4-.1c1.8-.1 2.8-1 2.9-2.9.1-1 .1-1.3.1-4s0-3-.1-4c-.1-1.8-1-2.8-2.9-2.9-1-.1-1.3-.1-4-.1zm0 3a5 5 0 110 10 5 5 0 010-10zm0 1.8a3.2 3.2 0 100 6.4 3.2 3.2 0 000-6.4zm5.2-3a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z"/></svg>
+        인스타 스토리에 올리기
+      </button>
+      <button type="button" class="map-share" id="room-share">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2C6.7 3.2 2.4 6.6 2.4 10.8c0 2.7 1.8 5.1 4.5 6.5l-.9 3.4c-.1.3.3.6.5.4l3.8-2.5c.6.1 1.1.1 1.7.1 5.3 0 9.6-3.4 9.6-7.6S17.3 3.2 12 3.2z"/></svg>
+        카톡으로 친구 초대
+      </button>
+      <button type="button" class="map-copy" id="room-copy">링크만 복사</button>
+    </div>
+    <p class="map-invite-hint">스토리 공유를 누르면 링크가 자동으로 복사돼요. 스토리 올릴 때 링크 스티커에 붙여넣으면 끝.</p>
     <div id="host-login-box" hidden>
       <p class="map-warn">이 지도는 아직 카카오 계정에 안 붙어 있어요. 휴대폰을 바꾸거나 기록을 지우면 관리 화면을 못 찾을 수 있어요. 지금 로그인해서 저장해 두세요.</p>
       <a class="map-kakao" id="host-login" th:href="|/login/kakao?next=/m/${mapView.id()}|">
@@ -189,10 +197,10 @@
     <div class="map-capture-row">
       <button type="button" class="map-story" id="story-map">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.2c2.7 0 3 0 4.1.1 2.7.1 4.4 1.7 4.5 4.5.1 1.1.1 1.4.1 4.1s0 3-.1 4.1c-.1 2.7-1.7 4.4-4.5 4.5-1.1.1-1.4.1-4.1.1s-3 0-4.1-.1c-2.7-.1-4.4-1.7-4.5-4.5C2.2 15 2.2 14.7 2.2 12s0-3 .1-4.1C2.4 5.2 4 3.6 6.8 3.5 7.9 3.4 8.3 3.4 11 3.4h1zm0 1.8c-2.6 0-2.9 0-4 .1-1.8.1-2.8 1-2.9 2.9-.1 1-.1 1.3-.1 4s0 3 .1 4c.1 1.8 1 2.8 2.9 2.9 1 .1 1.3.1 4 .1s3 0 4-.1c1.8-.1 2.8-1 2.9-2.9.1-1 .1-1.3.1-4s0-3-.1-4c-.1-1.8-1-2.8-2.9-2.9-1-.1-1.3-.1-4-.1zm0 3a5 5 0 110 10 5 5 0 010-10zm0 1.8a3.2 3.2 0 100 6.4 3.2 3.2 0 000-6.4zm5.2-3a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z"/></svg>
-        인스타 스토리용 이미지
+        인스타 스토리에 올리기
       </button>
       <button type="button" class="map-save" id="save-map">정사각 이미지 저장</button>
-      <p>스토리용은 세로로 꽉 차게, 지도·정복도·1등·QR이 한 장에 들어가요.</p>
+      <p>스토리용은 세로로 꽉 차게 지도·정복도·1등·QR이 들어가고, 누르면 링크도 같이 복사돼요.</p>
     </div>
     <div class="map-throne" id="map-throne" hidden></div>
     <ol class="map-rank" id="map-rank"></ol>
