@@ -849,6 +849,34 @@
     io.observe(root);
   }
 
+  /** 공유 멘트. 호스트가 친구를 부르는 말투로 인원·정복도·1등을 넣는다. 카톡·스토리·OG가 같이 씀 */
+  function inviteCopy(view) {
+    const host = (view && view.hostName) || "친구";
+    const total = (view && view.total) || 0;
+    const percent = view && view.conquest ? view.conquest.percent || 0 : 0;
+    const people = (view && view.people) || [];
+    const top = people.length ? sortPeople(people)[0] : null;
+    const topName = top && top.name ? top.name : "";
+    if (total <= 0) {
+      return {
+        title: `${host}님의 짝꿍지도`,
+        description: `${host}: 내 지도 아직 비었어. 너 어디 살아? 들어와서 핀 찍고 나랑 궁합 봐.`,
+        button: "첫 핀 찍기",
+        cta: "너 어디 살아? 들어와서 핀 찍어 👉",
+        nudge: "아직 아무도 없어요. 스토리에 올리면 첫 핀이 찍혀요."
+      };
+    }
+    const topBit = topName ? ` · 1등 ${topName}` : "";
+    const dare = topName ? `${topName} 넘어 봐.` : "1등 먹어.";
+    return {
+      title: `${host}님의 짝꿍지도 · ${total}명 참여`,
+      description: `${total}명이 핀 찍음 · 정복도 ${percent}%${topBit}. 너 어디 살아? 들어와서 궁합 찍고 ${dare}`,
+      button: topName ? `${topName} 넘으러 가기` : "나도 들어가기",
+      cta: topName ? `${topName} 넘을 사람? 들어와서 궁합 찍어 👉` : "너도 들어와서 궁합 찍어 👉",
+      nudge: ""
+    };
+  }
+
   async function shareKakao(payload) {
     const title = payload.title || "짝꿍지도";
     const description = payload.description || "두 이름으로 보는 이름궁합";
@@ -1805,6 +1833,7 @@
     celebrateJoin,
     revealRank,
     shareKakao,
+    inviteCopy,
     savePrefill,
     takePrefill,
     clearPrefill,

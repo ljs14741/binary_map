@@ -17,9 +17,9 @@
   });
   document.getElementById("kakao-share")?.addEventListener("click", () => {
     MapApp.shareKakao({
-      title: "짝꿍지도",
-      description: "이름 두 개로 궁합 보고, 내 지도에 친구를 모아보세요.",
-      button: "나도 해보기",
+      title: "짝꿍지도 · 내 친구들은 어디 살까",
+      description: "친구들이 지도에 핀 찍고 궁합 순위 매기는 거. 내 지도 만들어서 스토리에 올리면 끝.",
+      button: "내 지도 만들기",
       place: "home_hero"
     });
   });

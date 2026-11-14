@@ -188,8 +188,10 @@
       text.textContent = `전국 정복도 ${conquest.percent}% · ${conquest.sidoFilled}/${conquest.sidoTotal}개 시도`;
     }
     if (nudge) {
-      nudge.hidden = !conquest.inviteNudge;
-      nudge.textContent = conquest.inviteNudge || "";
+      const copy = MapApp.inviteCopy(view);
+      const text = copy.nudge || conquest.inviteNudge || "";
+      nudge.hidden = !text;
+      nudge.textContent = text;
     }
   }
 
@@ -246,6 +248,7 @@
     document.getElementById("host-story")?.addEventListener("click", () => {
       MapApp.captureShare(document.getElementById("map-stage"), {
         story: true,
+        cta: MapApp.inviteCopy(view).cta,
         url: view.shareUrl,
         filename: `${view.hostName}의_짝꿍지도_스토리.png`,
         text: `${view.hostName}님의 짝꿍지도`,
@@ -257,11 +260,11 @@
       MapApp.copyLink(view.shareUrl);
     });
     document.getElementById("room-share").addEventListener("click", () => {
-      const nudge = view.conquest && view.conquest.inviteNudge ? view.conquest.inviteNudge : "";
+      const copy = MapApp.inviteCopy(view);
       MapApp.shareKakao({
-        title: `${view.hostName}님의 짝꿍지도`,
-        description: view.ogDescription || nudge || "닉네임과 생일을 적으면 궁합이 나오고, 사는 곳에 핀이 찍혀요.",
-        button: "나도 들어가기",
+        title: copy.title,
+        description: copy.description,
+        button: copy.button,
         url: view.shareUrl,
         imageUrl: view.ogImageUrl,
         place: "room_invite"
@@ -276,6 +279,7 @@
     document.getElementById("story-map")?.addEventListener("click", () => {
       MapApp.captureShare(document.getElementById("map-stage"), {
         story: true,
+        cta: MapApp.inviteCopy(view).cta,
         url: view.shareUrl,
         filename: `${view.hostName}의_짝꿍지도_스토리.png`,
         text: `${view.hostName}님의 짝꿍지도`,

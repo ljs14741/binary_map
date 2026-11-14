@@ -79,11 +79,36 @@ public record MapView(
         return shareUrl + "/og.png?v=" + total + "-" + conquestPercent();
     }
 
-    /** 미리보기 설명. 정복도와 빈 지역을 넣어서 클릭 이유를 만든다. */
-    public String ogDescription() {
-        if (conquest != null && conquest.inviteNudge() != null && !conquest.inviteNudge().isBlank()) {
-            return total + "명 참여 · " + conquestText() + ". " + conquest.inviteNudge();
+    /** 1등 짝꿍 이름. 목록은 이미 점수순 */
+    public String topName() {
+        if (people == null || people.isEmpty()) {
+            return "";
         }
-        return total + "명 참여. 닉네임과 생일을 적으면 궁합이 나오고, 사는 곳에 핀이 찍혀요.";
+        String name = people.get(0).name();
+        return name == null ? "" : name;
+    }
+
+    /** 미리보기 제목. 인원이 있으면 숫자를 붙여서 눌러볼 이유를 만든다 */
+    public String ogTitle() {
+        if (total <= 0) {
+            return hostName + "님의 짝꿍지도";
+        }
+        return hostName + "님의 짝꿍지도 · " + total + "명 참여";
+    }
+
+    /** 미리보기 설명. 호스트가 친구를 부르는 말투로, 인원·정복도·1등 이름을 넣는다 */
+    public String ogDescription() {
+        if (total <= 0) {
+            return hostName + ": 내 지도 아직 비었어. 너 어디 살아? 들어와서 핀 찍고 나랑 궁합 봐.";
+        }
+        String top = topName();
+        StringBuilder sb = new StringBuilder();
+        sb.append(total).append("명이 핀 찍음 · 정복도 ").append(conquestPercent()).append("%");
+        if (!top.isBlank()) {
+            sb.append(" · 1등 ").append(top);
+        }
+        sb.append(". 너 어디 살아? 들어와서 궁합 찍고 ");
+        sb.append(top.isBlank() ? "1등 먹어." : top + " 넘어 봐.");
+        return sb.toString();
     }
 }
